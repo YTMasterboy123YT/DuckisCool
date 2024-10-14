@@ -1,0 +1,15 @@
+local Players = game:GetService("Players")
+
+local function changeJumpPower(jumpPowerValue)
+    for _, player in ipairs(Players:GetPlayers()) do
+        local character = player.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.JumpPower = jumpPowerValue
+            end
+        end
+    end
+end
+
+-- Example usage: changeJumpPower(100) to set jump power to 100
