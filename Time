@@ -1,0 +1,16 @@
+local function setGameTime(timeOfDay)
+    if timeOfDay == "Morning" then
+        game.Lighting.ClockTime = 6
+    elseif timeOfDay == "Afternoon" then
+        game.Lighting.ClockTime = 12
+    elseif timeOfDay == "Night" then
+        game.Lighting.ClockTime = 18
+    else
+        print("Invalid time of day.")
+    end
+end
+
+-- Example usage:
+setGameTime("Morning")   -- Set time to morning
+setGameTime("Afternoon") -- Set time to afternoon
+setGameTime("Night")     -- Set time to night
