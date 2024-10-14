@@ -1,0 +1,5 @@
+local function changeGravity(gravityValue)
+    workspace.Gravity = gravityValue
+end
+
+-- Example usage: changeGravity(50) to set gravity to 50
