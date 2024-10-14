@@ -1,0 +1,16 @@
+local Players = game:GetService("Players")
+
+local function setNoClip(character, value)
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = not value
+        end
+    end
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
+    local character = player.Character
+    if character then
+        setNoClip(character, true) -- Enable no clip
+    end
+end
