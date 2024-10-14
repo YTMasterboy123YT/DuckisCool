@@ -1,0 +1,27 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local punching = false
+local toolName = "Punch"
+
+local function autoUseTool()
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local tool = LocalPlayer.Backpack:FindFirstChild(toolName)
+
+    if tool then
+        humanoid:EquipTool(tool)
+        while punching and tool.Parent == character do
+            tool:Activate()
+            wait(1)
+        end
+    end
+end
+
+local function toggleAutoPunch(value)
+    punching = value
+
+    if punching then
+        autoUseTool()
+    end
+end
