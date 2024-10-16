@@ -1,6 +1,6 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-
+local button = script.Parent:WaitForChild("TextButton") -- Reference to the button
 local isTeleporting = false
 
 local function teleportAllPlayersToMe()
@@ -39,14 +39,14 @@ local function stopTeleporting()
     print("Teleporting stopped.")
 end
 
--- Example toggle function
 local function toggleTeleporting()
     if isTeleporting then
         stopTeleporting()
+        button.Text = "Start Teleport" -- Change button text
     else
         startTeleporting()
+        button.Text = "Stop Teleport" -- Change button text
     end
 end
 
--- Call this to toggle teleporting on or off
-toggleTeleporting()
+button.MouseButton1Click:Connect(toggleTeleporting) -- Connect button click to toggle function
