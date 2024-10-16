@@ -1,26 +1,52 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local function teleportAllPlayersToMe()
-    while true do
-        local myCharacter = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local myPosition = myCharacter.PrimaryPart.Position -- Get the position of your character
+local isTeleporting = false
 
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then -- Skip the local player
-                local character = player.Character or player.CharacterAdded:Wait()
-                if character and character:FindFirstChild("HumanoidRootPart") then
-                    local humanoidRootPart = character.HumanoidRootPart
-                    
-                    -- Teleport to your position while keeping the body visible
-                    humanoidRootPart.Position = myPosition
-                end
+local function teleportAllPlayersToMe()
+    local myCharacter = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local myPosition = myCharacter.PrimaryPart.Position -- Get the position of your character
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then -- Skip the local player
+            local character = player.Character or player.CharacterAdded:Wait()
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local humanoidRootPart = character.HumanoidRootPart
+                local originalCFrame = humanoidRootPart.CFrame
+
+                -- Set the HumanoidRootPart position without affecting the limbs
+                humanoidRootPart.Position = myPosition
+
+                -- Restore the original CFrame to keep the hands in the correct position
+                humanoidRootPart.CFrame = originalCFrame
             end
         end
-        
-        wait(0.5) -- Adjust the wait time as needed for how frequently you want to teleport
     end
 end
 
--- Start the continuous teleport
-teleportAllPlayersToMe()
+local function startTeleporting()
+    isTeleporting = true
+    print("Teleporting started.")
+
+    while isTeleporting do
+        teleportAllPlayersToMe()
+        wait(0.5) -- Adjust the wait time as necessary
+    end
+end
+
+local function stopTeleporting()
+    isTeleporting = false
+    print("Teleporting stopped.")
+end
+
+-- Example toggle function
+local function toggleTeleporting()
+    if isTeleporting then
+        stopTeleporting()
+    else
+        startTeleporting()
+    end
+end
+
+-- Call this to toggle teleporting on or off
+toggleTeleporting()
