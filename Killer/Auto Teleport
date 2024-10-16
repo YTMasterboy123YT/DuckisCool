@@ -1,24 +1,69 @@
 -- Place this script in ServerScriptService
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local function teleportPlayersToOwner()
-    local ownerPlayer = Players.LocalPlayer -- Get the player running the script
+-- Create RemoteEvent for toggling teleportation
+local toggleTeleportEvent = Instance.new("RemoteEvent", ReplicatedStorage)
+toggleTeleportEvent.Name = "ToggleTeleport"
 
-    if ownerPlayer and ownerPlayer.Character and ownerPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local ownerPosition = ownerPlayer.Character.HumanoidRootPart.Position
-        
-        for _, player in pairs(Players:GetPlayers()) do
-            local character = player.Character
+local teleporting = false
+
+local function teleportLimbs(character)
+    local leftArm = character:FindFirstChild("Left Arm")
+    local rightArm = character:FindFirstChild("Right Arm")
+
+    if leftArm then
+        leftArm.Position = character.HumanoidRootPart.Position + Vector3.new(-5, 0, 0) -- Adjust as needed
+    end
+    
+    if rightArm then
+        rightArm.Position = character.HumanoidRootPart.Position + Vector3.new(5, 0, 0) -- Adjust as needed
+    end
+end
+
+local function teleportPlayersTo(player)
+    local targetCharacter = player.Character
+    local targetPosition = targetCharacter.HumanoidRootPart.Position
+
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= player then
+            local character = otherPlayer.Character
             if character and character:FindFirstChild("HumanoidRootPart") then
-                character.HumanoidRootPart.CFrame = CFrame.new(ownerPosition)
+                character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+                teleportLimbs(character)
             end
         end
     end
 end
 
--- Teleport players every second
-while true do
-    teleportPlayersToOwner()
-    wait(1)
+toggleTeleportEvent.OnServerEvent:Connect(function(player)
+    teleporting = not teleporting -- Toggle the state
+    if teleporting then
+        teleportPlayersTo(player)
+        while teleporting do
+            wait(1)
+            teleportPlayersTo(player) -- Re-teleport every second
+        end
+    end
+end)
+
+-- Create UI for toggling teleportation
+local function createToggleButton(player)
+    local playerGui = player:WaitForChild("PlayerGui")
+    local screenGui = Instance.new("ScreenGui", playerGui)
+    local button = Instance.new("TextButton", screenGui)
+
+    button.Size = UDim2.new(0, 200, 0, 50)
+    button.Position = UDim2.new(0.5, -100, 0.5, -25)
+    button.Text = "Toggle Teleport"
+    button.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+    button.TextColor3 = Color3.new(1, 1, 1)
+
+    button.MouseButton1Click:Connect(function()
+        toggleTeleportEvent:FireServer()
+    end)
 end
+
+-- Create button for each player when they join
+Players.PlayerAdded:Connect(createToggleButton)
