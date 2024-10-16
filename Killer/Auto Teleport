@@ -1,0 +1,23 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function teleportAllPlayersToMe()
+    while true do
+        local myCharacter = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local myPosition = myCharacter.PrimaryPart.Position -- Get the position of your character
+
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then -- Skip the local player
+                local character = player.Character or player.CharacterAdded:Wait()
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    character.HumanoidRootPart.Position = myPosition -- Teleport to your position
+                end
+            end
+        end
+        
+        wait(0.5) -- Adjust the wait time as needed for how frequently you want to teleport
+    end
+end
+
+-- Start the continuous teleport
+teleportAllPlayersToMe()
