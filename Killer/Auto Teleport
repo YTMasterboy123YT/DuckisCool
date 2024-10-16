@@ -1,52 +1,25 @@
+-- Place this script in ServerScriptService
+
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local button = script.Parent:WaitForChild("TextButton") -- Reference to the button
-local isTeleporting = false
+local Workspace = game:GetService("Workspace")
 
-local function teleportAllPlayersToMe()
-    local myCharacter = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local myPosition = myCharacter.PrimaryPart.Position -- Get the position of your character
-
+local function teleportPlayers()
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then -- Skip the local player
-            local character = player.Character or player.CharacterAdded:Wait()
-            if character and character:FindFirstChild("HumanoidRootPart") then
-                local humanoidRootPart = character.HumanoidRootPart
-                local originalCFrame = humanoidRootPart.CFrame
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            -- Generate random position within certain bounds
+            local randomX = math.random(-50, 50) -- Adjust the range as needed
+            local randomZ = math.random(-50, 50) -- Adjust the range as needed
+            local randomPosition = Vector3.new(randomX, character.HumanoidRootPart.Position.Y, randomZ)
 
-                -- Set the HumanoidRootPart position without affecting the limbs
-                humanoidRootPart.Position = myPosition
-
-                -- Restore the original CFrame to keep the hands in the correct position
-                humanoidRootPart.CFrame = originalCFrame
-            end
+            -- Teleport the player
+            character.HumanoidRootPart.CFrame = CFrame.new(randomPosition)
         end
     end
 end
 
-local function startTeleporting()
-    isTeleporting = true
-    print("Teleporting started.")
-
-    while isTeleporting do
-        teleportAllPlayersToMe()
-        wait(0.5) -- Adjust the wait time as necessary
-    end
+-- Teleport players every second
+while true do
+    teleportPlayers()
+    wait(1)
 end
-
-local function stopTeleporting()
-    isTeleporting = false
-    print("Teleporting stopped.")
-end
-
-local function toggleTeleporting()
-    if isTeleporting then
-        stopTeleporting()
-        button.Text = "Start Teleport" -- Change button text
-    else
-        startTeleporting()
-        button.Text = "Stop Teleport" -- Change button text
-    end
-end
-
-button.MouseButton1Click:Connect(toggleTeleporting) -- Connect button click to toggle function
