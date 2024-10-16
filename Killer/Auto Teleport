@@ -1,25 +1,24 @@
 -- Place this script in ServerScriptService
 
 local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
 
-local function teleportPlayers()
-    for _, player in pairs(Players:GetPlayers()) do
-        local character = player.Character
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            -- Generate random position within certain bounds
-            local randomX = math.random(-50, 50) -- Adjust the range as needed
-            local randomZ = math.random(-50, 50) -- Adjust the range as needed
-            local randomPosition = Vector3.new(randomX, character.HumanoidRootPart.Position.Y, randomZ)
+local function teleportPlayersToOwner()
+    local ownerPlayer = Players.LocalPlayer -- Get the player running the script
 
-            -- Teleport the player
-            character.HumanoidRootPart.CFrame = CFrame.new(randomPosition)
+    if ownerPlayer and ownerPlayer.Character and ownerPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local ownerPosition = ownerPlayer.Character.HumanoidRootPart.Position
+        
+        for _, player in pairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                character.HumanoidRootPart.CFrame = CFrame.new(ownerPosition)
+            end
         end
     end
 end
 
 -- Teleport players every second
 while true do
-    teleportPlayers()
+    teleportPlayersToOwner()
     wait(1)
 end
