@@ -4,7 +4,26 @@ local LocalPlayer = Players.LocalPlayer
 local punching = false
 local toolName = "Punch"
 
+-- Function to set tool cooldowns
+local function setToolCooldowns()
+    local tools = {
+        {name = toolName, type = "attackTime"}
+    }
+
+    for _, toolInfo in pairs(tools) do
+        local tool = LocalPlayer.Backpack:FindFirstChild(toolInfo.name) or LocalPlayer.Character:FindFirstChild(toolInfo.name)
+        if tool then
+            local cooldown = tool:FindFirstChild(toolInfo.type) -- Assuming attackTime is an object
+            if cooldown then
+                cooldown.Value = 0.1 -- Set the cooldown value
+            end
+        end
+    end
+end
+
 local function autoUseTool()
+    setToolCooldowns() -- Call to set cooldowns before starting to hit
+
     while punching do
         local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
         local humanoid = character:FindFirstChildOfClass("Humanoid")
