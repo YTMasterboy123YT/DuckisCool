@@ -15,9 +15,9 @@ local function autoUseTool()
                 humanoid:EquipTool(tool)
             end
             tool:Activate()
-            wait(1) -- Adjust the wait time as necessary
+            wait(0.1) -- Set to 0.1 seconds for faster hitting
         else
-            wait(1) -- Wait before checking again if tool is not found
+            wait(0.5) -- Wait before checking again if the tool is not found
         end
     end
 end
