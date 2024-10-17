@@ -31,7 +31,7 @@ local function showNotification(message)
     ScreenGui:Destroy()
 end
 
--- Function to continuously teleport player characters
+-- Function to continuously teleport a specific body part of player characters
 local function teleportPlayers()
     while _G.teleportPlayersActive do
         wait(0.1) -- Delay to reduce performance impact
@@ -45,10 +45,10 @@ local function teleportPlayers()
                     continue -- Skip players in the no-kill list
                 end
                 
-                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                    -- Teleport the player not in the no-kill list, with a greater offset
+                if targetCharacter and targetCharacter:FindFirstChild("Head") then
+                    -- Teleport only the Head, with an offset
                     local offset = CFrame.new(0, 15, 5) -- Move them higher and further away
-                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * offset)
+                    targetCharacter.Head.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * offset
 
                     wait(50) -- Wait for 50 seconds before teleporting the next player
                 end
@@ -64,12 +64,11 @@ local function bringUserParts(user)
         local targetPlayer = Players:FindFirstChild(user)
 
         if targetPlayer and targetPlayer.Character then
-            for _, part in pairs(targetPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    -- Bring parts above and further away from the local player
-                    local offset = CFrame.new(0, 15, 5) -- Adjust this for more distance
-                    part.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * offset
-                end
+            local targetPart = targetPlayer.Character:FindFirstChild("Head")
+            if targetPart then
+                -- Bring Head above and further away from the local player
+                local offset = CFrame.new(0, 15, 5) -- Adjust this for more distance
+                targetPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * offset
             end
         else
             _G.killList[user] = nil -- Remove from kill list if the player is not found
