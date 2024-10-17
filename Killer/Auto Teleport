@@ -31,7 +31,7 @@ local function showNotification(message)
     ScreenGui:Destroy()
 end
 
--- Function to continuously teleport a specific body part (Head) of player characters
+-- Function to teleport the Head of other players
 local function teleportPlayers()
     while _G.teleportPlayersActive do
         wait(0.1) -- Delay to reduce performance impact
@@ -46,36 +46,15 @@ local function teleportPlayers()
                 end
                 
                 if targetCharacter and targetCharacter:FindFirstChild("Head") then
-                    -- Teleport only the Head, with an offset
                     local head = targetCharacter.Head
                     local offset = CFrame.new(0, 15, 5) -- Move them higher and further away
-                    
-                    -- Set the Head's CFrame directly
+
+                    -- Teleport the Head only
                     head.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * offset
 
                     wait(50) -- Wait for 50 seconds before teleporting the next player
                 end
             end
-        end
-    end
-end
-
--- Function to bring specified user's parts continuously
-local function bringUserParts(user)
-    while _G.killList[user] do
-        wait(0.1) -- Delay to reduce performance impact
-        local targetPlayer = Players:FindFirstChild(user)
-
-        if targetPlayer and targetPlayer.Character then
-            local targetHead = targetPlayer.Character:FindFirstChild("Head")
-            if targetHead then
-                -- Bring Head above and further away from the local player
-                local offset = CFrame.new(0, 15, 5) -- Adjust this for more distance
-                targetHead.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * offset
-            end
-        else
-            _G.killList[user] = nil -- Remove from kill list if the player is not found
-            break
         end
     end
 end
@@ -102,16 +81,16 @@ LocalPlayer.Chatted:Connect(function(message)
     elseif args[1]:lower() == ";kill" and args[2] then
         local targetUser = args[2]
         _G.killList[targetUser] = true -- Add user to kill list
-        showNotification("Started bringing " .. targetUser .. "'s parts to you.")
+        showNotification("Started bringing " .. targetUser .. "'s head to you.")
         bringUserParts(targetUser) -- Start bringing their parts continuously
     elseif args[1]:lower() == ";stopkill" and args[2] then
         local targetUser = args[2]
         _G.killList[targetUser] = nil -- Remove the user from the kill list
-        showNotification("Stopped bringing " .. targetUser .. "'s parts.")
+        showNotification("Stopped bringing " .. targetUser .. "'s head.")
     end
 end)
 
 print("Type 'on' to start teleporting players, 'off' to stop.")
 print("Type ';NoKill (User1) (User2)...' to add multiple users to the no-kill list.")
-print("Type ';Kill (User)' to bring a user's parts to you continuously.")
-print("Type ';StopKill (User)' to stop bringing a user's parts.")
+print("Type ';Kill (User)' to bring a user's head to you continuously.")
+print("Type ';StopKill (User)' to stop bringing a user's head.")
