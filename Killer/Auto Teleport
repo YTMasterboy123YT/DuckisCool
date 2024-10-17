@@ -23,20 +23,19 @@ local player = game.Players.LocalPlayer
 local teleporting = false
 local teleportThread
 
-local function moveHandsAboveHead(p, height)
+local function teleportArms(p, position)
     local character = p.Character
     if character then
         local rightArm = character:FindFirstChild("RightArm")
         local leftArm = character:FindFirstChild("LeftArm")
-        local head = character:FindFirstChild("Head")
         
-        if rightArm and head then
-            rightArm.Position = head.Position + Vector3.new(0, height, 0)
+        if rightArm then
+            rightArm.Position = position + Vector3.new(0, 15, 0) -- Move right arm 15 studs above
             rightArm.Anchored = true
         end
         
-        if leftArm and head then
-            leftArm.Position = head.Position + Vector3.new(0, height, 0)
+        if leftArm then
+            leftArm.Position = position + Vector3.new(0, 15, 0) -- Move left arm 15 studs above
             leftArm.Anchored = true
         end
     end
@@ -51,8 +50,9 @@ local function teleportPlayers()
 
         for _, p in ipairs(game.Players:GetPlayers()) do
             if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                p.Character:SetPrimaryPartCFrame(CFrame.new(position + Vector3.new(0, 5, 0))) -- Teleport above the player's position
-                moveHandsAboveHead(p, 15) -- Move hands 15 studs above the head
+                local targetPosition = position + Vector3.new(0, 5, 0)
+                p.Character:SetPrimaryPartCFrame(CFrame.new(targetPosition)) -- Teleport above the player's position
+                teleportArms(p, targetPosition) -- Teleport arms 15 studs above
             end
         end
         wait(0.05) -- Faster teleportation every 0.05 seconds
