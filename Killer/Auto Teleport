@@ -46,9 +46,11 @@ local function teleportPlayers()
                 end
                 
                 if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                    -- Teleport all other players not in the no-kill list, with a safe distance offset
-                    local offset = CFrame.new(0, 10, 0) -- Adjust this value as needed
+                    -- Teleport the player not in the no-kill list, with a greater offset
+                    local offset = CFrame.new(0, 15, 5) -- Move them higher and further away
                     targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * offset)
+
+                    wait(50) -- Wait for 50 seconds before teleporting the next player
                 end
             end
         end
@@ -64,8 +66,8 @@ local function bringUserParts(user)
         if targetPlayer and targetPlayer.Character then
             for _, part in pairs(targetPlayer.Character:GetDescendants()) do
                 if part:IsA("BasePart") then
-                    -- Bring parts slightly above the local player to avoid collision
-                    local offset = CFrame.new(0, 10, 0) -- Adjust this value as needed
+                    -- Bring parts above and further away from the local player
+                    local offset = CFrame.new(0, 15, 5) -- Adjust this for more distance
                     part.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * offset
                 end
             end
