@@ -1,28 +1,84 @@
-local player = game.Players.LocalPlayer
-local offset = Vector3.new(0, 5, 0) -- Adjust the height above the character
+-- Define services
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ScreenGui = Instance.new("ScreenGui")
+local Notification = Instance.new("TextLabel")
 
--- Function to teleport all players' UpperTorso above the local player's character
-local function teleportAllUpperTorso()
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+-- Global variables for toggle state and no-kill list
+_G.teleportPlayersActive = false
+_G.noKillList = {}
+_G.killList = {}
 
-    while true do
-        local targetPosition = humanoidRootPart.Position + offset
+-- Function to create and display notification
+local function showNotification(message)
+    Notification.Text = message
+    Notification.Size = UDim2.new(0.3, 0, 0.1, 0)
+    Notification.Position = UDim2.new(0.5, -75, 0.1, 0)
+    Notification.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Notification.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Notification.TextScaled = true
+    Notification.Parent = ScreenGui
 
-        for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-            if otherPlayer.Character then
-                local upperTorso = otherPlayer.Character:FindFirstChild("UpperTorso")
+    ScreenGui.Parent = game.CoreGui
 
-                if upperTorso then
-                    -- Teleport UpperTorso for all players
-                    upperTorso.CFrame = CFrame.new(targetPosition) -- Set to target position
+    -- Fade out effect
+    for i = 1, 10 do
+        wait(0.1)
+        Notification.TextTransparency = i / 10
+    end
+
+    -- Remove notification after fading out
+    ScreenGui:Destroy()
+end
+
+-- Function to continuously teleport a specific body part (e.g., Head)
+local function teleportPlayerPart(partName)
+    while _G.teleportPlayersActive do
+        wait(0.1) -- Delay to reduce performance impact
+
+        -- Iterate through other players
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            local targetCharacter = otherPlayer.Character
+
+            if otherPlayer ~= LocalPlayer then
+                if _G.noKillList[otherPlayer.Name] then
+                    continue -- Skip players in the no-kill list
+                end
+                
+                if targetCharacter then
+                    local targetPart = targetCharacter:FindFirstChild(partName)
+
+                    if targetPart then
+                        -- Teleport the specified body part
+                        targetPart.Position = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, 5, 0)
+                    end
                 end
             end
         end
-
-        wait(0.1) -- Adjust the delay as needed (in seconds)
     end
 end
 
--- Call the function
-teleportAllUpperTorso()
+-- Chat command to toggle player part teleportation
+LocalPlayer.Chatted:Connect(function(message)
+    local args = message:split(" ")
+
+    if args[1]:lower() == "on" then
+        _G.teleportPlayersActive = true
+        teleportPlayerPart("Head") -- Change "Head" to the desired body part
+        showNotification("Started teleporting players' heads.")
+    elseif args[1]:lower() == "off" then
+        _G.teleportPlayersActive = false -- Stop teleporting players
+        showNotification("Stopped teleporting players.")
+    elseif args[1]:lower() == ";nokill" then
+        for i = 2, #args do
+            local user = args[i]
+            if not _G.noKillList[user] then
+                _G.noKillList[user] = true -- Add each user to no-kill list
+            end
+        end
+        showNotification("Added to no-kill list: " .. table.concat(args, ", ", 2))
+    end
+end)
+
+print("Type 'on' to start teleporting players' heads, 'off' to stop.")
+print("Type ';NoKill (User1) (User2)...' to add multiple users to the no-kill list.")
