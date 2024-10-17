@@ -37,11 +37,12 @@ local function disconnectArms(p)
 end
 
 local function teleportPlayers()
-    local character = player.Character or player.CharacterAdded:Wait()
-    local position = character.PrimaryPart.Position
     local endTime = tick() + 25 -- Run for 25 seconds
 
     while teleporting and tick() < endTime do
+        local character = player.Character or player.CharacterAdded:Wait()
+        local position = character.PrimaryPart.Position -- Get the current position in each loop
+
         for _, p in ipairs(game.Players:GetPlayers()) do
             if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                 p.Character:SetPrimaryPartCFrame(CFrame.new(position + Vector3.new(0, 5, 0))) -- Teleport above the player's position
