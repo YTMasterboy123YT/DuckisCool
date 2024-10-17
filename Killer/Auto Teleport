@@ -1,72 +1,17 @@
--- Create ScreenGui
-local screenGui = Instance.new("ScreenGui")
-local startButton = Instance.new("TextButton")
-local stopButton = Instance.new("TextButton")
-
--- Properties for ScreenGui
-screenGui.Parent = game.CoreGui
-
--- Properties for Start Button
-startButton.Size = UDim2.new(0.2, 0, 0.1, 0)
-startButton.Position = UDim2.new(0.3, 0, 0.4, 0)
-startButton.Text = "Start Teleporting"
-startButton.Parent = screenGui
-
--- Properties for Stop Button
-stopButton.Size = UDim2.new(0.2, 0, 0.1, 0)
-stopButton.Position = UDim2.new(0.5, 0, 0.4, 0)
-stopButton.Text = "Stop Teleporting"
-stopButton.Parent = screenGui
-
--- Variables for controlling teleportation
 local player = game.Players.LocalPlayer
-local teleporting = false
-local teleportThread
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local leftHand = character:WaitForChild("LeftHand")
+local rightHand = character:WaitForChild("RightHand")
 
-local function teleportArms(p, position)
-    local character = p.Character
-    if character then
-        local rightArm = character:FindFirstChild("RightArm")
-        local leftArm = character:FindFirstChild("LeftArm")
-        
-        if rightArm then
-            rightArm.Position = position + Vector3.new(0, 15, 0) -- Move right arm 15 studs above
-            rightArm.Anchored = true
-        end
-        
-        if leftArm then
-            leftArm.Position = position + Vector3.new(0, 15, 0) -- Move left arm 15 studs above
-            leftArm.Anchored = true
-        end
-    end
+-- Function to teleport hands above the character
+local function teleportHands()
+    local offset = Vector3.new(0, 5, 0) -- Adjust the height above the character
+
+    -- Set the new positions for the hands
+    leftHand.Position = humanoidRootPart.Position + offset + Vector3.new(-1, 0, 0) -- Left hand slightly to the left
+    rightHand.Position = humanoidRootPart.Position + offset + Vector3.new(1, 0, 0) -- Right hand slightly to the right
 end
 
-local function teleportPlayers()
-    local endTime = tick() + 25 -- Run for 25 seconds
-
-    while teleporting and tick() < endTime do
-        local character = player.Character or player.CharacterAdded:Wait()
-        local position = character.PrimaryPart.Position -- Get the current position in each loop
-
-        for _, p in ipairs(game.Players:GetPlayers()) do
-            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                local targetPosition = position + Vector3.new(0, 5, 0)
-                p.Character:SetPrimaryPartCFrame(CFrame.new(targetPosition)) -- Teleport above the player's position
-                teleportArms(p, targetPosition) -- Teleport arms 15 studs above
-            end
-        end
-        wait(0.05) -- Faster teleportation every 0.05 seconds
-    end
-end
-
-startButton.MouseButton1Click:Connect(function()
-    if not teleporting then
-        teleporting = true
-        teleportThread = coroutine.create(teleportPlayers)
-        coroutine.resume(teleportThread)
-    end
-end)
-
-stopButton.MouseButton1Click:Connect(function()
-    teleporting = false
-end)
+-- Call the function (you can trigger this with an event if needed)
+teleportHands()
