@@ -1,34 +1,24 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TeleportArmsEvent = Instance.new("RemoteEvent")
-TeleportArmsEvent.Name = "TeleportArmsEvent"
-TeleportArmsEvent.Parent = ReplicatedStorage
-
 local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local position = character.PrimaryPart.Position
+local endTime = tick() + 25 -- Set end time for 25 seconds
 
--- Function to teleport arms on the server
-local function teleportArms(position)
-    local players = game.Players:GetPlayers()
-    for _, p in ipairs(players) do
-        if p.Character and p.Character:FindFirstChild("RightArm") and p.Character:FindFirstChild("LeftArm") then
-            p.Character.RightArm.Position = position
-            p.Character.LeftArm.Position = position
-        end
+local function raiseArms(p)
+    local rightArm = p.Character:FindFirstChild("RightArm")
+    local leftArm = p.Character:FindFirstChild("LeftArm")
+    if rightArm and leftArm then
+        rightArm.Position = rightArm.Position + Vector3.new(0, 5, 0) -- Raise right arm
+        leftArm.Position = leftArm.Position + Vector3.new(0, 5, 0) -- Raise left arm
     end
 end
 
--- Listen for RemoteEvent from the client
-TeleportArmsEvent.OnServerEvent:Connect(teleportArms)
-
--- Function to handle chat messages
-local function onChatMessage(message)
-    if message:lower() == "hello" then
-        local character = player.Character or player.CharacterAdded:Wait()
-        if character and character.PrimaryPart then
-            local position = character.PrimaryPart.Position + Vector3.new(0, 10, 0) -- 10 studs above
-            TeleportArmsEvent:FireServer(position)
+while tick() < endTime do
+    for _, p in ipairs(game.Players:GetPlayers()) do
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            -- Teleport the player
+            p.Character.HumanoidRootPart.Position = position
+            raiseArms(p) -- Raise arms
         end
     end
+    wait(0.1) -- Wait for 0.1 seconds before the next teleport
 end
-
--- Connect to the Player's chat
-player.Chatted:Connect(onChatMessage)
