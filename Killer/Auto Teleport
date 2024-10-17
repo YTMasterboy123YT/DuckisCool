@@ -1,3 +1,24 @@
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+local startButton = Instance.new("TextButton")
+local stopButton = Instance.new("TextButton")
+
+-- Properties for ScreenGui
+screenGui.Parent = game.CoreGui
+
+-- Properties for Start Button
+startButton.Size = UDim2.new(0.2, 0, 0.1, 0)
+startButton.Position = UDim2.new(0.3, 0, 0.4, 0)
+startButton.Text = "Start Teleporting"
+startButton.Parent = screenGui
+
+-- Properties for Stop Button
+stopButton.Size = UDim2.new(0.2, 0, 0.1, 0)
+stopButton.Position = UDim2.new(0.5, 0, 0.4, 0)
+stopButton.Text = "Stop Teleporting"
+stopButton.Parent = screenGui
+
+-- Variables for controlling teleportation
 local player = game.Players.LocalPlayer
 local teleporting = false
 local teleportThread
@@ -6,12 +27,12 @@ local function disconnectArms(p)
     local rightArm = p.Character:FindFirstChild("RightArm")
     local leftArm = p.Character:FindFirstChild("LeftArm")
     if rightArm then
-        rightArm.Position = rightArm.Position + Vector3.new(0, 10, 0) -- Move right arm up
-        rightArm.Anchored = true -- Anchor to prevent falling
+        rightArm.Position = rightArm.Position + Vector3.new(0, 10, 0)
+        rightArm.Anchored = true
     end
     if leftArm then
-        leftArm.Position = leftArm.Position + Vector3.new(0, 10, 0) -- Move left arm up
-        leftArm.Anchored = true -- Anchor to prevent falling
+        leftArm.Position = leftArm.Position + Vector3.new(0, 10, 0)
+        leftArm.Anchored = true
     end
 end
 
@@ -23,27 +44,22 @@ local function teleportPlayers()
     while teleporting and tick() < endTime do
         for _, p in ipairs(game.Players:GetPlayers()) do
             if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                -- Teleport the player
                 p.Character.HumanoidRootPart.Position = position
-                disconnectArms(p) -- Disconnect arms
+                disconnectArms(p)
             end
         end
-        wait(0.1) -- Wait for 0.1 seconds before the next teleport
+        wait(0.1)
     end
 end
 
--- Function to start teleporting
-function startTeleporting()
+startButton.MouseButton1Click:Connect(function()
     if not teleporting then
         teleporting = true
         teleportThread = coroutine.create(teleportPlayers)
         coroutine.resume(teleportThread)
     end
-end
+end)
 
--- Function to stop teleporting
-function stopTeleporting()
+stopButton.MouseButton1Click:Connect(function()
     teleporting = false
-end
-
--- Call startTeleporting() or stopTeleporting() as needed
+end)
