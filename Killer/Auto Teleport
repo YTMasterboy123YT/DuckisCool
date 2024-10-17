@@ -31,7 +31,7 @@ local function showNotification(message)
     ScreenGui:Destroy()
 end
 
--- Function to continuously teleport a specific body part of player characters
+-- Function to continuously teleport a specific body part (Head) of player characters
 local function teleportPlayers()
     while _G.teleportPlayersActive do
         wait(0.1) -- Delay to reduce performance impact
@@ -47,8 +47,11 @@ local function teleportPlayers()
                 
                 if targetCharacter and targetCharacter:FindFirstChild("Head") then
                     -- Teleport only the Head, with an offset
+                    local head = targetCharacter.Head
                     local offset = CFrame.new(0, 15, 5) -- Move them higher and further away
-                    targetCharacter.Head.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * offset
+                    
+                    -- Set the Head's CFrame directly
+                    head.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * offset
 
                     wait(50) -- Wait for 50 seconds before teleporting the next player
                 end
@@ -64,11 +67,11 @@ local function bringUserParts(user)
         local targetPlayer = Players:FindFirstChild(user)
 
         if targetPlayer and targetPlayer.Character then
-            local targetPart = targetPlayer.Character:FindFirstChild("Head")
-            if targetPart then
+            local targetHead = targetPlayer.Character:FindFirstChild("Head")
+            if targetHead then
                 -- Bring Head above and further away from the local player
                 local offset = CFrame.new(0, 15, 5) -- Adjust this for more distance
-                targetPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * offset
+                targetHead.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * offset
             end
         else
             _G.killList[user] = nil -- Remove from kill list if the player is not found
