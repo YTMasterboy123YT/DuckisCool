@@ -3,19 +3,15 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 local offset = Vector3.new(0, 5, 0) -- Adjust the height above the character
 
--- Function to teleport hands above the local player's character
+-- Function to teleport the local player's hands above their character
 local function teleportHands()
-    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-        if otherPlayer.Character then
-            local leftHand = otherPlayer.Character:FindFirstChild("LeftHand")
-            local rightHand = otherPlayer.Character:FindFirstChild("RightHand")
+    local leftHand = character:FindFirstChild("LeftHand")
+    local rightHand = character:FindFirstChild("RightHand")
 
-            if leftHand and rightHand then
-                -- Teleport hands to the local player's position
-                leftHand.Position = humanoidRootPart.Position + offset + Vector3.new(-1, 0, 0) -- Left hand slightly to the left
-                rightHand.Position = humanoidRootPart.Position + offset + Vector3.new(1, 0, 0) -- Right hand slightly to the right
-            end
-        end
+    if leftHand and rightHand then
+        -- Use CFrame to set the hands' position for the local player only
+        leftHand.CFrame = humanoidRootPart.CFrame * CFrame.new(-1, 5, 0) -- Left hand slightly to the left and up
+        rightHand.CFrame = humanoidRootPart.CFrame * CFrame.new(1, 5, 0) -- Right hand slightly to the right and up
     end
 end
 
