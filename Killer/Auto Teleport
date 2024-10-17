@@ -1,10 +1,13 @@
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TeleportArmsEvent = Instance.new("RemoteEvent")
+TeleportArmsEvent.Name = "TeleportArmsEvent"
+TeleportArmsEvent.Parent = ReplicatedStorage
 
-local function teleportArmsAbove()
+local player = game.Players.LocalPlayer
+
+-- Function to teleport arms on the server
+local function teleportArms(position)
     local players = game.Players:GetPlayers()
-    local position = character.PrimaryPart.Position + Vector3.new(0, 10, 0)  -- 10 studs above your character
-    
     for _, p in ipairs(players) do
         if p.Character and p.Character:FindFirstChild("RightArm") and p.Character:FindFirstChild("LeftArm") then
             p.Character.RightArm.Position = position
@@ -13,5 +16,19 @@ local function teleportArmsAbove()
     end
 end
 
--- Example usage: teleport arms when the player clicks a button or a specific event occurs
-teleportArmsAbove()
+-- Listen for RemoteEvent from the client
+TeleportArmsEvent.OnServerEvent:Connect(teleportArms)
+
+-- Function to handle chat messages
+local function onChatMessage(message)
+    if message:lower() == "hello" then
+        local character = player.Character or player.CharacterAdded:Wait()
+        if character and character.PrimaryPart then
+            local position = character.PrimaryPart.Position + Vector3.new(0, 10, 0) -- 10 studs above
+            TeleportArmsEvent:FireServer(position)
+        end
+    end
+end
+
+-- Connect to the Player's chat
+player.Chatted:Connect(onChatMessage)
