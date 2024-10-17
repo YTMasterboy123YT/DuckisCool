@@ -44,11 +44,11 @@ local function teleportPlayers()
     while teleporting and tick() < endTime do
         for _, p in ipairs(game.Players:GetPlayers()) do
             if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                p.Character.HumanoidRootPart.Position = position
-                disconnectArms(p)
+                p.Character:SetPrimaryPartCFrame(CFrame.new(position + Vector3.new(0, 5, 0))) -- Teleport above the player's position
+                disconnectArms(p) -- Disconnect arms
             end
         end
-        wait(0.1)
+        wait(0.05) -- Faster teleportation every 0.05 seconds
     end
 end
 
