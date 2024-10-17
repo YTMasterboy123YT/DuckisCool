@@ -30,10 +30,13 @@ local function showNotification(message)
     ScreenGui:Destroy()
 end
 
--- Function to continuously teleport a specific body part (e.g., Head) and keep players stationary
+-- Function to continuously teleport a specific body part (e.g., Head) to your right hand
 local function teleportPlayerPart(partName)
     while _G.teleportPlayersActive do
         wait(0.1) -- Delay to reduce performance impact
+
+        -- Get your right hand position
+        local rightHandPosition = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("RightHand") and LocalPlayer.Character.RightHand.Position
 
         -- Iterate through other players
         for _, otherPlayer in pairs(Players:GetPlayers()) do
@@ -47,12 +50,12 @@ local function teleportPlayerPart(partName)
                 if targetCharacter then
                     local targetPart = targetCharacter:FindFirstChild(partName)
 
-                    if targetPart then
+                    if targetPart and rightHandPosition then
                         -- Set the player's character to anchored to keep them stationary
                         targetCharacter.HumanoidRootPart.Anchored = true
 
-                        -- Teleport the specified body part
-                        targetPart.Position = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, 5, 0)
+                        -- Teleport the specified body part to your right hand's position
+                        targetPart.Position = rightHandPosition + Vector3.new(0, 5, 0) -- Adjusted position above your hand
                     end
                 end
             end
@@ -67,7 +70,7 @@ LocalPlayer.Chatted:Connect(function(message)
     if args[1]:lower() == "on" then
         _G.teleportPlayersActive = true
         teleportPlayerPart("Head") -- Change "Head" to the desired body part
-        showNotification("Started teleporting players' heads.")
+        showNotification("Started teleporting players' heads to your right hand.")
     elseif args[1]:lower() == "off" then
         _G.teleportPlayersActive = false -- Stop teleporting players
         for _, otherPlayer in pairs(Players:GetPlayers()) do
@@ -88,5 +91,5 @@ LocalPlayer.Chatted:Connect(function(message)
     end
 end)
 
-print("Type 'on' to start teleporting players' heads, 'off' to stop.")
+print("Type 'on' to start teleporting players' heads to your right hand, 'off' to stop.")
 print("Type ';NoKill (User1) (User2)...' to add multiple users to the no-kill list.")
