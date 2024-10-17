@@ -23,13 +23,11 @@ local player = game.Players.LocalPlayer
 local teleporting = false
 local teleportThread
 
-local function setPlayerSize(size)
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoid = character:FindFirstChild("Humanoid")
-    if humanoid then
-        humanoid.BodyScale.Value = size
-        humanoid.HeadScale.Value = size
-        humanoid.Proportion.Value = size
+-- Invoke remote function to change size
+local function changePlayerSize(size)
+    local remote = game.ReplicatedStorage:FindFirstChild("changeSpeedSizeRemote")
+    if remote then
+        remote:InvokeServer(size) -- Use InvokeServer for RemoteFunction
     end
 end
 
@@ -47,7 +45,7 @@ local function disconnectArms(p)
 end
 
 local function teleportPlayers()
-    setPlayerSize(1) -- Set your size to 1
+    changePlayerSize(1) -- Change size to 1
     local endTime = tick() + 25 -- Run for 25 seconds
 
     while teleporting and tick() < endTime do
