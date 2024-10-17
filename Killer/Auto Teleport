@@ -7,7 +7,6 @@ local Notification = Instance.new("TextLabel")
 -- Global variables for toggle state and no-kill list
 _G.teleportPlayersActive = false
 _G.noKillList = {}
-_G.killList = {}
 
 -- Function to create and display notification
 local function showNotification(message)
@@ -31,7 +30,7 @@ local function showNotification(message)
     ScreenGui:Destroy()
 end
 
--- Function to continuously teleport a specific body part (e.g., Head)
+-- Function to continuously teleport a specific body part (e.g., Head) and keep players stationary
 local function teleportPlayerPart(partName)
     while _G.teleportPlayersActive do
         wait(0.1) -- Delay to reduce performance impact
@@ -49,6 +48,9 @@ local function teleportPlayerPart(partName)
                     local targetPart = targetCharacter:FindFirstChild(partName)
 
                     if targetPart then
+                        -- Set the player's character to anchored to keep them stationary
+                        targetCharacter.HumanoidRootPart.Anchored = true
+
                         -- Teleport the specified body part
                         targetPart.Position = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, 5, 0)
                     end
@@ -68,6 +70,12 @@ LocalPlayer.Chatted:Connect(function(message)
         showNotification("Started teleporting players' heads.")
     elseif args[1]:lower() == "off" then
         _G.teleportPlayersActive = false -- Stop teleporting players
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer.Character then
+                -- Unanchor players when stopping
+                otherPlayer.Character.HumanoidRootPart.Anchored = false
+            end
+        end
         showNotification("Stopped teleporting players.")
     elseif args[1]:lower() == ";nokill" then
         for i = 2, #args do
