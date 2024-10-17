@@ -1,8 +1,8 @@
 local player = game.Players.LocalPlayer
 local offset = Vector3.new(0, 5, 0) -- Adjust the height above the character
 
--- Function to teleport all players' arms and hands above the local player's character
-local function teleportAllArmsAndHands()
+-- Function to teleport all players' UpperTorso above the local player's character
+local function teleportAllUpperTorso()
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
@@ -11,17 +11,11 @@ local function teleportAllArmsAndHands()
 
         for _, otherPlayer in pairs(game.Players:GetPlayers()) do
             if otherPlayer.Character then
-                local leftArm = otherPlayer.Character:FindFirstChild("LeftArm")
-                local rightArm = otherPlayer.Character:FindFirstChild("RightArm")
-                local leftHand = otherPlayer.Character:FindFirstChild("LeftHand")
-                local rightHand = otherPlayer.Character:FindFirstChild("RightHand")
+                local upperTorso = otherPlayer.Character:FindFirstChild("UpperTorso")
 
-                if leftArm and rightArm and leftHand and rightHand then
-                    -- Teleport arms and hands for all players
-                    leftArm.CFrame = CFrame.new(targetPosition + Vector3.new(-1, 0, 0)) -- Left arm slightly to the left
-                    leftHand.CFrame = CFrame.new(targetPosition + Vector3.new(-1, 0, -0.5)) -- Left hand below the left arm
-                    rightArm.CFrame = CFrame.new(targetPosition + Vector3.new(1, 0, 0)) -- Right arm slightly to the right
-                    rightHand.CFrame = CFrame.new(targetPosition + Vector3.new(1, 0, -0.5)) -- Right hand below the right arm
+                if upperTorso then
+                    -- Teleport UpperTorso for all players
+                    upperTorso.CFrame = CFrame.new(targetPosition) -- Set to target position
                 end
             end
         end
@@ -31,4 +25,4 @@ local function teleportAllArmsAndHands()
 end
 
 -- Call the function
-teleportAllArmsAndHands()
+teleportAllUpperTorso()
