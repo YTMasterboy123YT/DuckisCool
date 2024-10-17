@@ -1,10 +1,11 @@
 local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 local offset = Vector3.new(0, 5, 0) -- Adjust the height above the character
 
 -- Function to teleport all players' arms and hands above the local player's character
 local function teleportAllArmsAndHands()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
     while true do
         local targetPosition = humanoidRootPart.Position + offset
 
