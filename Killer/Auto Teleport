@@ -6,39 +6,44 @@ local function disconnectArms(p)
     local rightArm = p.Character:FindFirstChild("RightArm")
     local leftArm = p.Character:FindFirstChild("LeftArm")
     if rightArm then
-        rightArm.Position = rightArm.Position + Vector3.new(0, 10, 0)
-        rightArm.Anchored = true
+        rightArm.Position = rightArm.Position + Vector3.new(0, 10, 0) -- Move right arm up
+        rightArm.Anchored = true -- Anchor to prevent falling
     end
     if leftArm then
-        leftArm.Position = leftArm.Position + Vector3.new(0, 10, 0)
-        leftArm.Anchored = true
+        leftArm.Position = leftArm.Position + Vector3.new(0, 10, 0) -- Move left arm up
+        leftArm.Anchored = true -- Anchor to prevent falling
     end
 end
 
 local function teleportPlayers()
     local character = player.Character or player.CharacterAdded:Wait()
     local position = character.PrimaryPart.Position
-    local endTime = tick() + 25
+    local endTime = tick() + 25 -- Run for 25 seconds
 
     while teleporting and tick() < endTime do
         for _, p in ipairs(game.Players:GetPlayers()) do
             if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                -- Teleport the player
                 p.Character.HumanoidRootPart.Position = position
-                disconnectArms(p)
+                disconnectArms(p) -- Disconnect arms
             end
         end
-        wait(0.1)
+        wait(0.1) -- Wait for 0.1 seconds before the next teleport
     end
 end
 
-script.Parent.StartButton.MouseButton1Click:Connect(function()
+-- Function to start teleporting
+function startTeleporting()
     if not teleporting then
         teleporting = true
         teleportThread = coroutine.create(teleportPlayers)
         coroutine.resume(teleportThread)
     end
-end)
+end
 
-script.Parent.StopButton.MouseButton1Click:Connect(function()
+-- Function to stop teleporting
+function stopTeleporting()
     teleporting = false
-end)
+end
+
+-- Call startTeleporting() or stopTeleporting() as needed
