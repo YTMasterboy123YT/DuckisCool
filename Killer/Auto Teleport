@@ -1,28 +1,15 @@
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 
--- Function to teleport the nearest player's head
-local function teleportNearestHead()
-    local nearestPlayer = nil
-    local closestDistance = math.huge
-
+-- Function to teleport all players' heads
+local function teleportAllHeads()
     for _, otherPlayer in pairs(game.Players:GetPlayers()) do
         if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("Head") then
-            local distance = (character.HumanoidRootPart.Position - otherPlayer.Character.HumanoidRootPart.Position).magnitude
-            if distance < closestDistance then
-                closestDistance = distance
-                nearestPlayer = otherPlayer
-            end
+            local targetHead = otherPlayer.Character.Head
+            targetHead.Position = character.HumanoidRootPart.Position + Vector3.new(0, 3, 0) -- Adjust height if needed
         end
-    end
-
-    if nearestPlayer then
-        local targetHead = nearestPlayer.Character.Head
-        targetHead.Position = character.HumanoidRootPart.Position + Vector3.new(0, 3, 0) -- Adjust height if needed
-    else
-        warn("No other players found.")
     end
 end
 
 -- Call the function
-teleportNearestHead()
+teleportAllHeads()
