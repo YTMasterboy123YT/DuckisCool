@@ -23,29 +23,26 @@ local player = game.Players.LocalPlayer
 local teleporting = false
 local teleportThread
 
--- Invoke remote function to change size
-local function changePlayerSize(size)
-    local remote = game.ReplicatedStorage:FindFirstChild("changeSpeedSizeRemote")
-    if remote then
-        remote:InvokeServer(size) -- Use InvokeServer for RemoteFunction
-    end
-end
-
-local function disconnectArms(p)
-    local rightArm = p.Character:FindFirstChild("RightArm")
-    local leftArm = p.Character:FindFirstChild("LeftArm")
-    if rightArm then
-        rightArm.Position = rightArm.Position + Vector3.new(0, 10, 0)
-        rightArm.Anchored = true
-    end
-    if leftArm then
-        leftArm.Position = leftArm.Position + Vector3.new(0, 10, 0)
-        leftArm.Anchored = true
+local function moveHandsAboveHead(p, height)
+    local character = p.Character
+    if character then
+        local rightArm = character:FindFirstChild("RightArm")
+        local leftArm = character:FindFirstChild("LeftArm")
+        local head = character:FindFirstChild("Head")
+        
+        if rightArm and head then
+            rightArm.Position = head.Position + Vector3.new(0, height, 0)
+            rightArm.Anchored = true
+        end
+        
+        if leftArm and head then
+            leftArm.Position = head.Position + Vector3.new(0, height, 0)
+            leftArm.Anchored = true
+        end
     end
 end
 
 local function teleportPlayers()
-    changePlayerSize(1) -- Change size to 1
     local endTime = tick() + 25 -- Run for 25 seconds
 
     while teleporting and tick() < endTime do
@@ -55,7 +52,7 @@ local function teleportPlayers()
         for _, p in ipairs(game.Players:GetPlayers()) do
             if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                 p.Character:SetPrimaryPartCFrame(CFrame.new(position + Vector3.new(0, 5, 0))) -- Teleport above the player's position
-                disconnectArms(p) -- Disconnect arms
+                moveHandsAboveHead(p, 15) -- Move hands 15 studs above the head
             end
         end
         wait(0.05) -- Faster teleportation every 0.05 seconds
