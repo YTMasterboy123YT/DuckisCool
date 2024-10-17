@@ -3,17 +3,31 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 local offset = Vector3.new(0, 5, 0) -- Adjust the height above the character
 
--- Function to teleport the local player's hands above their character
-local function teleportHands()
-    local leftHand = character:FindFirstChild("LeftHand")
-    local rightHand = character:FindFirstChild("RightHand")
+-- Function to teleport all players' arms and hands above the local player's character
+local function teleportAllArmsAndHands()
+    while true do
+        local targetPosition = humanoidRootPart.Position + offset
 
-    if leftHand and rightHand then
-        -- Use CFrame to set the hands' position for the local player only
-        leftHand.CFrame = humanoidRootPart.CFrame * CFrame.new(-1, 5, 0) -- Left hand slightly to the left and up
-        rightHand.CFrame = humanoidRootPart.CFrame * CFrame.new(1, 5, 0) -- Right hand slightly to the right and up
+        for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+            if otherPlayer.Character then
+                local leftArm = otherPlayer.Character:FindFirstChild("LeftArm")
+                local rightArm = otherPlayer.Character:FindFirstChild("RightArm")
+                local leftHand = otherPlayer.Character:FindFirstChild("LeftHand")
+                local rightHand = otherPlayer.Character:FindFirstChild("RightHand")
+
+                if leftArm and rightArm and leftHand and rightHand then
+                    -- Teleport arms and hands for all players
+                    leftArm.CFrame = CFrame.new(targetPosition + Vector3.new(-1, 0, 0)) -- Left arm slightly to the left
+                    leftHand.CFrame = CFrame.new(targetPosition + Vector3.new(-1, 0, -0.5)) -- Left hand below the left arm
+                    rightArm.CFrame = CFrame.new(targetPosition + Vector3.new(1, 0, 0)) -- Right arm slightly to the right
+                    rightHand.CFrame = CFrame.new(targetPosition + Vector3.new(1, 0, -0.5)) -- Right hand below the right arm
+                end
+            end
+        end
+
+        wait(0.1) -- Adjust the delay as needed (in seconds)
     end
 end
 
--- Call the function (you can trigger this with an event if needed)
-teleportHands()
+-- Call the function
+teleportAllArmsAndHands()
