@@ -1,30 +1,43 @@
+-- Ensure this script runs in a LocalScript if you want to access your character's position
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 
-local machinesFolders = workspace:FindFirstChild("machinesFolders")
+-- Find the machinesFolder in Workspace
+local machinesFolder = game.Workspace:FindFirstChild("machinesFolder")
+if not machinesFolder then
+    warn("machinesFolder not found!")
+    return
+end
 
-if machinesFolders then
-    local rocks = {"Frozen Rock", "Rock Of Legends", "Muscle King Mountain"}
-    
-    for _, rockName in ipairs(rocks) do
-        local rockFolder = machinesFolders:FindFirstChild(rockName)
-        
-        if rockFolder then
-            local rock = rockFolder:FindFirstChild("rock")  -- Adjust if needed
-            
-            if rock then
-                rock.Size = Vector3.new(30, 30, 25)  -- Change the size
-                while true do
-                    rock.Position = character.HumanoidRootPart.Position  -- Teleport to player
-                    wait(0.5)  -- Adjust delay as needed
-                end
-            else
-                warn(rockName .. " rock not found inside " .. rockName)
-            end
-        else
-            warn(rockName .. " not found in machinesFolders.")
-        end
+-- Find the specific rock within Muscle King Mountain
+local muscleKingMountain = machinesFolder:FindFirstChild("Muscle King Mountain")
+if not muscleKingMountain then
+    warn("Muscle King Mountain not found!")
+    return
+end
+
+local rock = muscleKingMountain:FindFirstChild("Rock")
+if not rock then
+    warn("Rock not found!")
+    return
+end
+
+-- Make the rock invisible and scale it down
+rock.Transparency = 1 -- Make it invisible
+rock.Size = Vector3.new(0.5, 0.5, 0.5) -- Scale it down to fit the hand
+
+-- Disable physics to prevent it from moving or teleporting the player
+rock.CanCollide = false
+
+-- Function to teleport the rock to the player's right or left hand
+local function teleportRockToHand()
+    if character and character:FindFirstChild("RightHand") then
+        -- Teleport to RightHand
+        rock.CFrame = character.RightHand.CFrame * CFrame.new(0, 0, -1) -- Adjust position in front of the right hand
     end
-else
-    warn("machinesFolders not found in Workspace.")
+end
+
+-- Teleport the rock to the hand every 0.1 seconds (adjustable)
+while wait(0.1) do
+    teleportRockToHand()
 end
