@@ -1,0 +1,19 @@
+local player = game.Players.LocalPlayer
+local userInputService = game:GetService("UserInputService")
+
+-- Function to enable infinite jump
+local function onJumpRequest()
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end
+
+-- Connect the jump request to the function
+userInputService.JumpRequest:Connect(onJumpRequest)
+
+-- Optional: Ensure the player can jump continuously
+userInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.Space then
+        onJumpRequest()
+    end
+end)
