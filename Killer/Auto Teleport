@@ -1,12 +1,16 @@
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 
--- Function to teleport all players' heads
+-- Function to teleport all players' heads in front of you
 local function teleportAllHeads()
-    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-        if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("Head") then
-            local targetHead = otherPlayer.Character.Head
-            targetHead.Position = character.HumanoidRootPart.Position + Vector3.new(0, 3, 0) -- Adjust height if needed
+    for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+        if targetPlayer ~= player and targetPlayer.Character then
+            local targetHead = targetPlayer.Character:FindFirstChild("Head")
+            if targetHead then
+                -- Calculate the position in front of the player
+                local positionOffset = character.HumanoidRootPart.CFrame.LookVector * 5 -- Adjust distance as needed
+                targetHead.Position = character.HumanoidRootPart.Position + positionOffset + Vector3.new(0, 3, 0) -- Adjust height if needed
+            end
         end
     end
 end
