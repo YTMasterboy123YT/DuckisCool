@@ -1,25 +1,20 @@
 local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local mouse = player:GetMouse()
+local handPart = player.Character:WaitForChild("RightHand")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TeleportHandEvent = ReplicatedStorage:WaitForChild("TeleportHandEvent")
 
-local function hitPlayer(target)
-    if target and target:IsA("Player") and target ~= player then
-        -- Apply damage to the target player
-        local humanoid = target.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid:TakeDamage(10) -- Change damage as needed
+while true do
+    wait(0.1)
+    
+    local targetPlayer = nil
+    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Character then
+            targetPlayer = otherPlayer
+            break
         end
     end
-end
-
-mouse.Button1Down:Connect(function()
-    local rayOrigin = character.PrimaryPart.Position
-    local rayDirection = (mouse.Hit.p - rayOrigin).unit * 100 -- Adjust distance as needed
-    local raycastResult = workspace:Raycast(rayOrigin, rayDirection)
-
-    if raycastResult then
-        local hitPart = raycastResult.Instance
-        local hitPlayer = game.Players:GetPlayerFromCharacter(hitPart.Parent)
-        hitPlayer(hitPlayer)
+    
+    if targetPlayer then
+        TeleportHandEvent:FireServer(targetPlayer)
     end
-end)
+end
