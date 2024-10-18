@@ -9,58 +9,47 @@ if not machinesFolder then
     return
 end
 
--- Create the dropdown UI
-local ScreenGui = Instance.new("ScreenGui")
-local dropdown = Instance.new("Frame")
-dropdown.Size = UDim2.new(0, 200, 0, 200) -- Increased height
-dropdown.Position = UDim2.new(0.5, -100, 0.5, -100)
-dropdown.BackgroundColor3 = Color3.new(1, 1, 1)
-dropdown.Parent = ScreenGui
-ScreenGui.Parent = game.CoreGui
+local rockNames = {
+    ["Rock1"] = "Muscle King Mountain",
+    ["Rock2"] = "Frozen Rock",
+    ["Rock3"] = "Rock Of Legends",
+}
 
-local function createButton(rockName, yPosition)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, 0, 0, 50)
-    button.Position = UDim2.new(0, 0, yPosition, 0) -- Set the vertical position
-    button.Text = rockName
-    button.Parent = dropdown
+local function teleportRock(rockFolderName)
+    local rockFolder = machinesFolder:FindFirstChild(rockFolderName)
+    if not rockFolder then
+        warn(rockFolderName .. " not found!")
+        return
+    end
 
-    button.MouseButton1Click:Connect(function()
-        local rockFolder = machinesFolder:FindFirstChild(rockName)
-        if not rockFolder then
-            warn(rockName .. " not found!")
-            return
+    local rock = rockFolder:FindFirstChild("Rock")
+    if not rock then
+        warn("Rock not found in " .. rockFolderName)
+        return
+    end
+
+    -- Make the rock invisible and scale it down
+    rock.Transparency = 1 -- Make it invisible
+    rock.Size = Vector3.new(0.5, 0.5, 0.5) -- Scale it down to fit the hand
+    rock.CanCollide = false -- Disable physics
+
+    -- Function to teleport the rock to the player's right hand
+    local function teleportToHand()
+        if character and character:FindFirstChild("RightHand") then
+            rock.CFrame = character.RightHand.CFrame * CFrame.new(0, 0, -1) -- Adjust position in front of the right hand
         end
+    end
 
-        local rock = rockFolder:FindFirstChild("Rock")
-        if not rock then
-            warn("Rock not found in " .. rockName)
-            return
-        end
-
-        -- Make the rock invisible and scale it down
-        rock.Transparency = 1 -- Make it invisible
-        rock.Size = Vector3.new(0.5, 0.5, 0.5) -- Scale it down to fit the hand
-
-        -- Disable physics to prevent it from moving or teleporting the player
-        rock.CanCollide = false
-
-        -- Function to teleport the rock to the player's right hand
-        local function teleportRockToHand()
-            if character and character:FindFirstChild("RightHand") then
-                rock.CFrame = character.RightHand.CFrame * CFrame.new(0, 0, -1) -- Adjust position in front of the right hand
-            end
-        end
-
-        -- Teleport the rock to the hand every 0.1 seconds (adjustable)
-        while wait(0.1) do
-            teleportRockToHand()
-        end
-    end)
+    -- Teleport the rock to the hand every 0.1 seconds (adjustable)
+    while wait(0.1) do
+        teleportToHand()
+    end
 end
 
--- Create buttons for each rock with vertical spacing
-local rockNames = {"Muscle King Mountain", "Frozen Rock", "Rock Of Legends"}
-for index, rockName in ipairs(rockNames) do
-    createButton(rockName, (index - 1) * 50) -- Space buttons vertically
-end
+-- Listen for chat commands
+player.Chatted:Connect(function(message)
+    local rockFolderName = rockNames[message]
+    if rockFolderName then
+        teleportRock(rockFolderName)
+    end
+end)
