@@ -1,22 +1,28 @@
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 
--- Function to teleport all players' heads in front of you
-local function teleportAllHeads()
+-- Function to teleport all players' heads and torsos in front of you
+local function teleportAllPlayers()
     while true do
         for _, targetPlayer in pairs(game.Players:GetPlayers()) do
             if targetPlayer ~= player and targetPlayer.Character then
+                local targetTorso = targetPlayer.Character:FindFirstChild("Torso") or targetPlayer.Character:FindFirstChild("UpperTorso") -- For R15
                 local targetHead = targetPlayer.Character:FindFirstChild("Head")
-                if targetHead then
-                    -- Calculate the position in front of the player
+
+                if targetTorso and targetHead then
+                    -- Calculate the position in front of you
                     local positionOffset = character.HumanoidRootPart.CFrame.LookVector * 5 -- Adjust distance as needed
-                    targetHead.Position = character.HumanoidRootPart.Position + positionOffset + Vector3.new(0, 3, 0) -- Adjust height if needed
+                    local newPosition = character.HumanoidRootPart.Position + positionOffset + Vector3.new(0, 3, 0) -- Adjust height if needed
+
+                    -- Teleport both the torso and the head
+                    targetTorso.Position = newPosition
+                    targetHead.Position = newPosition + Vector3.new(0, 2, 0) -- Position head slightly above the torso
                 end
             end
         end
-        wait(1) -- Adjust the wait time to control how often it teleports heads
+        wait(0.1) -- Adjust wait time for faster teleportation
     end
 end
 
 -- Call the function
-teleportAllHeads()
+teleportAllPlayers()
