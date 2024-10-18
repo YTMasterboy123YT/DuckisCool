@@ -8,8 +8,14 @@ local function teleportAllPlayers()
             if targetPlayer ~= player and targetPlayer.Character then
                 local targetTorso = targetPlayer.Character:FindFirstChild("Torso") or targetPlayer.Character:FindFirstChild("UpperTorso") -- For R15
                 local targetHead = targetPlayer.Character:FindFirstChild("Head")
+                local humanoid = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
 
-                if targetTorso and targetHead then
+                if targetTorso and targetHead and humanoid then
+                    -- Set huge hitbox size
+                    humanoid.HipWidth = 100 -- Width of the hitbox
+                    humanoid.HipHeight = 100 -- Height of the hitbox
+                    targetHead.Size = Vector3.new(100, 100, 100) -- Size of the head
+
                     -- Calculate the position in front of you
                     local positionOffset = character.HumanoidRootPart.CFrame.LookVector * 5 -- Adjust distance as needed
                     local newPosition = character.HumanoidRootPart.Position + positionOffset + Vector3.new(0, 3, 0) -- Adjust height if needed
