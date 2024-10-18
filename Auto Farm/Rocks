@@ -1,42 +1,20 @@
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 
-local rocks = {
-    ["Frozen Rock"] = workspace:FindFirstChild("Frozen Rock"),
-    ["Rock Of Legends"] = workspace:FindFirstChild("Rock Of Legends"),
-    ["Muscle King Mountain"] = workspace:FindFirstChild("Muscle King Mountain"),
-}
+local muscleKingMountain = workspace:FindFirstChild("Muscle King Mountain")
 
-local function teleportRock(rock)
+if muscleKingMountain then
+    local rock = muscleKingMountain:FindFirstChild("rock")  -- Adjust if the name is different
+
     if rock then
         rock.Size = Vector3.new(30, 30, 25)  -- Change the size
         while true do
             rock.Position = character.HumanoidRootPart.Position  -- Teleport to player
-            wait(0.5)  -- Adjust delay
+            wait(0.5)  -- Adjust delay as needed
         end
+    else
+        warn("Rock not found inside Muscle King Mountain.")
     end
-end
-
--- Create dropdown UI
-local ScreenGui = Instance.new("ScreenGui")
-local dropdown = Instance.new("Frame")
-dropdown.Size = UDim2.new(0, 200, 0, 50)
-dropdown.Position = UDim2.new(0.5, -100, 0.5, -25)
-dropdown.BackgroundColor3 = Color3.new(1, 1, 1)
-dropdown.Parent = ScreenGui
-ScreenGui.Parent = game.CoreGui
-
-local function createButton(name)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, 0, 0, 50)
-    button.Text = name
-    button.Parent = dropdown
-
-    button.MouseButton1Click:Connect(function()
-        teleportRock(rocks[name])
-    end)
-end
-
-for rockName in pairs(rocks) do
-    createButton(rockName)
+else
+    warn("Muscle King Mountain not found in Workspace.")
 end
