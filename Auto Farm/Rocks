@@ -1,20 +1,30 @@
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 
-local muscleKingMountain = workspace:FindFirstChild("Muscle King Mountain")
+local machinesFolders = workspace:FindFirstChild("machinesFolders")
 
-if muscleKingMountain then
-    local rock = muscleKingMountain:FindFirstChild("rock")  -- Adjust if the name is different
-
-    if rock then
-        rock.Size = Vector3.new(30, 30, 25)  -- Change the size
-        while true do
-            rock.Position = character.HumanoidRootPart.Position  -- Teleport to player
-            wait(0.5)  -- Adjust delay as needed
+if machinesFolders then
+    local rocks = {"Frozen Rock", "Rock Of Legends", "Muscle King Mountain"}
+    
+    for _, rockName in ipairs(rocks) do
+        local rockFolder = machinesFolders:FindFirstChild(rockName)
+        
+        if rockFolder then
+            local rock = rockFolder:FindFirstChild("rock")  -- Adjust if needed
+            
+            if rock then
+                rock.Size = Vector3.new(30, 30, 25)  -- Change the size
+                while true do
+                    rock.Position = character.HumanoidRootPart.Position  -- Teleport to player
+                    wait(0.5)  -- Adjust delay as needed
+                end
+            else
+                warn(rockName .. " rock not found inside " .. rockName)
+            end
+        else
+            warn(rockName .. " not found in machinesFolders.")
         end
-    else
-        warn("Rock not found inside Muscle King Mountain.")
     end
 else
-    warn("Muscle King Mountain not found in Workspace.")
+    warn("machinesFolders not found in Workspace.")
 end
