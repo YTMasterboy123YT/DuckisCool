@@ -1,20 +1,30 @@
 local player = game.Players.LocalPlayer
-local handPart = player.Character:WaitForChild("RightHand")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TeleportHandEvent = ReplicatedStorage:WaitForChild("TeleportHandEvent")
+local character = player.Character or player.CharacterAdded:Wait()
 
-while true do
-    wait(0.1)
-    
-    local targetPlayer = nil
-    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-        if otherPlayer ~= player and otherPlayer.Character then
-            targetPlayer = otherPlayer
-            break
+-- Function to teleport your hands to all players
+local function teleportHands()
+    local leftHand = character:FindFirstChild("LeftHand")
+    local rightHand = character:FindFirstChild("RightHand")
+    local originalLeftPosition = leftHand.Position
+    local originalRightPosition = rightHand.Position
+
+    for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+        if targetPlayer ~= player and targetPlayer.Character then
+            local targetHumanoidRootPart = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if targetHumanoidRootPart then
+                -- Teleport hands to the target player's position
+                leftHand.Position = targetHumanoidRootPart.Position + Vector3.new(-1, 0, 0) -- Adjust for left hand
+                rightHand.Position = targetHumanoidRootPart.Position + Vector3.new(1, 0, 0) -- Adjust for right hand
+            end
         end
     end
-    
-    if targetPlayer then
-        TeleportHandEvent:FireServer(targetPlayer)
-    end
+
+    wait(0.5) -- Wait for 0.5 seconds
+
+    -- Return hands to original positions
+    leftHand.Position = originalLeftPosition
+    rightHand.Position = originalRightPosition
 end
+
+-- Call the function
+teleportHands()
