@@ -10,26 +10,33 @@ local rocks = {
 local function teleportRock(rock)
     if rock then
         rock.Size = Vector3.new(30, 30, 25)  -- Change the size
-        while rock do
+        while true do
             rock.Position = character.HumanoidRootPart.Position  -- Teleport to player
-            wait(0.5)  -- Adjust the delay as needed
+            wait(0.5)  -- Adjust delay
         end
     end
 end
 
-local frame = script.Parent -- Assuming the script is a child of the Frame
+-- Create dropdown UI
+local ScreenGui = Instance.new("ScreenGui")
+local dropdown = Instance.new("Frame")
+dropdown.Size = UDim2.new(0, 200, 0, 50)
+dropdown.Position = UDim2.new(0.5, -100, 0.5, -25)
+dropdown.BackgroundColor3 = Color3.new(1, 1, 1)
+dropdown.Parent = ScreenGui
+ScreenGui.Parent = game.CoreGui
 
-for rockName, rock in pairs(rocks) do
+local function createButton(name)
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, 200, 0, 50)
-    button.Text = rockName
-    button.Parent = frame
+    button.Size = UDim2.new(1, 0, 0, 50)
+    button.Text = name
+    button.Parent = dropdown
 
-    button.MouseButton1Down:Connect(function()
-        teleportRock(rock)
+    button.MouseButton1Click:Connect(function()
+        teleportRock(rocks[name])
     end)
+end
 
-    button.MouseButton1Up:Connect(function()
-        rock = nil  -- Stop teleporting when the button is released
-    end)
+for rockName in pairs(rocks) do
+    createButton(rockName)
 end
