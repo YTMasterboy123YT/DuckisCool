@@ -1,0 +1,35 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+local rocks = {
+    ["Frozen Rock"] = workspace:FindFirstChild("Frozen Rock"),
+    ["Rock Of Legends"] = workspace:FindFirstChild("Rock Of Legends"),
+    ["Muscle King Mountain"] = workspace:FindFirstChild("Muscle King Mountain"),
+}
+
+local function teleportRock(rock)
+    if rock then
+        rock.Size = Vector3.new(30, 30, 25)  -- Change the size
+        while rock do
+            rock.Position = character.HumanoidRootPart.Position  -- Teleport to player
+            wait(0.5)  -- Adjust the delay as needed
+        end
+    end
+end
+
+local frame = script.Parent -- Assuming the script is a child of the Frame
+
+for rockName, rock in pairs(rocks) do
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 200, 0, 50)
+    button.Text = rockName
+    button.Parent = frame
+
+    button.MouseButton1Down:Connect(function()
+        teleportRock(rock)
+    end)
+
+    button.MouseButton1Up:Connect(function()
+        rock = nil  -- Stop teleporting when the button is released
+    end)
+end
