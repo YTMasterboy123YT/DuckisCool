@@ -12,15 +12,16 @@ end
 -- Create the dropdown UI
 local ScreenGui = Instance.new("ScreenGui")
 local dropdown = Instance.new("Frame")
-dropdown.Size = UDim2.new(0, 200, 0, 150)
-dropdown.Position = UDim2.new(0.5, -100, 0.5, -75)
+dropdown.Size = UDim2.new(0, 200, 0, 200) -- Increased height
+dropdown.Position = UDim2.new(0.5, -100, 0.5, -100)
 dropdown.BackgroundColor3 = Color3.new(1, 1, 1)
 dropdown.Parent = ScreenGui
 ScreenGui.Parent = game.CoreGui
 
-local function createButton(rockName)
+local function createButton(rockName, yPosition)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(1, 0, 0, 50)
+    button.Position = UDim2.new(0, 0, yPosition, 0) -- Set the vertical position
     button.Text = rockName
     button.Parent = dropdown
 
@@ -58,8 +59,8 @@ local function createButton(rockName)
     end)
 end
 
--- Create buttons for each rock
+-- Create buttons for each rock with vertical spacing
 local rockNames = {"Muscle King Mountain", "Frozen Rock", "Rock Of Legends"}
-for _, rockName in ipairs(rockNames) do
-    createButton(rockName)
+for index, rockName in ipairs(rockNames) do
+    createButton(rockName, (index - 1) * 50) -- Space buttons vertically
 end
