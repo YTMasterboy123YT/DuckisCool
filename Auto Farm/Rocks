@@ -1,19 +1,119 @@
--- Ensure this script runs in a LocalScript
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
--- Find the machinesFolder in Workspace
-local machinesFolder = game.Workspace:FindFirstChild("machinesFolder")
-if not machinesFolder then
-    warn("machinesFolder not found!")
-    return
-end
+local Window = OrionLib:MakeWindow({
+    Name = "Ducks Private Script", 
+    HidePremium = false, 
+    SaveConfig = true, 
+    ConfigFolder = "OrionTest",
+    IntroEnabled = true,
+    IntroText = "Welcome to Ducks Private Script!", 
+    IntroIcon = "rbxassetid://95093869224117"
+})
 
--- List of rock names to check
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+-- Main Tab
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://132359476107633",
+    PremiumOnly = false
+})
+
+MainTab:AddLabel("Main Settings")
+
+-- Speed Changer
+MainTab:AddTextbox({
+    Name = "Speed Changer",
+    Default = "16",
+    TextDisappear = true,
+    Callback = function(Value)
+        local speedValue = tonumber(Value) or 16
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.WalkSpeed = speedValue
+                end
+            end
+        end
+    end
+})
+
+-- Jump Changer
+MainTab:AddTextbox({
+    Name = "Jump Changer",
+    Default = "50",
+    TextDisappear = true,
+    Callback = function(Value)
+        local jumpPowerValue = tonumber(Value) or 50
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.JumpPower = jumpPowerValue
+                end
+            end
+        end
+    end
+})
+
+-- Gravity Changer
+MainTab:AddTextbox({
+    Name = "Gravity Changer",
+    Default = "196.2",
+    TextDisappear = true,
+    Callback = function(Value)
+        local gravityValue = tonumber(Value) or 196.2
+        workspace.Gravity = gravityValue
+    end
+})
+
+-- Set Time of Day Dropdown
+MainTab:AddDropdown({
+    Name = "Set Time of Day",
+    Options = {"Morning", "Afternoon", "Night"},
+    Callback = function(selected)
+        if selected == "Morning" then
+            game.Lighting.ClockTime = 6
+        elseif selected == "Afternoon" then
+            game.Lighting.ClockTime = 12
+        elseif selected == "Night" then
+            game.Lighting.ClockTime = 18
+        end
+    end
+})
+
+-- Auto Farm Tab
+local AutoFarmTab = Window:MakeTab({
+    Name = "Auto Farm",
+    Icon = "rbxassetid://132359476107633",
+    PremiumOnly = false
+})
+
+-- Dropdown for selecting rocks
 local rockNames = {"Muscle King Mountain", "Frozen Rock", "Rock Of Legends"}
+
+AutoFarmTab:AddDropdown({
+    Name = "Select Rock to Teleport",
+    Options = rockNames,
+    Callback = function(selected)
+        -- Call function to teleport the selected rock to the player's hand
+        teleportRockToHand(selected)
+    end
+})
 
 -- Function to teleport the specified rock to the player's right hand
 local function teleportRockToHand(rockFolderName)
+    local machinesFolder = game.Workspace:FindFirstChild("machinesFolder")
+    if not machinesFolder then
+        warn("machinesFolder not found!")
+        return
+    end
+
     local rockFolder = machinesFolder:FindFirstChild(rockFolderName)
     if not rockFolder then
         warn(rockFolderName .. " not found!")
@@ -39,7 +139,6 @@ local function teleportRockToHand(rockFolderName)
     end
 end
 
--- Loop through each rock name and teleport them to the hand
-for _, rockName in ipairs(rockNames) do
-    teleportRockToHand(rockName)
-end
+print("Script Loaded. Use the tabs to manage game settings and auto farming.")
+
+OrionLib:Init()
