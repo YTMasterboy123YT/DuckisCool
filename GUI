@@ -21,70 +21,37 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
-MainTab:AddLabel("Main Settings")
-
--- Speed Changer
-MainTab:AddTextbox({
-    Name = "Speed Changer",
-    Default = "16",
-    TextDisappear = true,
+-- Example settings for the Main Tab
+MainTab:AddSlider({
+    Name = "Walk Speed",
+    Min = 16,
+    Max = 100,
+    Default = 16,
+    Color = Color3.fromRGB(255, 0, 0),
+    Increment = 1,
     Callback = function(Value)
-        local speedValue = tonumber(Value) or 16
-        for _, player in ipairs(Players:GetPlayers()) do
-            local character = player.Character
-            if character then
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid.WalkSpeed = speedValue
-                end
-            end
-        end
-    end
+        LocalPlayer.Character.Humanoid.WalkSpeed = Value
+    end    
 })
 
--- Jump Changer
-MainTab:AddTextbox({
-    Name = "Jump Changer",
-    Default = "50",
-    TextDisappear = true,
+MainTab:AddSlider({
+    Name = "Jump Power",
+    Min = 50,
+    Max = 200,
+    Default = 50,
+    Color = Color3.fromRGB(0, 255, 0),
+    Increment = 1,
     Callback = function(Value)
-        local jumpPowerValue = tonumber(Value) or 50
-        for _, player in ipairs(Players:GetPlayers()) do
-            local character = player.Character
-            if character then
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid.JumpPower = jumpPowerValue
-                end
-            end
-        end
-    end
+        LocalPlayer.Character.Humanoid.JumpPower = Value
+    end    
 })
 
--- Gravity Changer
-MainTab:AddTextbox({
-    Name = "Gravity Changer",
-    Default = "196.2",
-    TextDisappear = true,
+MainTab:AddToggle({
+    Name = "Infinite Jump",
+    Default = false,
     Callback = function(Value)
-        local gravityValue = tonumber(Value) or 196.2
-        workspace.Gravity = gravityValue
-    end
-})
-
--- Set Time of Day Dropdown
-MainTab:AddDropdown({
-    Name = "Set Time of Day",
-    Options = {"Morning", "Afternoon", "Night"},
-    Callback = function(selected)
-        if selected == "Morning" then
-            game.Lighting.ClockTime = 6
-        elseif selected == "Afternoon" then
-            game.Lighting.ClockTime = 12
-        elseif selected == "Night" then
-            game.Lighting.ClockTime = 18
-        end
-    end
+        -- Logic for Infinite Jump
+    end    
 })
 
 -- Auto Farm Tab
@@ -94,51 +61,93 @@ local AutoFarmTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Dropdown for selecting rocks
-local rockNames = {"Muscle King Mountain", "Frozen Rock", "Rock Of Legends"}
-
+-- Example Auto Farm features
 AutoFarmTab:AddDropdown({
-    Name = "Select Rock to Teleport",
-    Options = rockNames,
+    Name = "Select Rock",
+    Options = {"Muscle King Mountain", "Frozen Rock", "Rock Of Legends"},
+    Default = "Muscle King Mountain",
     Callback = function(selected)
-        -- Call function to teleport the selected rock to the player's hand
-        teleportRockToHand(selected)
+        -- Logic to teleport the selected rock to the player's hand
+        -- (Insert the teleporting logic here)
     end
 })
 
--- Function to teleport the specified rock to the player's right hand
-local function teleportRockToHand(rockFolderName)
-    local machinesFolder = game.Workspace:FindFirstChild("machinesFolder")
-    if not machinesFolder then
-        warn("machinesFolder not found!")
-        return
-    end
+-- Killer Tab
+local KillerTab = Window:MakeTab({
+    Name = "Killer",
+    Icon = "rbxassetid://132359476107633",
+    PremiumOnly = false
+})
 
-    local rockFolder = machinesFolder:FindFirstChild(rockFolderName)
-    if not rockFolder then
-        warn(rockFolderName .. " not found!")
-        return
-    end
+local punching = false
+local toolName = "Punch"
+local hitSpeed = 0.1 -- Default hit speed
 
-    local rock = rockFolder:FindFirstChild("Rock")
-    if not rock then
-        warn("Rock not found in " .. rockFolderName)
-        return
-    end
+-- Function to set tool cooldowns
+local function setToolCooldowns()
+    local tools = {
+        {name = toolName, type = "attackTime"}
+    }
 
-    -- Make the rock invisible and scale it down
-    rock.Transparency = 1 -- Make it invisible
-    rock.Size = Vector3.new(0.5, 0.5, 0.5) -- Scale it down to fit the hand
-    rock.CanCollide = false -- Disable physics
-
-    -- Teleport the rock to the player's right hand
-    while wait(0.1) do
-        if character and character:FindFirstChild("RightHand") then
-            rock.CFrame = character.RightHand.CFrame * CFrame.new(0, 0, -1) -- Adjust position in front of the right hand
+    for _, toolInfo in pairs(tools) do
+        local tool = LocalPlayer.Backpack:FindFirstChild(toolInfo.name) or LocalPlayer.Character:FindFirstChild(toolInfo.name)
+        if tool then
+            local cooldown = tool:FindFirstChild(toolInfo.type)
+            if cooldown then
+                cooldown.Value = hitSpeed -- Use the user-defined hit speed
+            end
         end
     end
 end
 
-print("Script Loaded. Use the tabs to manage game settings and auto farming.")
+local function autoUseTool()
+    setToolCooldowns()
+
+    while punching do
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
+
+        if tool then
+            if tool.Parent ~= character then
+                humanoid:EquipTool(tool)
+            end
+            tool:Activate()
+            wait(hitSpeed) -- Use the user-defined hit speed
+        else
+            wait(0.5)
+        end
+    end
+end
+
+local function toggleAutoPunch(value)
+    punching = value
+
+    if punching then
+        print("Auto-punching started.")
+        autoUseTool()
+    else
+        print("Auto-punching stopped.")
+    end
+end
+
+-- Add Auto Hit toggle button to Killer Tab
+KillerTab:AddToggle({
+    Name = "Auto Hit",
+    Default = false,
+    Callback = function(Value)
+        toggleAutoPunch(Value)
+    end
+})
+
+-- Add Hit Speed input box to Killer Tab
+KillerTab:AddTextbox({
+    Name = "Hit Speed",
+    Default = "0.1",
+    TextDisappear = true,
+    Callback = function(Value)
+        hitSpeed = tonumber(Value) or 0.1 -- Update hit speed
+    end
+})
 
 OrionLib:Init()
