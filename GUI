@@ -14,6 +14,7 @@ local Window = OrionLib:MakeWindow({
     IntroIcon = introIcon
 })
 
+-- Main Tab
 local MainTab = Window:MakeTab({
     Name = "Main",
     Icon = tabIcon,
@@ -21,7 +22,7 @@ local MainTab = Window:MakeTab({
 })
 
 -- Speed Textbox
-local SpeedTextBox = MainTab:MakeTextbox({
+MainTab:MakeTextbox({
     Name = "Speed",
     Default = "16", -- Default speed value
     TextDisappear = true,
@@ -37,7 +38,7 @@ local SpeedTextBox = MainTab:MakeTextbox({
 })
 
 -- Jump Power Textbox
-local JumpTextBox = MainTab:MakeTextbox({
+MainTab:MakeTextbox({
     Name = "Jump Power",
     Default = "50", -- Default jump power value
     TextDisappear = true,
@@ -53,7 +54,7 @@ local JumpTextBox = MainTab:MakeTextbox({
 })
 
 -- Gravity Textbox
-local GravityTextBox = MainTab:MakeTextbox({
+MainTab:MakeTextbox({
     Name = "Gravity",
     Default = "196.2", -- Default gravity value
     TextDisappear = true,
