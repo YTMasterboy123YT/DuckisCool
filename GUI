@@ -1,32 +1,33 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "Your GUI Title", HidePremium = false, SaveConfig = true, ConfigFolder = "YourConfigFolder"})
+
+local Window = OrionLib:MakeWindow({
+    Name = "Your GUI Title",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "YourConfigFolder",
+    IntroEnabled = true,
+    IntroText = "Welcome to the Game!",
+    IntroIcon = "rbxassetid://95093869224117", -- Your icon asset ID
+    Icon = "rbxassetid://132359476107633",
+})
 
 -- Main Tab
 local MainTab = Window:MakeTab({
     Name = "Main",
-    Icon = "rbxassetid://youriconid",
-    PremiumIcon = "rbxassetid://yourpremiumiconid"
+    Icon = "rbxassetid://132359476107633",
 })
-
--- Add features to Main Tab here
 
 -- Killer Tab
 local KillerTab = Window:MakeTab({
     Name = "Killer",
-    Icon = "rbxassetid://youriconid",
-    PremiumIcon = "rbxassetid://yourpremiumiconid"
+    Icon = "rbxassetid://132359476107633",
 })
-
--- Add features to Killer Tab here
 
 -- Auto Farm Tab
 local AutoFarmTab = Window:MakeTab({
     Name = "Auto Farm",
-    Icon = "rbxassetid://youriconid",
-    PremiumIcon = "rbxassetid://yourpremiumiconid"
+    Icon = "rbxassetid://132359476107633",
 })
-
--- Add features to Auto Farm Tab here
 
 -- Initialize Orion UI
 OrionLib:Init()
