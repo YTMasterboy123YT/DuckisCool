@@ -1,58 +1,66 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
 local Window = OrionLib:MakeWindow({
-    Name = "Ducks Private Script", 
+    Name = "Player Management Script", 
     HidePremium = false, 
     SaveConfig = true, 
-    ConfigFolder = "OrionTest",
+    ConfigFolder = "PlayerManagement",
     IntroEnabled = true,
-    IntroText = "Welcome to Ducks Private Script!", 
+    IntroText = "Welcome to Player Management Script!", 
     IntroIcon = "https://i.imgur.com/dWXaDfO.jpg"
 })
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local _G = getfenv(0) -- Global table for storing state
 
-_G.autoHitActive = false
+-- Global variables for toggle state and lists
+_G.teleportPlayersActive = false
 _G.noKillList = {}
+_G.killList = {}
 
--- Function to set cooldowns for the Punch tool
-local function setToolCooldowns(tool)
-    if tool and tool:FindFirstChild("attackTime") then
-        tool.attackTime.Value = 0.1 -- Adjust cooldown value as needed
-    end
+-- Function to show notifications
+local function showNotification(message)
+    OrionLib:MakeNotification({
+        Name = "Notification",
+        Content = message,
+        Duration = 5,
+    })
 end
 
--- Function to start Auto Hit
-local function startAutoHit()
-    _G.autoHitActive = true
-    print("Auto Hit is ON.")
+-- Function to continuously teleport player characters
+local function teleportPlayers()
+    while _G.teleportPlayersActive do
+        wait(0.1)
 
-    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local tool = LocalPlayer.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
-
-    if tool then
-        setToolCooldowns(tool)
-        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):EquipTool(tool) -- Equip the tool
-
-        while _G.autoHitActive do
-            wait(0.1) -- Adjust as needed
-            for _, otherPlayer in pairs(Players:GetPlayers()) do
-                if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
-                    local targetCharacter = otherPlayer.Character
-                    if targetCharacter and targetCharacter:FindFirstChild("Humanoid") then
-                        tool:Activate() -- Activate the tool to hit
-                    end
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
+                local targetCharacter = otherPlayer.Character
+                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
                 end
             end
         end
     end
 end
 
--- Function to stop Auto Hit
-local function stopAutoHit()
-    _G.autoHitActive = false
-    print("Auto Hit is OFF.")
+-- Function to bring specified user's parts continuously
+local function bringUserParts(user)
+    while _G.killList[user] do
+        wait(0.1)
+        local targetPlayer = Players:FindFirstChild(user)
+
+        if targetPlayer and targetPlayer.Character then
+            for _, part in pairs(targetPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0)
+                end
+            end
+        else
+            _G.killList[user] = nil
+            break
+        end
+    end
 end
 
 -- Main Tab
@@ -62,20 +70,93 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
-MainTab:AddLabel("Main Tab - Duck")
-
--- Add Auto Hit Button
-MainTab:AddButton({
-    Name = "Toggle Auto Hit",
-    Callback = function()
-        if _G.autoHitActive then
-            stopAutoHit()
+-- Toggle to start/stop teleporting players
+MainTab:AddToggle({
+    Name = "Teleport Players",
+    Default = false,
+    Callback = function(Value)
+        _G.teleportPlayersActive = Value
+        if Value then
+            teleportPlayers() -- Start teleporting players
+            showNotification("Started teleporting players.")
         else
-            startAutoHit()
+            showNotification("Stopped teleporting players.")
         end
     end
 })
 
--- Additional UI elements and other tabs can be added here as needed
+-- Button to clear no-kill list
+MainTab:AddButton({
+    Name = "Clear No-Kill List",
+    Callback = function()
+        _G.noKillList = {}
+        showNotification("Cleared no-kill list.")
+    end
+})
+
+-- Killer Tab
+local KillerTab = Window:MakeTab({
+    Name = "Killer Tab",
+    Icon = "rbxassetid://132359476107633",
+    PremiumOnly = false
+})
+
+-- Auto Hit Toggle
+KillerTab:AddToggle({
+    Name = "Auto Hit",
+    Default = false,
+    Callback = function(Value)
+        _G.autoHitActive = Value
+        if Value then
+            showNotification("Auto Hit Enabled.")
+            -- Start auto-hitting loop here
+            while _G.autoHitActive do
+                for _, otherPlayer in pairs(Players:GetPlayers()) do
+                    if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
+                        local targetCharacter = otherPlayer.Character
+                        if targetCharacter and targetCharacter:FindFirstChild("Humanoid") then
+                            targetCharacter.Humanoid:TakeDamage(10) -- Adjust damage as needed
+                        end
+                    end
+                end
+                wait(0.1) -- Adjust as needed
+            end
+        else
+            showNotification("Auto Hit Disabled.")
+        end
+    end
+})
+
+-- Button to bring selected player's parts
+KillerTab:AddButton({
+    Name = "Kill Selected Player",
+    Callback = function()
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
+                _G.killList[otherPlayer.Name] = true
+                showNotification("Started bringing " .. otherPlayer.Name .. "'s parts to you.")
+                bringUserParts(otherPlayer.Name)
+            end
+        end
+    end
+})
+
+-- Players Tab
+local PlayersTab = Window:MakeTab({
+    Name = "Players Tab",
+    Icon = "rbxassetid://132359476107633",
+    PremiumOnly = false
+})
+
+-- List all players in the game
+for _, player in ipairs(Players:GetPlayers()) do
+    PlayersTab:AddButton({
+        Name = player.Name,
+        Callback = function()
+            _G.noKillList[player.Name] = true
+            showNotification(player.Name .. " added to no-kill list.")
+        end
+    })
+end
 
 print("Script Loaded. Use the tabs to manage game settings and player interactions.")
