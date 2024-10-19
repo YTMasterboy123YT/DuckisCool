@@ -52,7 +52,6 @@ MainTab:AddDropdown({
     Name = "Set Time",
     Options = {"morning", "afternoon", "night"},
     Callback = function(option)
-        -- Set lighting based on the selected time
         local Lighting = game:GetService("Lighting")
         if option == "morning" then
             Lighting.Brightness = 2
@@ -117,9 +116,20 @@ local KillerTab = Window:MakeTab({
     Icon = "rbxassetid://132359476107633",
 })
 
+-- Hit Speed Textbox
+KillerTab:AddTextbox({
+    Name = "Hit Speed",
+    Default = "0.1",
+    TextDisappear = true,
+    Callback = function(value)
+        hitSpeed = tonumber(value) or 0.1
+    end
+})
+
 -- Auto Hit Toggle
 local punching = false
 local toolName = "Punch"
+local hitSpeed = 0.1
 
 KillerTab:AddToggle({
     Name = "Auto Hit",
@@ -140,7 +150,7 @@ KillerTab:AddToggle({
                     end
                     tool:Activate()
                 end
-                wait(0.1)
+                wait(hitSpeed)
             end
         else
             print("Auto-punching stopped.")
