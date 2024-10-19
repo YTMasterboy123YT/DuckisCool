@@ -1,161 +1,128 @@
--- Load Orion Library
 local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Orion/main/source.lua'))()
 
--- Create the main GUI
 local Window = OrionLib:MakeWindow({
-    Name = "Game Utility",
-    IntroIcon = "rbxassetid://95093869224117",
+    Name = "My Game Utility",
     HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "MyGameConfig",
+    IntroEnabled = true,
+    IntroText = "Welcome to My Utility",
+    IntroIcon = "rbxassetid://95093869224117",
+    Icon = "rbxassetid://987654321",
 })
 
 -- Main Tab
 local MainTab = Window:MakeTab({
     Name = "Main",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false,
+    Icon = "rbxassetid://123456789",
+    Premium = false,
 })
 
--- Lighting settings
-local function setLighting(timeOfDay)
+-- Walk Speed
+MainTab:AddLabel("Set Walk Speed:")
+MainTab:AddTextBox("Enter Walk Speed", "Default: 16", true, function(value)
+    local player = game.Players.LocalPlayer
+    player.Character.Humanoid.WalkSpeed = tonumber(value) or 16
+end)
+
+-- Jump Power
+MainTab:AddLabel("Set Jump Power:")
+MainTab:AddTextBox("Enter Jump Power", "Default: 50", true, function(value)
+    local player = game.Players.LocalPlayer
+    player.Character.Humanoid.JumpPower = tonumber(value) or 50
+end)
+
+-- Gravity Button
+MainTab:AddButton("Set Gravity to 50", function()
+    workspace.Gravity = 50
+end)
+
+-- Time of Day Dropdown
+MainTab:AddDropdown("Time of Day", {"Morning", "Afternoon", "Night"}, function(selected)
     local Lighting = game:GetService("Lighting")
-    if timeOfDay == "morning" then
+    if selected == "Morning" then
         Lighting.Brightness = 2
-        Lighting.ColorShift_Tint = Color3.fromRGB(255, 200, 150)
-        Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 255)
-    elseif timeOfDay == "afternoon" then
+    elseif selected == "Afternoon" then
         Lighting.Brightness = 3
-        Lighting.ColorShift_Tint = Color3.fromRGB(255, 255, 255)
-        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
-    elseif timeOfDay == "night" then
+    elseif selected == "Night" then
         Lighting.Brightness = 0.5
-        Lighting.ColorShift_Tint = Color3.fromRGB(50, 50, 100)
-        Lighting.OutdoorAmbient = Color3.fromRGB(20, 20, 40)
     end
-end
+end)
 
-MainTab:AddDropdown({
-    Name = "Time of Day",
-    Options = {"morning", "afternoon", "night"},
-    Callback = function(selectedTime)
-        setLighting(selectedTime)
-    end,
-})
-
--- NoClip function
-local function setNoClip(character, value)
+-- Enable No Clip Button
+MainTab:AddButton("Enable No Clip", function()
+    local Players = game:GetService("Players")
+    local character = Players.LocalPlayer.Character
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
-            part.CanCollide = not value
+            part.CanCollide = false
         end
     end
-end
+end)
 
-MainTab:AddButton({
-    Name = "Enable NoClip",
-    Callback = function()
-        for _, player in ipairs(game.Players:GetPlayers()) do
-            local character = player.Character
-            if character then
-                setNoClip(character, true)
-            end
-        end
-    end,
-})
-
--- Infinite Jump function
-local UserInputService = game:GetService("UserInputService")
-
-local function enableInfiniteJump()
+-- Enable Infinite Jump Button
+MainTab:AddButton("Enable Infinite Jump", function()
+    local UserInputService = game:GetService("UserInputService")
     UserInputService.JumpRequest:Connect(function()
-        local character = game.Players.LocalPlayer.Character
-        if character then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
+        local player = game.Players.LocalPlayer
+        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
         end
     end)
-end
-
-MainTab:AddButton({
-    Name = "Enable Infinite Jump",
-    Callback = function()
-        enableInfiniteJump()
-    end,
-})
+end)
 
 -- Killer Tab
 local KillerTab = Window:MakeTab({
     Name = "Killer",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false,
+    Icon = "rbxassetid://123456789",
+    Premium = false,
 })
-
-local LocalPlayer = game.Players.LocalPlayer
-local punching = false
-local toolName = "Punch"
-
--- Function to set tool cooldowns
-local function setToolCooldowns()
-    local tools = {
-        {name = toolName, type = "attackTime"}
-    }
-
-    for _, toolInfo in pairs(tools) do
-        local tool = LocalPlayer.Backpack:FindFirstChild(toolInfo.name) or LocalPlayer.Character:FindFirstChild(toolInfo.name)
-        if tool then
-            local cooldown = tool:FindFirstChild(toolInfo.type)
-            if cooldown then
-                cooldown.Value = 0.1 -- Set the cooldown value
-            end
-        end
-    end
-end
-
-local function autoUseTool()
-    setToolCooldowns()
-    while punching do
-        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
-
-        if tool then
-            if tool.Parent ~= character then
-                humanoid:EquipTool(tool)
-            end
-            tool:Activate()
-            wait(0.1)
-        else
-            wait(0.5)
-        end
-    end
-end
-
-local function toggleAutoPunch(value)
-    punching = value
-    if punching then
-        autoUseTool()
-    end
-end
 
 KillerTab:AddToggle({
     Name = "Auto Hit",
     Default = false,
-    Callback = function(state)
-        toggleAutoPunch(state)
-    end,
-})
+    Callback = function(value)
+        local punching = false
+        local toolName = "Punch"
 
-KillerTab:AddTextBox({
-    Name = "Hit Speed (seconds)",
-    PlaceholderText = "Enter hit speed",
-    Text = "0.1",
-    Callback = function(hitSpeed)
-        local speed = tonumber(hitSpeed)
-        if speed then
-            wait(speed)
+        local function setToolCooldowns()
+            local tools = { { name = toolName, type = "attackTime" } }
+            for _, toolInfo in pairs(tools) do
+                local tool = game.Players.LocalPlayer.Backpack:FindFirstChild(toolInfo.name) or game.Players.LocalPlayer.Character:FindFirstChild(toolInfo.name)
+                if tool then
+                    local cooldown = tool:FindFirstChild(toolInfo.type)
+                    if cooldown then
+                        cooldown.Value = 0.1
+                    end
+                end
+            end
         end
-    end,
+
+        local function autoUseTool()
+            setToolCooldowns()
+            while punching do
+                local character = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                local tool = game.Players.LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
+
+                if tool then
+                    if tool.Parent ~= character then
+                        humanoid:EquipTool(tool)
+                    end
+                    tool:Activate()
+                    wait(0.1)
+                else
+                    wait(0.5)
+                end
+            end
+        end
+
+        punching = value
+        if punching then
+            autoUseTool()
+        end
+    end
 })
 
 KillerTab:AddParagraph("Commands", "/kill\n/Off\n/NK \"User\"")
@@ -163,151 +130,93 @@ KillerTab:AddParagraph("Commands", "/kill\n/Off\n/NK \"User\"")
 -- Auto Farm Tab
 local AutoFarmTab = Window:MakeTab({
     Name = "Auto Farm",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false,
+    Icon = "rbxassetid://123456789",
+    Premium = false,
 })
 
--- Function to teleport rocks to hand
-local function teleportRockToHand(rockFolderName)
-    local machinesFolder = game.Workspace:FindFirstChild("machinesFolder")
-    if not machinesFolder then
-        warn("machinesFolder not found!")
-        return
-    end
-
-    local rockFolder = machinesFolder:FindFirstChild(rockFolderName)
-    if not rockFolder then
-        warn(rockFolderName .. " not found!")
-        return
-    end
-
-    local rock = rockFolder:FindFirstChild("Rock")
-    if not rock then
-        warn("Rock not found in " .. rockFolderName)
-        return
-    end
-
-    rock.Transparency = 1
-    rock.Size = Vector3.new(0.5, 0.5, 0.5)
-    rock.CanCollide = false
-
-    while wait(0.1) do
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("RightHand") then
-            rock.CFrame = LocalPlayer.Character.RightHand.CFrame * CFrame.new(0, 0, -1)
+AutoFarmTab:AddDropdown("Select Rock", {"Muscle King Mountain", "Frozen Rock", "Rock Of Legends"}, function(selected)
+    local function teleportRockToHand(rockFolderName)
+        local machinesFolder = game.Workspace:FindFirstChild("machinesFolder")
+        if machinesFolder then
+            local rockFolder = machinesFolder:FindFirstChild(rockFolderName)
+            if rockFolder then
+                local rock = rockFolder:FindFirstChild("Rock")
+                if rock then
+                    rock.Transparency = 1
+                    rock.Size = Vector3.new(0.5, 0.5, 0.5)
+                    rock.CanCollide = false
+                    while wait(0.1) do
+                        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("RightHand") then
+                            rock.CFrame = game.Players.LocalPlayer.Character.RightHand.CFrame * CFrame.new(0, 0, -1)
+                        end
+                    end
+                end
+            end
         end
     end
-end
-
-AutoFarmTab:AddDropdown({
-    Name = "Select Rock",
-    Options = {"Muscle King Mountain", "Frozen Rock", "Rock Of Legends"},
-    Callback = function(selectedRock)
-        teleportRockToHand(selectedRock)
-    end,
-})
+    teleportRockToHand(selected)
+end)
 
 -- Stats Tab
 local StatsTab = Window:MakeTab({
     Name = "Stats",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false,
+    Icon = "rbxassetid://123456789",
+    Premium = false,
 })
 
--- Function to create and display a stats GUI
-local function createStatsGui(stats)
-    local statsGui = Instance.new("ScreenGui")
-    local frame = Instance.new("Frame")
-    local closeButton = Instance.new("TextButton")
-
-    statsGui.Name = "StatsGui"
-    statsGui.Parent = game.CoreGui
-
-    frame.Size = UDim2.new(0.5, 0, 0.5, 0)
-    frame.Position = UDim2.new(0.5, -125, 0.5, -125)
-    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    frame.BorderSizePixel = 0
-    frame.Parent = statsGui
-
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, 0, 0.2, 0)
-    titleLabel.Text = "Stats"
-    titleLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.TextScaled = true
-    titleLabel.Parent = frame
-
-    local statsList = Instance.new("TextLabel")
-    statsList.Size = UDim2.new(1, 0, 0.6, 0)
-    statsList.Position = UDim2.new(0, 0, 0.2, 0)
-    statsList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    statsList.TextColor3 = Color3.fromRGB(255, 255, 255)
-    statsList.TextScaled = true
-    statsList.TextWrapped = true
-    statsList.TextSize = 20
-    statsList.Text = stats
-    statsList.Parent = frame
-
-    closeButton.Size = UDim2.new(0.4, 0, 0.1, 0)
-    closeButton.Position = UDim2.new(0.5, -80, 0.85, 0)
-    closeButton.Text = "Close"
-    closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeButton.Parent = frame
-
-    closeButton.MouseButton1Click:Connect(function()
-        statsGui:Destroy()
-    end)
-end
-
--- Function to display stats for a player
-local function displayPlayerStats(player)
-    local statsString = ""
-
-    local leaderstats = player:FindFirstChild("leaderstats")
-    if leaderstats then
-        for _, stat in pairs(leaderstats:GetChildren()) do
-            statsString = statsString .. stat.Name .. ": " .. tostring(stat.Value) .. "\n"
+StatsTab:AddDropdown("Select Player", function(playerName)
+    local Players = game:GetService("Players")
+    local targetPlayer = Players:FindFirstChild(playerName)
+    
+    if targetPlayer then
+        local statsString = ""
+        local leaderstats = targetPlayer:FindFirstChild("leaderstats")
+        if leaderstats then
+            for _, stat in pairs(leaderstats:GetChildren()) do
+                statsString = statsString .. stat.Name .. ": " .. tostring(stat.Value) .. "\n"
+            end
         end
-    else
-        statsString = "No leaderstats found."
+
+        -- Show stats in a GUI
+        local statsGui = Instance.new("ScreenGui")
+        local frame = Instance.new("Frame")
+        frame.Parent = statsGui
+        statsGui.Parent = game.CoreGui
+        frame.Size = UDim2.new(0.5, 0, 0.5, 0)
+        frame.Position = UDim2.new(0.5, -125, 0.5, -125)
+        frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+
+        local titleLabel = Instance.new("TextLabel")
+        titleLabel.Size = UDim2.new(1, 0, 0.2, 0)
+        titleLabel.Text = "Stats for " .. targetPlayer.Name
+        titleLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        titleLabel.TextScaled = true
+        titleLabel.Parent = frame
+
+        local statsList = Instance.new("TextLabel")
+        statsList.Size = UDim2.new(1, 0, 0.6, 0)
+        statsList.Position = UDim2.new(0, 0, 0.2, 0)
+        statsList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        statsList.TextColor3 = Color3.fromRGB(255, 255, 255)
+        statsList.TextScaled = true
+        statsList.TextWrapped = true
+        statsList.TextSize = 20
+        statsList.Text = statsString
+        statsList.Parent = frame
+
+        local closeButton = Instance.new("TextButton")
+        closeButton.Size = UDim2.new(0.4, 0, 0.1, 0)
+        closeButton.Position = UDim2.new(0.5, -80, 0.85, 0)
+        closeButton.Text = "Close"
+        closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        closeButton.Parent = frame
+
+        closeButton.MouseButton1Click:Connect(function()
+            statsGui:Destroy()
+        end)
     end
+end)
 
-    local additionalStats = {"Durability", "Agility", "goodKarma", "evilKarma", "Gems", "muscleKingTime"}
-    for _, statName in ipairs(additionalStats) do
-        local stat = player:FindFirstChild(statName)
-        if stat then
-            statsString = statsString .. statName .. ": " .. tostring(stat.Value) .. "\n"
-        else
-            statsString = statsString .. statName .. " not found.\n"
-        end
-    end
-
-    createStatsGui(statsString)
-end
-
--- Dropdown for players in Stats tab
-StatsTab:AddDropdown({
-    Name = "Select Player",
-    Options = {},
-    CurrentOption = Players.LocalPlayer.Name,
-    Callback = function(selectedPlayer)
-        local player = Players:FindFirstChild(selectedPlayer)
-        if player then
-            displayPlayerStats(player)
-        end
-    end,
-})
-
--- Populate player dropdown
-local function updatePlayerDropdown()
-    local playerNames = {}
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        table.insert(playerNames, player.Name)
-    end
-    StatsTab:UpdateDropdown("Select Player", playerNames)
-end
-
-game.Players.PlayerAdded:Connect(updatePlayerDropdown)
-updatePlayerDropdown()
-
-print("Game Utility Loaded!")
+print("All tabs and functions are set up!")
