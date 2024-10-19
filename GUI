@@ -45,14 +45,14 @@ end
 -- Function to continuously teleport player characters
 local function teleportPlayers()
     while _G.teleportPlayersActive do
-        wait(0.1)
+        wait(0.1) -- Delay to reduce performance impact
 
         for _, otherPlayer in pairs(Players:GetPlayers()) do
             local targetCharacter = otherPlayer.Character
 
             if otherPlayer ~= LocalPlayer then
                 if _G.noKillList[otherPlayer.Name] then
-                    continue
+                    continue -- Skip players in the no-kill list
                 end
                 
                 if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
@@ -76,82 +76,10 @@ local function bringUserParts(user)
                 end
             end
         else
-            _G.killList[user] = nil
+            _G.killList[user] = nil -- Remove from kill list if the player is not found
             break
         end
     end
-end
-
--- Function to create and display player stats
-local function createStatsGui(stats)
-    local statsGui = Instance.new("ScreenGui")
-    local frame = Instance.new("Frame")
-    local closeButton = Instance.new("TextButton")
-
-    statsGui.Name = "StatsGui"
-    statsGui.Parent = game.CoreGui
-
-    frame.Size = UDim2.new(0.5, 0, 0.5, 0)
-    frame.Position = UDim2.new(0.5, -125, 0.5, -125)
-    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    frame.BorderSizePixel = 0
-    frame.Parent = statsGui
-
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, 0, 0.2, 0)
-    titleLabel.Text = "Stats"
-    titleLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.TextScaled = true
-    titleLabel.Parent = frame
-
-    local statsList = Instance.new("TextLabel")
-    statsList.Size = UDim2.new(1, 0, 0.6, 0)
-    statsList.Position = UDim2.new(0, 0, 0.2, 0)
-    statsList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    statsList.TextColor3 = Color3.fromRGB(255, 255, 255)
-    statsList.TextScaled = true
-    statsList.TextWrapped = true
-    statsList.TextSize = 20
-    statsList.Text = stats
-    statsList.Parent = frame
-
-    closeButton.Size = UDim2.new(0.4, 0, 0.1, 0)
-    closeButton.Position = UDim2.new(0.5, -80, 0.85, 0)
-    closeButton.Text = "Close"
-    closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeButton.Parent = frame
-
-    closeButton.MouseButton1Click:Connect(function()
-        statsGui:Destroy()
-    end)
-end
-
--- Function to display stats for a player
-local function displayPlayerStats(player)
-    local statsString = ""
-
-    local leaderstats = player:FindFirstChild("leaderstats")
-    if leaderstats then
-        for _, stat in pairs(leaderstats:GetChildren()) do
-            statsString = statsString .. stat.Name .. ": " .. tostring(stat.Value) .. "\n"
-        end
-    else
-        statsString = "No leaderstats found."
-    end
-
-    local additionalStats = {"Durability", "Agility", "goodKarma", "evilKarma", "Gems", "muscleKingTime"}
-    for _, statName in ipairs(additionalStats) do
-        local stat = player:FindFirstChild(statName)
-        if stat then
-            statsString = statsString .. statName .. ": " .. tostring(stat.Value) .. "\n"
-        else
-            statsString = statsString .. statName .. " not found.\n"
-        end
-    end
-
-    createStatsGui(statsString)
 end
 
 -- Main Tab
@@ -234,44 +162,23 @@ local KillerTab = Window:MakeTab({
 
 KillerTab:AddLabel("Killer - Duck")
 
--- Dropdown for player selection to display stats
-KillerTab:AddDropdown({
-    Name = "Select Player for Stats",
-    Options = {},
-    Callback = function(selected)
-        local targetPlayer = Players:FindFirstChild(selected)
-        if targetPlayer then
-            displayPlayerStats(targetPlayer)
-        end
-    end
-})
-
--- Update dropdown options with player names
-local function updateDropdownOptions()
-    local playerNames = {}
-    for _, player in ipairs(Players:GetPlayers()) do
-        table.insert(playerNames, player.Name)
-    end
-    KillerTab:UpdateDropdownOptions("Select Player for Stats", playerNames)
+-- Dropdown for player selection for no-kill list
+local playerNames = {}
+for _, player in ipairs(Players:GetPlayers()) do
+    table.insert(playerNames, player.Name)
 end
 
--- Update the dropdown on player added/removed
-Players.PlayerAdded:Connect(updateDropdownOptions)
-Players.PlayerRemoving:Connect(updateDropdownOptions)
-updateDropdownOptions() -- Initial call to populate dropdown
-
--- Dropdown for no-kill list management
 KillerTab:AddDropdown({
     Name = "Select Player for No-Kill List",
-    Options = {},
+    Options = playerNames,
     Callback = function(selected)
         local targetPlayer = Players:FindFirstChild(selected)
         if targetPlayer then
             if _G.noKillList[selected] then
-                _G.noKillList[selected] = nil
+                _G.noKillList[selected] = nil -- Remove from no-kill list if already there
                 showNotification(selected .. " removed from no-kill list.")
             else
-                _G.noKillList[selected] = true
+                _G.noKillList[selected] = true -- Add to no-kill list
                 showNotification(selected .. " added to no-kill list.")
             end
         end
@@ -281,13 +188,13 @@ KillerTab:AddDropdown({
 -- Dropdown for kill list management
 KillerTab:AddDropdown({
     Name = "Select Player for Kill List",
-    Options = {},
+    Options = playerNames,
     Callback = function(selected)
         local targetPlayer = Players:FindFirstChild(selected)
         if targetPlayer then
-            _G.killList[selected] = true
+            _G.killList[selected] = true -- Add user to kill list
             showNotification("Started bringing " .. selected .. "'s parts to you.")
-            bringUserParts(selected)
+            bringUserParts(selected) -- Start bringing their parts continuously
         end
     end
 })
@@ -298,7 +205,7 @@ KillerTab:AddButton({
     Callback = function()
         _G.teleportPlayersActive = not _G.teleportPlayersActive
         if _G.teleportPlayersActive then
-            teleportPlayers()
+            teleportPlayers() -- Start teleporting players
             showNotification("Started teleporting players.")
         else
             showNotification("Stopped teleporting players.")
