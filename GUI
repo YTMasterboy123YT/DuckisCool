@@ -15,12 +15,10 @@ local LocalPlayer = Players.LocalPlayer
 local ScreenGui = Instance.new("ScreenGui")
 local Notification = Instance.new("TextLabel")
 
--- Global variables for toggle state and no-kill list
 _G.teleportPlayersActive = false
 _G.noKillList = {}
 _G.killList = {}
 
--- Function to create and display notification
 local function showNotification(message)
     Notification.Text = message
     Notification.Size = UDim2.new(0.3, 0, 0.1, 0)
@@ -32,29 +30,20 @@ local function showNotification(message)
 
     ScreenGui.Parent = game.CoreGui
 
-    -- Fade out effect
     for i = 1, 10 do
         wait(0.1)
         Notification.TextTransparency = i / 10
     end
 
-    -- Remove notification after fading out
     ScreenGui:Destroy()
 end
 
--- Function to continuously teleport player characters
 local function teleportPlayers()
     while _G.teleportPlayersActive do
-        wait(0.1) -- Delay to reduce performance impact
-
+        wait(0.1)
         for _, otherPlayer in pairs(Players:GetPlayers()) do
-            local targetCharacter = otherPlayer.Character
-
-            if otherPlayer ~= LocalPlayer then
-                if _G.noKillList[otherPlayer.Name] then
-                    continue -- Skip players in the no-kill list
-                end
-                
+            if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
+                local targetCharacter = otherPlayer.Character
                 if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
                     targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
                 end
@@ -63,11 +52,9 @@ local function teleportPlayers()
     end
 end
 
--- Function to bring specified user's parts continuously
 local function bringUserParts(user)
     while _G.killList[user] do
         wait(0.1)
-
         local targetPlayer = Players:FindFirstChild(user)
         if targetPlayer and targetPlayer.Character then
             for _, part in pairs(targetPlayer.Character:GetDescendants()) do
@@ -76,13 +63,12 @@ local function bringUserParts(user)
                 end
             end
         else
-            _G.killList[user] = nil -- Remove from kill list if the player is not found
+            _G.killList[user] = nil
             break
         end
     end
 end
 
--- Main Tab
 local MainTab = Window:MakeTab({
     Name = "Main Tab",
     Icon = "rbxassetid://132359476107633",
@@ -91,7 +77,6 @@ local MainTab = Window:MakeTab({
 
 MainTab:AddLabel("Main Tab - Duck")
 
--- Add textboxes for speed, jump, and gravity
 MainTab:AddTextbox({
     Name = "Speed Changer",
     Default = "16",
@@ -138,7 +123,6 @@ MainTab:AddTextbox({
     end
 })
 
--- Dropdown for setting game time
 MainTab:AddDropdown({
     Name = "Set Time of Day",
     Options = {"Morning", "Afternoon", "Night"},
@@ -153,7 +137,6 @@ MainTab:AddDropdown({
     end
 })
 
--- Killer Tab
 local KillerTab = Window:MakeTab({
     Name = "Killer Tab",
     Icon = "rbxassetid://132359476107633",
@@ -162,50 +145,42 @@ local KillerTab = Window:MakeTab({
 
 KillerTab:AddLabel("Killer - Duck")
 
--- Dropdown for player selection for no-kill list
 local playerNames = {}
 for _, player in ipairs(Players:GetPlayers()) do
     table.insert(playerNames, player.Name)
 end
 
 KillerTab:AddDropdown({
-    Name = "Select Player for No-Kill List",
+    Name = "Select Players for No-Kill List",
     Options = playerNames,
-    Callback = function(selected)
-        local targetPlayer = Players:FindFirstChild(selected)
-        if targetPlayer then
-            if _G.noKillList[selected] then
-                _G.noKillList[selected] = nil -- Remove from no-kill list if already there
-                showNotification(selected .. " removed from no-kill list.")
-            else
-                _G.noKillList[selected] = true -- Add to no-kill list
-                showNotification(selected .. " added to no-kill list.")
-            end
+    MultiSelect = true,
+    Callback = function(selectedPlayers)
+        for _, player in ipairs(selectedPlayers) do
+            _G.noKillList[player] = true
         end
+        showNotification("Added to no-kill list: " .. table.concat(selectedPlayers, ", "))
     end
 })
 
--- Dropdown for kill list management
 KillerTab:AddDropdown({
-    Name = "Select Player for Kill List",
+    Name = "Select Players for Kill List",
     Options = playerNames,
-    Callback = function(selected)
-        local targetPlayer = Players:FindFirstChild(selected)
-        if targetPlayer then
-            _G.killList[selected] = true -- Add user to kill list
-            showNotification("Started bringing " .. selected .. "'s parts to you.")
-            bringUserParts(selected) -- Start bringing their parts continuously
+    MultiSelect = true,
+    Callback = function(selectedPlayers)
+        for _, player in ipairs(selectedPlayers) do
+            _G.killList[player] = true
+            showNotification("Started bringing " .. player .. "'s parts to you.")
+            bringUserParts(player)
         end
     end
 })
 
--- Button to toggle player teleportation
 KillerTab:AddButton({
     Name = "Toggle Teleport Players",
     Callback = function()
         _G.teleportPlayersActive = not _G.teleportPlayersActive
         if _G.teleportPlayersActive then
-            teleportPlayers() -- Start teleporting players
+            teleportPlayers()
             showNotification("Started teleporting players.")
         else
             showNotification("Stopped teleporting players.")
@@ -213,7 +188,6 @@ KillerTab:AddButton({
     end
 })
 
--- Auto hit button
 KillerTab:AddToggle({
     Name = "Auto Hit",
     Default = false,
