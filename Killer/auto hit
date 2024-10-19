@@ -1,154 +1,128 @@
--- Define services
-local Players = game:GetService("Players")
+    local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Global variables for toggle state and lists
 _G.teleportPlayersActive = false
 _G.noKillList = {}
-_G.killList = {}
+_G.autoHitActive = false
 
--- Function to create and display notification
+-- Function to show notifications (replace with your GUI logic)
 local function showNotification(message)
-    local Notification = Instance.new("ScreenGui")
-    local TextLabel = Instance.new("TextLabel")
-
-    TextLabel.Text = message
-    TextLabel.Size = UDim2.new(0.3, 0, 0.1, 0)
-    TextLabel.Position = UDim2.new(0.5, -75, 0.1, 0)
-    TextLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TextLabel.TextScaled = true
-    TextLabel.Parent = Notification
-
-    Notification.Parent = game.CoreGui
-
-    -- Fade out effect
-    for i = 1, 10 do
-        wait(0.1)
-        TextLabel.TextTransparency = i / 10
-    end
-
-    Notification:Destroy()
+    print(message) -- Placeholder for notifications
 end
 
--- Function to continuously teleport player characters and hit them
-local function teleportAndHitPlayers()
+-- Function to teleport players
+local function teleportPlayers()
     while _G.teleportPlayersActive do
-        wait(0.1)
+        wait(0.1) -- Delay to reduce performance impact
 
         for _, otherPlayer in pairs(Players:GetPlayers()) do
+            local targetCharacter = otherPlayer.Character
+
             if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
-                local targetCharacter = otherPlayer.Character
-                if targetCharacter and targetCharacter:FindFirstChild("Humanoid") and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
                     targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
-                    targetCharacter.Humanoid:TakeDamage(10) -- Adjust damage as needed
                 end
             end
         end
     end
 end
 
--- Function to teleport only players not on the kill list
-local function teleportSafePlayers()
-    showNotification("Teleporting players not on the kill list.")
+-- Function to start Auto Kill
+local function startAutoKill()
+    _G.teleportPlayersActive = true
+    showNotification("Started teleporting and auto-hitting players.")
 
-    for _, otherPlayer in pairs(Players:GetPlayers()) do
-        if otherPlayer ~= LocalPlayer and not _G.killList[otherPlayer.Name] then
-            local targetCharacter = otherPlayer.Character
-            if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
+    teleportPlayers()
+
+    -- Auto-hitting loop
+    while _G.teleportPlayersActive do
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
+                local targetCharacter = otherPlayer.Character
+                if targetCharacter and targetCharacter:FindFirstChild("Humanoid") then
+                    targetCharacter.Humanoid:TakeDamage(10) -- Adjust damage as needed
+                end
             end
+        end
+        wait(0.1) -- Adjust as needed
+    end
+end
+
+-- Function to stop Auto Kill
+local function stopAutoKill()
+    _G.teleportPlayersActive = false
+    showNotification("Stopped teleporting and auto-hitting players.")
+end
+
+-- GUI setup
+local screenGui = Instance.new("ScreenGui", game.CoreGui)
+local mainFrame = Instance.new("Frame", screenGui)
+mainFrame.Size = UDim2.new(0, 300, 0, 400)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+
+-- Button to start/stop Auto Kill
+local autoKillButton = Instance.new("TextButton", mainFrame)
+autoKillButton.Size = UDim2.new(0, 200, 0, 50)
+autoKillButton.Position = UDim2.new(0.5, -100, 0, 20)
+autoKillButton.Text = "Toggle Auto Kill"
+
+autoKillButton.MouseButton1Click:Connect(function()
+    if _G.teleportPlayersActive then
+        stopAutoKill()
+    else
+        startAutoKill()
+    end
+end)
+
+-- Button for Auto Hit
+local autoHitButton = Instance.new("TextButton", mainFrame)
+autoHitButton.Size = UDim2.new(0, 200, 0, 50)
+autoHitButton.Position = UDim2.new(0.5, -100, 0, 80)
+autoHitButton.Text = "Toggle Auto Hit"
+
+autoHitButton.MouseButton1Click:Connect(function()
+    _G.autoHitActive = not _G.autoHitActive
+    showNotification(_G.autoHitActive and "Auto Hit is ON." or "Auto Hit is OFF.")
+end)
+
+-- Create buttons for all players
+local function createPlayerButtons()
+    local yOffset = 150 -- Starting position for player buttons
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local playerButton = Instance.new("TextButton", mainFrame)
+            playerButton.Size = UDim2.new(0, 200, 0, 30)
+            playerButton.Position = UDim2.new(0.5, -100, 0, yOffset)
+            playerButton.Text = player.Name
+            playerButton.BackgroundColor3 = Color3.new(1, 1, 1) -- Default color
+
+            playerButton.MouseButton1Click:Connect(function()
+                if _G.noKillList[player.Name] then
+                    _G.noKillList[player.Name] = nil -- Remove from no-kill list
+                    playerButton.BackgroundColor3 = Color3.new(1, 1, 1) -- Reset color
+                    showNotification(player.Name .. " removed from No Kill list.")
+                else
+                    _G.noKillList[player.Name] = true -- Add to no-kill list
+                    playerButton.BackgroundColor3 = Color3.new(1, 0, 0) -- Change color to indicate selection
+                    showNotification(player.Name .. " added to No Kill list.")
+                end
+            end)
+
+            yOffset = yOffset + 35 -- Increment for the next button
         end
     end
 end
 
--- GUI setup
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-local Window = OrionLib:MakeWindow({Name = "Teleportation Script", HidePremium = false})
+-- Call the function to create player buttons
+createPlayerButtons()
 
--- Teleportation Tab
-local TeleportationTab = Window:MakeTab({
-    Name = "Teleportation",
-    Icon = "rbxassetid://4483345998", -- Change icon if needed
-    Premium = false
-})
+-- Ensure the UI updates when players join or leave
+Players.PlayerAdded:Connect(function(newPlayer)
+    createPlayerButtons() -- Re-create buttons when a new player joins
+end)
 
-TeleportationTab:AddButton({
-    Name = "Start Teleporting and Hitting",
-    Callback = function()
-        _G.teleportPlayersActive = true
-        showNotification("Started teleporting and auto-hitting players.")
-        teleportAndHitPlayers()
-    end
-})
+Players.PlayerRemoving:Connect(function(removedPlayer)
+    -- Optionally, update buttons when a player leaves
+end)
 
-TeleportationTab:AddButton({
-    Name = "Stop Teleporting and Hitting",
-    Callback = function()
-        _G.teleportPlayersActive = false
-        showNotification("Stopped teleporting and auto-hitting players.")
-    end
-})
-
-TeleportationTab:AddButton({
-    Name = "Teleport Safe Players",
-    Callback = function()
-        teleportSafePlayers()
-    end
-})
-
--- Kill List Management Tab
-local KillListTab = Window:MakeTab({
-    Name = "Kill List Management",
-    Icon = "rbxassetid://4483345998", -- Change icon if needed
-    Premium = false
-})
-
-KillListTab:AddTextbox({
-    Name = "Add to Kill List",
-    PlaceholderText = "Enter player name",
-    TextDisappear = true,
-    Callback = function(value)
-        if value and value ~= "" then
-            _G.killList[value] = true
-            showNotification(value .. " added to the kill list.")
-        end
-    end
-})
-
-KillListTab:AddButton({
-    Name = "Clear Kill List",
-    Callback = function()
-        _G.killList = {}
-        showNotification("Kill list cleared.")
-    end
-})
-
--- No Kill List Management Tab
-local NoKillListTab = Window:MakeTab({
-    Name = "No Kill List Management",
-    Icon = "rbxassetid://4483345998", -- Change icon if needed
-    Premium = false
-})
-
-NoKillListTab:AddTextbox({
-    Name = "Add to No Kill List",
-    PlaceholderText = "Enter player name",
-    TextDisappear = true,
-    Callback = function(value)
-        if value and value ~= "" then
-            _G.noKillList[value] = true
-            showNotification(value .. " added to the no-kill list.")
-        end
-    end
-})
-
-NoKillListTab:AddButton({
-    Name = "Clear No Kill List",
-    Callback = function()
-        _G.noKillList = {}
-        showNotification("No kill list cleared.")
-    end
-})
-
-OrionLib:Init()
+print("Script Loaded. Use the buttons to manage player interactions.")
