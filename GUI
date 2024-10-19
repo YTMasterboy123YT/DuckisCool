@@ -7,7 +7,7 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "YourConfigFolder",
     IntroEnabled = true,
     IntroText = "Welcome to the Game!",
-    IntroIcon = "rbxassetid://95093869224117", -- Your icon asset ID
+    IntroIcon = "rbxassetid://95093869224117",
     Icon = "rbxassetid://132359476107633",
 })
 
@@ -17,17 +17,139 @@ local MainTab = Window:MakeTab({
     Icon = "rbxassetid://132359476107633",
 })
 
+-- Walk Speed
+MainTab:AddTextbox({
+    Name = "Walk Speed",
+    Default = "16",
+    TextDisappear = true,
+    Callback = function(value)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(value) or 16
+    end
+})
+
+-- Jump Power
+MainTab:AddTextbox({
+    Name = "Jump Power",
+    Default = "50",
+    TextDisappear = true,
+    Callback = function(value)
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = tonumber(value) or 50
+    end
+})
+
+-- Gravity
+MainTab:AddTextbox({
+    Name = "Gravity",
+    Default = "196.2",
+    TextDisappear = true,
+    Callback = function(value)
+        game.Workspace.Gravity = tonumber(value) or 196.2
+    end
+})
+
+-- Time Dropdown
+MainTab:AddDropdown({
+    Name = "Set Time",
+    Options = {"morning", "afternoon", "night"},
+    Callback = function(option)
+        -- Set lighting based on the selected time
+        local Lighting = game:GetService("Lighting")
+        if option == "morning" then
+            Lighting.Brightness = 2
+            Lighting.ColorShift_Tint = Color3.fromRGB(255, 200, 150)
+            Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 255)
+        elseif option == "afternoon" then
+            Lighting.Brightness = 3
+            Lighting.ColorShift_Tint = Color3.fromRGB(255, 255, 255)
+            Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+        elseif option == "night" then
+            Lighting.Brightness = 0.5
+            Lighting.ColorShift_Tint = Color3.fromRGB(50, 50, 100)
+            Lighting.OutdoorAmbient = Color3.fromRGB(20, 20, 40)
+        end
+    end
+})
+
+-- NoClip Button
+MainTab:AddButton({
+    Name = "Enable NoClip",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        
+        local function setNoClip(character, value)
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = not value
+                end
+            end
+        end
+        
+        setNoClip(LocalPlayer.Character, true)
+        print("NoClip enabled.")
+    end
+})
+
+-- Infinite Jump Button
+MainTab:AddButton({
+    Name = "Enable Infinite Jump",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local UserInputService = game:GetService("UserInputService")
+
+        UserInputService.JumpRequest:Connect(function()
+            local character = Players.LocalPlayer.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end
+        end)
+        
+        print("Infinite Jump enabled.")
+    end
+})
+
 -- Killer Tab
 local KillerTab = Window:MakeTab({
     Name = "Killer",
     Icon = "rbxassetid://132359476107633",
 })
 
--- Auto Farm Tab
-local AutoFarmTab = Window:MakeTab({
-    Name = "Auto Farm",
-    Icon = "rbxassetid://132359476107633",
+-- Auto Hit Toggle
+local punching = false
+local toolName = "Punch"
+
+KillerTab:AddToggle({
+    Name = "Auto Hit",
+    Default = false,
+    Callback = function(value)
+        punching = value
+
+        if punching then
+            print("Auto-punching started.")
+            while punching do
+                local character = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                local tool = game.Players.LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
+
+                if tool then
+                    if tool.Parent ~= character then
+                        humanoid:EquipTool(tool)
+                    end
+                    tool:Activate()
+                end
+                wait(0.1)
+            end
+        else
+            print("Auto-punching stopped.")
+        end
+    end
 })
 
--- Initialize Orion UI
+-- Chat Commands
+KillerTab:AddParagraph("Commands", "/kill, /off, /nk 'User'")
+
+-- End of GUI Initialization
 OrionLib:Init()
