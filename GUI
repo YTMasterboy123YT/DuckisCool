@@ -124,6 +124,29 @@ KillerTab:AddTextbox({
     TextDisappear = true,
     Callback = function(value)
         hitSpeed = tonumber(value) or 0.1
+        
+        -- Set hit speed for specific tools
+        local tools = {
+            {"Punch", "attackTime"},
+            {"Ground Slam", "attackTime"},
+            {"Stomp", "attackTime"},
+            {"Handstands", "repTime"},
+            {"Pushups", "repTime"},
+            {"Weight", "repTime"},
+            {"Situps", "repTime"},
+        }
+
+        for _, toolInfo in ipairs(tools) do
+            local toolName = toolInfo[1]
+            local propertyName = toolInfo[2]
+            local tool = game.Players.LocalPlayer.Backpack:FindFirstChild(toolName) or game.Players.LocalPlayer.Character:FindFirstChild(toolName)
+            if tool then
+                local property = tool:FindFirstChild(propertyName)
+                if property then
+                    property.Value = hitSpeed
+                end
+            end
+        end
     end
 })
 
