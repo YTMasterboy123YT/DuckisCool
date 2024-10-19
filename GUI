@@ -15,10 +15,12 @@ local LocalPlayer = Players.LocalPlayer
 local ScreenGui = Instance.new("ScreenGui")
 local Notification = Instance.new("TextLabel")
 
+-- Global variables for toggle state and no-kill and kill lists
 _G.teleportPlayersActive = false
 _G.noKillList = {}
 _G.killList = {}
 
+-- Function to create and display notification
 local function showNotification(message)
     Notification.Text = message
     Notification.Size = UDim2.new(0.3, 0, 0.1, 0)
@@ -30,31 +32,40 @@ local function showNotification(message)
 
     ScreenGui.Parent = game.CoreGui
 
+    -- Fade out effect
     for i = 1, 10 do
         wait(0.1)
         Notification.TextTransparency = i / 10
     end
 
+    -- Remove notification after fading out
     ScreenGui:Destroy()
 end
 
+-- Function to continuously teleport player characters
 local function teleportPlayers()
     while _G.teleportPlayersActive do
         wait(0.1)
+
         for _, otherPlayer in pairs(Players:GetPlayers()) do
-            if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
-                local targetCharacter = otherPlayer.Character
-                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
+            local targetCharacter = otherPlayer.Character
+
+            if otherPlayer ~= LocalPlayer then
+                if not _G.noKillList[otherPlayer.Name] then
+                    if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                        targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
+                    end
                 end
             end
         end
     end
 end
 
+-- Function to bring specified user's parts continuously
 local function bringUserParts(user)
     while _G.killList[user] do
         wait(0.1)
+
         local targetPlayer = Players:FindFirstChild(user)
         if targetPlayer and targetPlayer.Character then
             for _, part in pairs(targetPlayer.Character:GetDescendants()) do
@@ -63,7 +74,7 @@ local function bringUserParts(user)
                 end
             end
         else
-            _G.killList[user] = nil
+            _G.killList[user] = nil -- Remove from kill list if the player is not found
             break
         end
     end
@@ -78,6 +89,7 @@ local MainTab = Window:MakeTab({
 
 MainTab:AddLabel("Main Tab - Duck")
 
+-- Add textboxes for speed, jump, and gravity
 MainTab:AddTextbox({
     Name = "Speed Changer",
     Default = "16",
@@ -148,34 +160,39 @@ local KillerTab = Window:MakeTab({
 
 KillerTab:AddLabel("Killer - Duck")
 
+-- Dropdown for player selection for no-kill list
 local playerNames = {}
 for _, player in ipairs(Players:GetPlayers()) do
     table.insert(playerNames, player.Name)
 end
 
--- No-Kill List Multi-Select
 KillerTab:AddDropdown({
     Name = "Select Players for No-Kill List",
     Options = playerNames,
     MultiSelect = true,
-    Callback = function(selectedPlayers)
-        for _, player in ipairs(selectedPlayers) do
-            _G.noKillList[player] = true
+    Callback = function(selectedOptions)
+        for _, playerName in ipairs(selectedOptions) do
+            if _G.noKillList[playerName] then
+                _G.noKillList[playerName] = nil -- Remove from no-kill list if already there
+                showNotification(playerName .. " removed from no-kill list.")
+            else
+                _G.noKillList[playerName] = true -- Add to no-kill list
+                showNotification(playerName .. " added to no-kill list.")
+            end
         end
-        showNotification("Added to no-kill list: " .. table.concat(selectedPlayers, ", "))
     end
 })
 
--- Kill List Multi-Select
+-- Dropdown for kill list management
 KillerTab:AddDropdown({
     Name = "Select Players for Kill List",
     Options = playerNames,
     MultiSelect = true,
-    Callback = function(selectedPlayers)
-        for _, player in ipairs(selectedPlayers) do
-            _G.killList[player] = true
-            showNotification("Started bringing " .. player .. "'s parts to you.")
-            bringUserParts(player)
+    Callback = function(selectedOptions)
+        for _, playerName in ipairs(selectedOptions) do
+            _G.killList[playerName] = true -- Add user to kill list
+            showNotification("Started bringing " .. playerName .. "'s parts to you.")
+            bringUserParts(playerName) -- Start bringing their parts continuously
         end
     end
 })
@@ -186,7 +203,7 @@ KillerTab:AddButton({
     Callback = function()
         _G.teleportPlayersActive = not _G.teleportPlayersActive
         if _G.teleportPlayersActive then
-            teleportPlayers()
+            teleportPlayers() -- Start teleporting players
             showNotification("Started teleporting players.")
         else
             showNotification("Stopped teleporting players.")
@@ -194,14 +211,12 @@ KillerTab:AddButton({
     end
 })
 
--- Auto Hit Toggle
-local autoHitActive = false
+-- Auto hit button
 KillerTab:AddToggle({
     Name = "Auto Hit",
     Default = false,
     Callback = function(Value)
-        autoHitActive = Value
-        
+        local punching = Value
         local toolName = "Punch"
         
         local function setToolCooldowns()
@@ -223,7 +238,7 @@ KillerTab:AddToggle({
         local function autoUseTool()
             setToolCooldowns()
 
-            while autoHitActive do
+            while punching do
                 local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
                 local humanoid = character:FindFirstChildOfClass("Humanoid")
                 local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
@@ -240,7 +255,7 @@ KillerTab:AddToggle({
             end
         end
 
-        if autoHitActive then
+        if punching then
             print("Auto-hitting started.")
             autoUseTool()
         else
