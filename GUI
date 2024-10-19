@@ -1,188 +1,111 @@
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
-local Window = OrionLib:MakeWindow({
-    Name = "Your GUI Title",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "YourConfigFolder",
-    IntroEnabled = true,
-    IntroText = "Welcome to the Game!",
-    IntroIcon = "rbxassetid://95093869224117",
-    Icon = "rbxassetid://132359476107633",
-})
+-- Define services
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ScreenGui = Instance.new("ScreenGui")
+local Notification = Instance.new("TextLabel")
 
--- Main Tab
-local MainTab = Window:MakeTab({
-    Name = "Main",
-    Icon = "rbxassetid://132359476107633",
-})
+-- Global variables for toggle state and no-kill list
+_G.teleportPlayersActive = false
+_G.noKillList = {}
+_G.killList = {}
 
--- Walk Speed
-MainTab:AddTextbox({
-    Name = "Walk Speed",
-    Default = "16",
-    TextDisappear = true,
-    Callback = function(value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(value) or 16
+-- Function to create and display notification
+local function showNotification(message)
+    Notification.Text = message
+    Notification.Size = UDim2.new(0.3, 0, 0.1, 0)
+    Notification.Position = UDim2.new(0.5, -75, 0.1, 0)
+    Notification.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Notification.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Notification.TextScaled = true
+    Notification.Parent = ScreenGui
+
+    ScreenGui.Parent = game.CoreGui
+
+    -- Fade out effect
+    for i = 1, 10 do
+        wait(0.1)
+        Notification.TextTransparency = i / 10
     end
-})
 
--- Jump Power
-MainTab:AddTextbox({
-    Name = "Jump Power",
-    Default = "50",
-    TextDisappear = true,
-    Callback = function(value)
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = tonumber(value) or 50
-    end
-})
+    -- Remove notification after fading out
+    ScreenGui:Destroy()
+end
 
--- Gravity
-MainTab:AddTextbox({
-    Name = "Gravity",
-    Default = "196.2",
-    TextDisappear = true,
-    Callback = function(value)
-        game.Workspace.Gravity = tonumber(value) or 196.2
-    end
-})
+-- Function to continuously teleport player characters
+local function teleportPlayers()
+    while _G.teleportPlayersActive do
+        wait(0.1) -- Delay to reduce performance impact
 
--- Time Dropdown
-MainTab:AddDropdown({
-    Name = "Set Time",
-    Options = {"morning", "afternoon", "night"},
-    Callback = function(option)
-        local Lighting = game:GetService("Lighting")
-        if option == "morning" then
-            Lighting.Brightness = 2
-            Lighting.ColorShift_Tint = Color3.fromRGB(255, 200, 150)
-            Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 255)
-        elseif option == "afternoon" then
-            Lighting.Brightness = 3
-            Lighting.ColorShift_Tint = Color3.fromRGB(255, 255, 255)
-            Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
-        elseif option == "night" then
-            Lighting.Brightness = 0.5
-            Lighting.ColorShift_Tint = Color3.fromRGB(50, 50, 100)
-            Lighting.OutdoorAmbient = Color3.fromRGB(20, 20, 40)
+        -- Iterate through other players
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            local targetCharacter = otherPlayer.Character
+
+            if otherPlayer ~= LocalPlayer then
+                if _G.noKillList[otherPlayer.Name] then
+                    continue -- Skip players in the no-kill list
+                end
+                
+                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                    -- Teleport all other players not in the no-kill list
+                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
+                end
+            end
         end
     end
-})
+end
 
--- NoClip Button
-MainTab:AddButton({
-    Name = "Enable NoClip",
-    Callback = function()
-        local Players = game:GetService("Players")
-        local LocalPlayer = Players.LocalPlayer
-        
-        local function setNoClip(character, value)
-            for _, part in ipairs(character:GetDescendants()) do
+-- Function to bring specified user's parts continuously
+local function bringUserParts(user)
+    while _G.killList[user] do
+        wait(0.1) -- Delay to reduce performance impact
+        local targetPlayer = Players:FindFirstChild(user)
+
+        if targetPlayer and targetPlayer.Character then
+            for _, part in pairs(targetPlayer.Character:GetDescendants()) do
                 if part:IsA("BasePart") then
-                    part.CanCollide = not value
+                    part.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0) -- Bring parts above the local player
                 end
-            end
-        end
-        
-        setNoClip(LocalPlayer.Character, true)
-        print("NoClip enabled.")
-    end
-})
-
--- Infinite Jump Button
-MainTab:AddButton({
-    Name = "Enable Infinite Jump",
-    Callback = function()
-        local Players = game:GetService("Players")
-        local UserInputService = game:GetService("UserInputService")
-
-        UserInputService.JumpRequest:Connect(function()
-            local character = Players.LocalPlayer.Character
-            if character then
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-            end
-        end)
-        
-        print("Infinite Jump enabled.")
-    end
-})
-
--- Killer Tab
-local KillerTab = Window:MakeTab({
-    Name = "Killer",
-    Icon = "rbxassetid://132359476107633",
-})
-
--- Hit Speed Textbox
-local hitSpeed = 0.1
-KillerTab:AddTextbox({
-    Name = "Hit Speed",
-    Default = "0.1",
-    TextDisappear = true,
-    Callback = function(value)
-        hitSpeed = tonumber(value) or 0.1
-        
-        -- Set hit speed for specific tools
-        local tools = {
-            {"Punch", "attackTime"},
-            {"Ground Slam", "attackTime"},
-            {"Stomp", "attackTime"},
-            {"Handstands", "repTime"},
-            {"Pushups", "repTime"},
-            {"Weight", "repTime"},
-            {"Situps", "repTime"},
-        }
-
-        for _, toolInfo in ipairs(tools) do
-            local toolName = toolInfo[1]
-            local propertyName = toolInfo[2]
-            local tool = game.Players.LocalPlayer.Backpack:FindFirstChild(toolName) or game.Players.LocalPlayer.Character:FindFirstChild(toolName)
-            if tool then
-                local property = tool:FindFirstChild(propertyName)
-                if property then
-                    property.Value = hitSpeed
-                end
-            end
-        end
-    end
-})
-
--- Auto Hit Toggle
-local punching = false
-local toolName = "Punch"
-
-KillerTab:AddToggle({
-    Name = "Auto Hit",
-    Default = false,
-    Callback = function(value)
-        punching = value
-
-        if punching then
-            print("Auto-punching started.")
-            while punching do
-                local character = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                local tool = game.Players.LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
-
-                if tool then
-                    if tool.Parent ~= character then
-                        humanoid:EquipTool(tool)
-                    end
-                    tool:Activate()
-                end
-                wait(hitSpeed) -- Use the hit speed from the textbox
             end
         else
-            print("Auto-punching stopped.")
+            _G.killList[user] = nil -- Remove from kill list if the player is not found
+            break
         end
     end
-})
+end
 
--- Chat Commands
-KillerTab:AddParagraph("Commands", "/kill, /off, /nk 'User'")
+-- Chat command to toggle player teleportation and manage no-kill and kill lists
+LocalPlayer.Chatted:Connect(function(message)
+    local args = message:split(" ")
 
--- End of GUI Initialization
-OrionLib:Init()
+    if args[1]:lower() == "on" then
+        _G.teleportPlayersActive = true
+        teleportPlayers() -- Start teleporting players
+        showNotification("Started teleporting players.")
+    elseif args[1]:lower() == "off" then
+        _G.teleportPlayersActive = false -- Stop teleporting players
+        showNotification("Stopped teleporting players.")
+    elseif args[1]:lower() == ";nokill" then
+        for i = 2, #args do
+            local user = args[i]
+            if not _G.noKillList[user] then
+                _G.noKillList[user] = true -- Add each user to no-kill list
+            end
+        end
+        showNotification("Added to no-kill list: " .. table.concat(args, ", ", 2))
+    elseif args[1]:lower() == ";kill" and args[2] then
+        local targetUser = args[2]
+        _G.killList[targetUser] = true -- Add user to kill list
+        showNotification("Started bringing " .. targetUser .. "'s parts to you.")
+        bringUserParts(targetUser) -- Start bringing their parts continuously
+    elseif args[1]:lower() == ";stopkill" and args[2] then
+        local targetUser = args[2]
+        _G.killList[targetUser] = nil -- Remove the user from the kill list
+        showNotification("Stopped bringing " .. targetUser .. "'s parts.")
+    end
+end)
+
+print("Type 'on' to start teleporting players, 'off' to stop.")
+print("Type ';NoKill (User1) (User2)...' to add multiple users to the no-kill list.")
+print("Type ';Kill (User)' to bring a user's parts to you continuously.")
+print("Type ';StopKill (User)' to stop bringing a user's parts.")
