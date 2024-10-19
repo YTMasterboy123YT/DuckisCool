@@ -6,8 +6,8 @@ local Window = OrionLib:MakeWindow({
     SaveConfig = true, 
     ConfigFolder = "OrionTest",
     IntroEnabled = true,
-    IntroText = "Welcome to Ducks Private Script!", -- Your intro text here
-    IntroIcon = "URL_to_icon" -- Replace with your actual icon URL
+    IntroText = "Welcome to Ducks Private Script!", 
+    IntroIcon = "https://i.imgur.com/dWXaDfO.jpg" -- Direct image link
 })
 
 --[[ 
