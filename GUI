@@ -1,221 +1,51 @@
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+local ArrayField = loadstring(game:HttpGet('https://raw.githubusercontent.com/UI-Interface/ArrayField/main/Source.lua'))()
 
--- Create the main window
-local Window = OrionLib:MakeWindow({
-    Name = "Game Title",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "OrionTest",
-    IntroEnabled = true,
-    IntroText = "Welcome!",
-    IntroIcon = "http://www.roblox.com/asset/?id=132359476107633",
-    Icon = "http://www.roblox.com/asset/?id=132359476107633"
+local Window = ArrayField:CreateWindow({
+   Name = "ArrayField Example Window",
+   LoadingTitle = "ArrayField Interface Suite",
+   LoadingSubtitle = "by Arrays",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = nil, -- Create a custom folder for your hub/game
+      FileName = "ArrayField"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD
+      RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+   },
+   KeySystem = false, -- Set this to true to use our key system
+   KeySettings = {
+      Title = "Untitled",
+      Subtitle = "Key System",
+      Note = "No method of obtaining the key is provided",
+      FileName = "Key", -- It is recommended to use something unique as other scripts using ArrayField may overwrite your key file
+      SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+      GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like ArrayField to get the key from
+      Actions = {
+            [1] = {
+                Text = 'Click here to copy the key link <--',
+                OnPress = function()
+                    print('Pressed')
+                end,
+                }
+            },
+      Key = {"Hello"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+   }
 })
 
--- Main Tab
-local MainTab = Window:MakeTab({
-    Name = "Main",
-    Icon = "http://www.roblox.com/asset/?id=132359476107633",
-    PremiumOnly = false
-})
-
--- Killer Tab
-local KillerTab = Window:MakeTab({
-    Name = "Killer",
-    Icon = "http://www.roblox.com/asset/?id=132359476107633",
-    PremiumOnly = false
-})
-
--- Auto Farm Tab
-local AutoFarmTab = Window:MakeTab({
-    Name = "Auto Farm",
-    Icon = "http://www.roblox.com/asset/?id=132359476107633",
-    PremiumOnly = false
-})
-
--- Main Functions
-MainTab:AddSlider({
-    Name = "Walk Speed",
-    Min = 16,
-    Max = 500,
-    Default = 16,
-    Color = Color3.fromRGB(255, 0, 0),
-    Increment = 1,
-    Callback = function(value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
-    end
-})
-
-MainTab:AddSlider({
-    Name = "Jump Power",
-    Min = 50,
-    Max = 500,
-    Default = 50,
-    Color = Color3.fromRGB(0, 255, 0),
-    Increment = 1,
-    Callback = function(value)
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = value
-    end
-})
-
-MainTab:AddTextbox({
-    Name = "Hit Speed",
-    Default = "0.1",
-    TextDisappear = true,
-    Callback = function(value)
-        local tools = {
-            "Punch",
-            "Ground Slam",
-            "Stomp",
-            "Handstands",
-            "Pushups",
-            "Weight",
-            "Situps"
+-- Display prompt window
+Window:Prompt({
+    Title = 'Interface Prompt',
+    SubTitle = 'SubTitle',
+    Content = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    Actions = {
+        Accept = {
+            Name = 'Accept',
+            Callback = function()
+                print('Pressed')
+            end,
         }
-        
-        for _, toolName in ipairs(tools) do
-            local tool = game.Players.LocalPlayer.Backpack:FindFirstChild(toolName) or game.Players.LocalPlayer.Character:FindFirstChild(toolName)
-            if tool then
-                local attackTime = tool:FindFirstChild("attackTime") or tool:FindFirstChild("repTime")
-                if attackTime then
-                    attackTime.Value = tonumber(value) -- Set the value to the input
-                end
-            end
-        end
-    end
+    }
 })
 
--- Killer Functions
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local ScreenGui = Instance.new("ScreenGui")
-local Notification = Instance.new("TextLabel")
-
--- Global variables for toggle state and no-kill list
-_G.teleportPlayersActive = false
-_G.noKillList = {}
-_G.killList = {}
-_G.lastAddedUser = nil -- Store the last added user
-
--- Function to create and display notification
-local function showNotification(message)
-    Notification.Text = message
-    Notification.Size = UDim2.new(0.3, 0, 0.1, 0)
-    Notification.Position = UDim2.new(0.5, -75, 0.1, 0)
-    Notification.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    Notification.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Notification.TextScaled = true
-    Notification.Parent = ScreenGui
-
-    ScreenGui.Parent = game.CoreGui
-
-    -- Fade out effect
-    for i = 1, 10 do
-        wait(0.1)
-        Notification.TextTransparency = i / 10
-    end
-
-    -- Remove notification after fading out
-    ScreenGui:Destroy()
-end
-
--- Function to continuously teleport player characters
-local function teleportPlayers()
-    while _G.teleportPlayersActive do
-        wait(0.1) -- Delay to reduce performance impact
-
-        -- Iterate through other players
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            local targetCharacter = otherPlayer.Character
-
-            if otherPlayer ~= LocalPlayer then
-                if _G.noKillList[otherPlayer.Name] then
-                    continue -- Skip players in the no-kill list
-                end
-                
-                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                    -- Teleport all other players not in the no-kill list
-                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
-                end
-            end
-        end
-    end
-end
-
--- Function to bring specified user's parts continuously
-local function bringUserParts(user)
-    while _G.killList[user] do
-        wait(0.1) -- Delay to reduce performance impact
-        local targetPlayer = Players:FindFirstChild(user)
-
-        if targetPlayer and targetPlayer.Character then
-            for _, part in pairs(targetPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") and not _G.noKillList[targetPlayer.Name] then
-                    part.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0) -- Bring parts above the local player
-                end
-            end
-        else
-            _G.killList[user] = nil -- Remove from kill list if the player is not found
-            break
-        end
-    end
-end
-
--- Chat command to toggle player teleportation and manage no-kill and kill lists
-LocalPlayer.Chatted:Connect(function(message)
-    local args = message:split(" ")
-    
-    if args[1]:lower() == "/kill" and args[2] then
-        local targetUser = args[2]
-        _G.killList[targetUser] = true
-        showNotification("Started bringing " .. targetUser .. "'s parts to you.")
-        bringUserParts(targetUser)
-    elseif args[1]:lower() == "/off" then
-        _G.teleportPlayersActive = false
-        showNotification("Stopped teleporting players.")
-    elseif args[1]:lower() == "/nk" and args[2] then
-        local user1 = args[2]:gsub('"', '') -- First user
-        if user1 ~= "" and not _G.noKillList[user1] then
-            _G.noKillList[user1] = true
-            _G.lastAddedUser = user1 -- Store last added user
-        end
-        
-        if args[3] then
-            local user2 = args[3]:gsub('"', '') -- Second user
-            if user2 ~= "" and not _G.noKillList[user2] then
-                _G.noKillList[user2] = true
-            end
-            showNotification("Added to no-kill list: " .. user1 .. ", " .. user2)
-        else
-            if _G.lastAddedUser then
-                showNotification("Added to no-kill list: " .. user1 .. " and previous user: " .. _G.lastAddedUser)
-            else
-                showNotification("Added to no-kill list: " .. user1)
-            end
-        end
-    end
-end)
-
--- Button to teleport all players not in the no-kill list
-KillerTab:AddButton({
-    Name = "Teleport All (No Kill List)",
-    Callback = function()
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            local targetCharacter = otherPlayer.Character
-
-            if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
-                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
-                end
-            end
-        end
-        showNotification("Teleported all players not in the no-kill list.")
-    end
-})
-
-print("Type '/kill (User)' to bring a user's parts to you continuously.")
-print("Type '/off' to stop teleporting players.")
-print("Type '/nk \"User1\" \"User2\"' to add two users to the no-kill list.")
-
--- Finalize the GUI
-OrionLib:Init()
