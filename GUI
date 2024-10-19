@@ -16,6 +16,8 @@ local LocalPlayer = Players.LocalPlayer
 -- Global variables
 _G.noKillList = {}
 _G.killList = {}
+local autoHitActive = false
+local punching = false
 
 -- Main Tab
 local MainTab = Window:MakeTab({
@@ -87,50 +89,60 @@ KillerTab:AddToggle({
     Name = "Auto Hit",
     Default = false,
     Callback = function(Value)
-        local punching = Value
-        local toolName = "Punch"
-        
-        local function setToolCooldowns()
-            local tools = {
-                {name = toolName, type = "attackTime"}
-            }
-
-            for _, toolInfo in pairs(tools) do
-                local tool = LocalPlayer.Backpack:FindFirstChild(toolInfo.name) or LocalPlayer.Character:FindFirstChild(toolInfo.name)
-                if tool then
-                    local cooldown = tool:FindFirstChild(toolInfo.type)
-                    if cooldown then
-                        cooldown.Value = 0.1
-                    end
-                end
-            end
-        end
-
-        local function autoUseTool()
-            setToolCooldowns()
-
-            while punching do
-                local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
-
-                if tool then
-                    if tool.Parent ~= character then
-                        humanoid:EquipTool(tool)
-                    end
-                    tool:Activate()
-                    wait(0.1)
-                else
-                    wait(0.5)
-                end
-            end
-        end
-
-        if punching then
-            print("Auto-hitting started.")
+        autoHitActive = Value
+        if autoHitActive then
+            punching = true
             autoUseTool()
         else
-            print("Auto-hitting stopped.")
+            punching = false
+        end
+    end
+})
+
+-- Function to set tool cooldowns
+local function setToolCooldowns()
+    local toolName = "Punch"
+    local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or LocalPlayer.Character:FindFirstChild(toolName)
+    if tool then
+        local cooldown = tool:FindFirstChild("attackTime")
+        if cooldown then
+            cooldown.Value = 0.1
+        end
+    end
+end
+
+-- Function to auto use the tool
+local function autoUseTool()
+    setToolCooldowns()
+    while punching do
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local tool = LocalPlayer.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
+
+        if tool then
+            if tool.Parent ~= character then
+                humanoid:EquipTool(tool)
+            end
+            tool:Activate()
+            wait(0.1)
+        else
+            wait(0.5)
+        end
+    end
+end
+
+-- Kill Button
+KillerTab:AddButton({
+    Name = "Kill Selected Players",
+    Callback = function()
+        for _, player in ipairs(Players:GetPlayers()) do
+            if _G.noKillList[player.Name] == nil then
+                local character = player.Character
+                if character and character:FindFirstChild("Humanoid") then
+                    character.Humanoid.Health = 0 -- Kill the player
+                    print(player.Name .. " has been killed.")
+                end
+            end
         end
     end
 })
