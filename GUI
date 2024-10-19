@@ -169,15 +169,35 @@ PlayersTab:AddLabel("Manage Players - Duck")
 -- Function to create buttons for each player
 local function createPlayerButtons()
     for _, player in ipairs(Players:GetPlayers()) do
+        local isSelected = false
+
         PlayersTab:AddButton({
             Name = player.Name,
             Callback = function()
-                -- Add player to No-Kill List
-                _G.noKillList[player.Name] = true
+                isSelected = not isSelected -- Toggle selection
+                if isSelected then
+                    _G.noKillList[player.Name] = true
+                else
+                    _G.noKillList[player.Name] = nil
+                end
 
-                -- Add others to Kill List
+                -- Update appearance based on selection
+                if isSelected then
+                    PlayersTab:UpdateButton({
+                        Name = player.Name,
+                        BackgroundColor3 = Color3.fromRGB(100, 255, 100) -- Green for selected
+                    })
+                else
+                    PlayersTab:UpdateButton({
+                        Name = player.Name,
+                        BackgroundColor3 = Color3.fromRGB(255, 100, 100) -- Red for not selected
+                    })
+                end
+
+                -- Update Kill List
+                _G.killList = {} -- Clear Kill List
                 for _, otherPlayer in ipairs(Players:GetPlayers()) do
-                    if otherPlayer.Name ~= player.Name then
+                    if not _G.noKillList[otherPlayer.Name] then
                         _G.killList[otherPlayer.Name] = true
                     end
                 end
