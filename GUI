@@ -51,81 +51,52 @@ MainTab:AddDropdown("Time of Day", {"Morning", "Afternoon", "Night"}, function(s
     end
 end)
 
-MainTab:AddButton("Enable No Clip", function()
-    local Players = game:GetService("Players")
-    local character = Players.LocalPlayer.Character
-    for _, part in ipairs(character:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = false
-        end
-    end
-end)
-
-MainTab:AddButton("Enable Infinite Jump", function()
-    local UserInputService = game:GetService("UserInputService")
-    UserInputService.JumpRequest:Connect(function()
-        local player = game.Players.LocalPlayer
-        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-    end)
-end)
-
 -- Killer Tab
 local KillerTab = Window:MakeTab({
     Name = "Killer",
-    Icon = "rbxassetid://123456789",
+    Icon = "rbxassetid://987654321",
     Premium = false,
 })
 
-KillerTab:AddToggle({
-    Name = "Auto Hit",
-    Default = false,
-    Callback = function(value)
-        local punching = false
-        local toolName = "Punch"
+local punching = false
+local toolName = "Punch"
 
-        local function setToolCooldowns()
-            local tools = { { name = toolName, type = "attackTime" } }
-            for _, toolInfo in pairs(tools) do
-                local tool = game.Players.LocalPlayer.Backpack:FindFirstChild(toolInfo.name) or game.Players.LocalPlayer.Character:FindFirstChild(toolInfo.name)
-                if tool then
-                    local cooldown = tool:FindFirstChild(toolInfo.type)
-                    if cooldown then
-                        cooldown.Value = 0.1
-                    end
-                end
+local function setToolCooldowns()
+    local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or LocalPlayer.Character:FindFirstChild(toolName)
+    if tool then
+        local cooldown = tool:FindFirstChild("attackTime")
+        if cooldown then
+            cooldown.Value = 0.1
+        end
+    end
+end
+
+local function autoUseTool()
+    setToolCooldowns()
+    while punching do
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
+        if tool then
+            if tool.Parent ~= character then
+                humanoid:EquipTool(tool)
             end
+            tool:Activate()
+            wait(0.1)
+        else
+            wait(0.5)
         end
+    end
+end
 
-        local function autoUseTool()
-            setToolCooldowns()
-            while punching do
-                local character = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                local tool = game.Players.LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
+KillerTab:AddToggle("Auto Hit", function(state)
+    punching = state
+    if punching then
+        autoUseTool()
+    end
+end)
 
-                if tool then
-                    if tool.Parent ~= character then
-                        humanoid:EquipTool(tool)
-                    end
-                    tool:Activate()
-                    wait(0.1)
-                else
-                    wait(0.5)
-                end
-            end
-        end
-
-        punching = value
-        if punching then
-            autoUseTool()
-        end
-    end,
-})
-
-KillerTab:AddParagraph("Commands", "/kill\n/Off\n/NK \"User\"")
+KillerTab:AddParagraph("Commands", "/kill /Off /NK 'User'")
 
 -- Auto Farm Tab
 local AutoFarmTab = Window:MakeTab({
@@ -136,19 +107,16 @@ local AutoFarmTab = Window:MakeTab({
 
 AutoFarmTab:AddDropdown("Select Rock", {"Muscle King Mountain", "Frozen Rock", "Rock Of Legends"}, function(selected)
     local function teleportRockToHand(rockFolderName)
-        local machinesFolder = game.Workspace:FindFirstChild("machinesFolder")
-        if machinesFolder then
-            local rockFolder = machinesFolder:FindFirstChild(rockFolderName)
-            if rockFolder then
-                local rock = rockFolder:FindFirstChild("Rock")
-                if rock then
-                    rock.Transparency = 1
-                    rock.Size = Vector3.new(0.5, 0.5, 0.5)
-                    rock.CanCollide = false
-                    while wait(0.1) do
-                        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("RightHand") then
-                            rock.CFrame = game.Players.LocalPlayer.Character.RightHand.CFrame * CFrame.new(0, 0, -1)
-                        end
+        local rockFolder = game.Workspace.machinesFolder:FindFirstChild(rockFolderName)
+        if rockFolder then
+            local rock = rockFolder:FindFirstChild("Rock")
+            if rock then
+                rock.Transparency = 1
+                rock.Size = Vector3.new(0.5, 0.5, 0.5)
+                rock.CanCollide = false
+                while wait(0.1) do
+                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("RightHand") then
+                        rock.CFrame = LocalPlayer.Character.RightHand.CFrame * CFrame.new(0, 0, -1)
                     end
                 end
             end
@@ -157,4 +125,5 @@ AutoFarmTab:AddDropdown("Select Rock", {"Muscle King Mountain", "Frozen Rock", "
     teleportRockToHand(selected)
 end)
 
-print("Utility loaded successfully.")
+-- Initialize the GUI
+OrionLib:Init()
