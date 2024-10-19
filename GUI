@@ -1,15 +1,17 @@
-local AutoKillWindow = OrionLib:MakeWindow({
-    Name = "Auto Kill - Duck",
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+
+-- Create the main window
+local MainWindow = OrionLib:MakeWindow({
+    Name = "Multi-Select Example",
     HidePremium = false,
     SaveConfig = true,
-    ConfigFolder = "AutoKillConfig",
+    ConfigFolder = "MultiSelectConfig",
     IntroEnabled = true,
-    IntroText = "Welcome to Auto Kill!",
+    IntroText = "Welcome to the Multi-Select GUI!",
     IntroIcon = "https://i.imgur.com/dWXaDfO.jpg"
 })
 
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
 
 -- Gather player names for the dropdown
 local playerNames = {}
@@ -17,59 +19,45 @@ for _, player in ipairs(Players:GetPlayers()) do
     table.insert(playerNames, player.Name)
 end
 
--- Dropdown for selecting players to auto kill
-AutoKillWindow:MakeTab({
-    Name = "Auto Kill",
+-- Create the tab for the multi-select feature
+local MultiSelectTab = MainWindow:MakeTab({
+    Name = "Multi-Select",
     Icon = "rbxassetid://132359476107633",
     PremiumOnly = false
 })
 
-AutoKillWindow:AddLabel("Auto Kill - Duck")
+MultiSelectTab:AddLabel("Select Multiple Players")
 
-AutoKillWindow:AddDropdown({
-    Name = "Select Players for Auto Kill",
+-- Dropdown for selecting multiple players
+MultiSelectTab:AddDropdown({
+    Name = "Select Players",
     Options = playerNames, -- List of player names
     MultiSelect = true, -- Enable multiple selection
     Callback = function(selectedOptions)
-        _G.autoKillTargets = selectedOptions -- Store selected targets globally
+        -- This function will be called with the selected players
+        print("Selected Players: ", table.concat(selectedOptions, ", "))
     end,
 })
 
--- Auto kill toggle
-AutoKillWindow:AddToggle({
-    Name = "Enable Auto Kill",
-    Default = false,
-    Callback = function(Value)
-        local autoKilling = Value
-        
-        local function performAutoKill()
-            while autoKilling do
-                wait(0.1) -- Adjust delay as needed
-                
-                for _, targetName in ipairs(_G.autoKillTargets) do
-                    local targetPlayer = Players:FindFirstChild(targetName)
-                    if targetPlayer and targetPlayer.Character then
-                        local targetHumanoid = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
-                        if targetHumanoid then
-                            -- Perform the killing action (e.g., attack)
-                            local tool = LocalPlayer.Backpack:FindFirstChild("Punch") or LocalPlayer.Character:FindFirstChild("Punch")
-                            if tool then
-                                -- Equip and activate the tool
-                                LocalPlayer.Character.Humanoid:EquipTool(tool)
-                                tool:Activate()
-                            end
-                        end
-                    end
+-- Button to perform an action with the selected players
+MultiSelectTab:AddButton({
+    Name = "Perform Action",
+    Callback = function()
+        -- Get selected players from the dropdown
+        local selectedPlayers = MultiSelectTab.Flags["Dropdown1"] -- Replace "Dropdown1" with your dropdown's flag if different
+
+        if #selectedPlayers > 0 then
+            for _, playerName in ipairs(selectedPlayers) do
+                local player = Players:FindFirstChild(playerName)
+                if player then
+                    print("Performing action on: " .. playerName)
+                    -- Perform your desired action on the player
                 end
             end
-        end
-
-        if autoKilling then
-            print("Auto Kill enabled.")
-            performAutoKill()
         else
-            print("Auto Kill disabled.")
+            print("No players selected.")
         end
-    end
+    end,
 })
 
+print("GUI Loaded. Use the dropdown to select players and perform actions.")
