@@ -13,6 +13,11 @@ local Window = OrionLib:MakeWindow({
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
+-- Global lists for no-kill and kill players
+local noKillList = {}
+local killList = {}
+
+-- Killer Tab
 local KillerTab = Window:MakeTab({
     Name = "Killer Tab",
     Icon = "rbxassetid://132359476107633",
@@ -21,8 +26,58 @@ local KillerTab = Window:MakeTab({
 
 KillerTab:AddLabel("Killer - Duck")
 
-local noKillList = {}
-local killList = {}
+-- Auto Hit Toggle
+KillerTab:AddToggle({
+    Name = "Auto Hit",
+    Default = false,
+    Callback = function(Value)
+        local punching = Value
+        local toolName = "Punch"
+        
+        local function setToolCooldowns()
+            local tools = {
+                {name = toolName, type = "attackTime"}
+            }
+
+            for _, toolInfo in pairs(tools) do
+                local tool = LocalPlayer.Backpack:FindFirstChild(toolInfo.name) or LocalPlayer.Character:FindFirstChild(toolInfo.name)
+                if tool then
+                    local cooldown = tool:FindFirstChild(toolInfo.type)
+                    if cooldown then
+                        cooldown.Value = 0.1
+                    end
+                end
+            end
+        end
+
+        local function autoUseTool()
+            setToolCooldowns()
+
+            while punching do
+                local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
+
+                if tool then
+                    if tool.Parent ~= character then
+                        humanoid:EquipTool(tool)
+                    end
+                    tool:Activate()
+                    wait(0.1)
+                else
+                    wait(0.5)
+                end
+            end
+        end
+
+        if punching then
+            print("Auto-hitting started.")
+            autoUseTool()
+        else
+            print("Auto-hitting stopped.")
+        end
+    end
+})
 
 -- Function to create player buttons with glow effect
 local function createPlayerButton(playerName)
@@ -46,7 +101,7 @@ local function createPlayerButton(playerName)
 
             -- Update Kill List
             for _, player in ipairs(Players:GetPlayers()) do
-                if not noKillList[player.Name then
+                if not noKillList[player.Name] then
                     killList[player.Name] = true -- Add to Kill List
                 else
                     killList[player.Name] = nil -- Remove from Kill List
@@ -62,3 +117,8 @@ for _, player in ipairs(Players:GetPlayers()) do
 end
 
 print("Player buttons created with selection toggle and glow effect.")
+
+-- Auto Hit Functionality (Toggle)
+-- Add additional tabs here as needed
+
+print("Script Loaded. Use the tabs to manage game settings and player interactions.")
