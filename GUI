@@ -1,6 +1,7 @@
 -- Ensure this script runs in a LocalScript
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))() -- Load Orion library
 
 -- Global variables
@@ -61,6 +62,52 @@ local function toggleAutoPunch(value)
     end
 end
 
+-- Lighting settings for time of day
+local function setLighting(timeOfDay)
+    if timeOfDay == "morning" then
+        Lighting.Brightness = 2
+        Lighting.ColorShift_Tint = Color3.fromRGB(255, 200, 150)
+        Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 255)
+    elseif timeOfDay == "afternoon" then
+        Lighting.Brightness = 3
+        Lighting.ColorShift_Tint = Color3.fromRGB(255, 255, 255)
+        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+    elseif timeOfDay == "night" then
+        Lighting.Brightness = 0.5
+        Lighting.ColorShift_Tint = Color3.fromRGB(50, 50, 100)
+        Lighting.OutdoorAmbient = Color3.fromRGB(20, 20, 40)
+    end
+end
+
+-- Function to enable no-clip
+local function setNoClip(character, value)
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = not value
+        end
+    end
+end
+
+local function toggleNoClip(value)
+    for _, player in ipairs(Players:GetPlayers()) do
+        local character = player.Character
+        if character then
+            setNoClip(character, value) -- Enable or disable no-clip
+        end
+    end
+end
+
+-- Function to enable infinite jump
+local function enableInfiniteJump()
+    UserInputService.JumpRequest:Connect(function()
+        local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end)
+    showNotification("Infinite Jump Enabled")
+end
+
 -- Main Tab
 local MainTab = Window:MakeTab({
     Name = "Main",
@@ -68,28 +115,69 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false,
 })
 
-MainTab:AddSlider({
+MainTab:AddTextbox({
     Name = "Walk Speed",
-    Min = 16,
-    Max = 100,
-    Default = 16,
-    Color = Color3.fromRGB(255, 255, 255),
-    Increment = 1,
+    Default = "16",
+    TextDisappear = true,
     Callback = function(Value)
-        LocalPlayer.Character.Humanoid.WalkSpeed = Value
+        local speed = tonumber(Value) or 16
+        LocalPlayer.Character.Humanoid.WalkSpeed = speed
     end    
 })
 
-MainTab:AddSlider({
+MainTab:AddTextbox({
     Name = "Jump Power",
-    Min = 50,
-    Max = 200,
-    Default = 50,
-    Color = Color3.fromRGB(255, 255, 255),
-    Increment = 1,
+    Default = "50",
+    TextDisappear = true,
     Callback = function(Value)
-        LocalPlayer.Character.Humanoid.JumpPower = Value
+        local jumpPower = tonumber(Value) or 50
+        LocalPlayer.Character.Humanoid.JumpPower = jumpPower
     end    
+})
+
+MainTab:AddTextbox({
+    Name = "Gravity",
+    Default = "196.2",
+    TextDisappear = true,
+    Callback = function(Value)
+        local gravity = tonumber(Value) or 196.2
+        workspace.Gravity = gravity
+    end    
+})
+
+-- Time Dropdown
+MainTab:AddDropdown({
+    Name = "Time of Day",
+    Options = {"morning", "afternoon", "night"},
+    CurrentOption = "morning",
+    Callback = function(Selected)
+        setLighting(Selected)
+        showNotification("Time set to: " .. Selected)
+    end,
+})
+
+-- No-Clip Dropdown
+MainTab:AddDropdown({
+    Name = "Toggle No-Clip",
+    Options = {"Enable", "Disable"},
+    CurrentOption = "Disable",
+    Callback = function(Selected)
+        if Selected == "Enable" then
+            toggleNoClip(true)
+            showNotification("No-Clip Enabled")
+        elseif Selected == "Disable" then
+            toggleNoClip(false)
+            showNotification("No-Clip Disabled")
+        end
+    end,
+})
+
+-- Infinite Jump Button
+MainTab:AddButton({
+    Name = "Enable Infinite Jump",
+    Callback = function()
+        enableInfiniteJump()
+    end,
 })
 
 -- Auto Farm Tab
