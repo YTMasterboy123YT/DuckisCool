@@ -85,12 +85,41 @@ MainTab:AddToggle({
     end
 })
 
--- Button to clear no-kill list
-MainTab:AddButton({
-    Name = "Clear No-Kill List",
-    Callback = function()
-        _G.noKillList = {}
-        showNotification("Cleared no-kill list.")
+-- Speed changer
+MainTab:AddTextbox({
+    Name = "Speed Changer",
+    Default = "16",
+    TextDisappear = true,
+    Callback = function(Value)
+        local speedValue = tonumber(Value) or 16
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.WalkSpeed = speedValue
+                end
+            end
+        end
+    end
+})
+
+-- Jump changer
+MainTab:AddTextbox({
+    Name = "Jump Changer",
+    Default = "50",
+    TextDisappear = true,
+    Callback = function(Value)
+        local jumpPowerValue = tonumber(Value) or 50
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.JumpPower = jumpPowerValue
+                end
+            end
+        end
     end
 })
 
@@ -109,7 +138,6 @@ KillerTab:AddToggle({
         _G.autoHitActive = Value
         if Value then
             showNotification("Auto Hit Enabled.")
-            -- Start auto-hitting loop here
             while _G.autoHitActive do
                 for _, otherPlayer in pairs(Players:GetPlayers()) do
                     if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
@@ -119,24 +147,10 @@ KillerTab:AddToggle({
                         end
                     end
                 end
-                wait(0.1) -- Adjust as needed
+                wait(0.1)
             end
         else
             showNotification("Auto Hit Disabled.")
-        end
-    end
-})
-
--- Button to bring selected player's parts
-KillerTab:AddButton({
-    Name = "Kill Selected Player",
-    Callback = function()
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
-                _G.killList[otherPlayer.Name] = true
-                showNotification("Started bringing " .. otherPlayer.Name .. "'s parts to you.")
-                bringUserParts(otherPlayer.Name)
-            end
         end
     end
 })
@@ -148,15 +162,47 @@ local PlayersTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- List all players in the game
-for _, player in ipairs(Players:GetPlayers()) do
-    PlayersTab:AddButton({
-        Name = player.Name,
-        Callback = function()
-            _G.noKillList[player.Name] = true
-            showNotification(player.Name .. " added to no-kill list.")
-        end
-    })
+-- Function to update player buttons
+local function updatePlayerButtons()
+    PlayersTab:Clear() -- Clear previous buttons
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        PlayersTab:AddToggle({
+            Name = player.Name,
+            Default = _G.noKillList[player.Name] or false,
+            Callback = function(Value)
+                if Value then
+                    _G.noKillList[player.Name] = true
+                    showNotification(player.Name .. " added to no-kill list.")
+                else
+                    _G.noKillList[player.Name] = nil
+                    showNotification(player.Name .. " removed from no-kill list.")
+                end
+            end
+        })
+    end
 end
+
+-- Update player buttons on initialization
+updatePlayerButtons()
+
+-- Connect player events to update buttons
+Players.PlayerAdded:Connect(function()
+    updatePlayerButtons()
+end)
+
+Players.PlayerRemoving:Connect(function()
+    updatePlayerButtons()
+end)
+
+-- Button to clear no-kill list
+KillerTab:AddButton({
+    Name = "Clear No-Kill List",
+    Callback = function()
+        _G.noKillList = {}
+        showNotification("Cleared no-kill list.")
+        updatePlayerButtons() -- Update buttons after clearing
+    end
+})
 
 print("Script Loaded. Use the tabs to manage game settings and player interactions.")
