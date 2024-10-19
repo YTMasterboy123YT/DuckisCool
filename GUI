@@ -69,5 +69,21 @@ MainTab:MakeTextbox({
     end
 })
 
+-- Settings Tab
+local SettingsTab = Window:MakeTab({
+    Name = "Settings",
+    Icon = "rbxassetid://4483345998", -- Change this icon as needed
+    PremiumOnly = false
+})
+
+-- Example functionality for the Settings tab
+SettingsTab:MakeButton({
+    Name = "Reset Settings",
+    Callback = function()
+        print("Settings have been reset.")
+        -- Add your reset logic here
+    end
+})
+
 -- Show the window
 OrionLib:Init()
