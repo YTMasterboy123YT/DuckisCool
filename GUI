@@ -18,38 +18,39 @@ local MainTab = Window:MakeTab({
     Premium = false,
 })
 
--- Walk Speed
 MainTab:AddLabel("Set Walk Speed:")
 MainTab:AddTextBox("Enter Walk Speed", "Default: 16", true, function(value)
     local player = game.Players.LocalPlayer
     player.Character.Humanoid.WalkSpeed = tonumber(value) or 16
 end)
 
--- Jump Power
 MainTab:AddLabel("Set Jump Power:")
 MainTab:AddTextBox("Enter Jump Power", "Default: 50", true, function(value)
     local player = game.Players.LocalPlayer
     player.Character.Humanoid.JumpPower = tonumber(value) or 50
 end)
 
--- Gravity Button
 MainTab:AddButton("Set Gravity to 50", function()
     workspace.Gravity = 50
 end)
 
--- Time of Day Dropdown
 MainTab:AddDropdown("Time of Day", {"Morning", "Afternoon", "Night"}, function(selected)
     local Lighting = game:GetService("Lighting")
     if selected == "Morning" then
         Lighting.Brightness = 2
+        Lighting.ColorShift_Tint = Color3.fromRGB(255, 200, 150)
+        Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 255)
     elseif selected == "Afternoon" then
         Lighting.Brightness = 3
+        Lighting.ColorShift_Tint = Color3.fromRGB(255, 255, 255)
+        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
     elseif selected == "Night" then
         Lighting.Brightness = 0.5
+        Lighting.ColorShift_Tint = Color3.fromRGB(50, 50, 100)
+        Lighting.OutdoorAmbient = Color3.fromRGB(20, 20, 40)
     end
 end)
 
--- Enable No Clip Button
 MainTab:AddButton("Enable No Clip", function()
     local Players = game:GetService("Players")
     local character = Players.LocalPlayer.Character
@@ -60,7 +61,6 @@ MainTab:AddButton("Enable No Clip", function()
     end
 end)
 
--- Enable Infinite Jump Button
 MainTab:AddButton("Enable Infinite Jump", function()
     local UserInputService = game:GetService("UserInputService")
     UserInputService.JumpRequest:Connect(function()
@@ -122,7 +122,7 @@ KillerTab:AddToggle({
         if punching then
             autoUseTool()
         end
-    end
+    end,
 })
 
 KillerTab:AddParagraph("Commands", "/kill\n/Off\n/NK \"User\"")
@@ -157,66 +157,4 @@ AutoFarmTab:AddDropdown("Select Rock", {"Muscle King Mountain", "Frozen Rock", "
     teleportRockToHand(selected)
 end)
 
--- Stats Tab
-local StatsTab = Window:MakeTab({
-    Name = "Stats",
-    Icon = "rbxassetid://123456789",
-    Premium = false,
-})
-
-StatsTab:AddDropdown("Select Player", function(playerName)
-    local Players = game:GetService("Players")
-    local targetPlayer = Players:FindFirstChild(playerName)
-    
-    if targetPlayer then
-        local statsString = ""
-        local leaderstats = targetPlayer:FindFirstChild("leaderstats")
-        if leaderstats then
-            for _, stat in pairs(leaderstats:GetChildren()) do
-                statsString = statsString .. stat.Name .. ": " .. tostring(stat.Value) .. "\n"
-            end
-        end
-
-        -- Show stats in a GUI
-        local statsGui = Instance.new("ScreenGui")
-        local frame = Instance.new("Frame")
-        frame.Parent = statsGui
-        statsGui.Parent = game.CoreGui
-        frame.Size = UDim2.new(0.5, 0, 0.5, 0)
-        frame.Position = UDim2.new(0.5, -125, 0.5, -125)
-        frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-
-        local titleLabel = Instance.new("TextLabel")
-        titleLabel.Size = UDim2.new(1, 0, 0.2, 0)
-        titleLabel.Text = "Stats for " .. targetPlayer.Name
-        titleLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        titleLabel.TextScaled = true
-        titleLabel.Parent = frame
-
-        local statsList = Instance.new("TextLabel")
-        statsList.Size = UDim2.new(1, 0, 0.6, 0)
-        statsList.Position = UDim2.new(0, 0, 0.2, 0)
-        statsList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        statsList.TextColor3 = Color3.fromRGB(255, 255, 255)
-        statsList.TextScaled = true
-        statsList.TextWrapped = true
-        statsList.TextSize = 20
-        statsList.Text = statsString
-        statsList.Parent = frame
-
-        local closeButton = Instance.new("TextButton")
-        closeButton.Size = UDim2.new(0.4, 0, 0.1, 0)
-        closeButton.Position = UDim2.new(0.5, -80, 0.85, 0)
-        closeButton.Text = "Close"
-        closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-        closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        closeButton.Parent = frame
-
-        closeButton.MouseButton1Click:Connect(function()
-            statsGui:Destroy()
-        end)
-    end
-end)
-
-print("All tabs and functions are set up!")
+print("Utility loaded successfully.")
