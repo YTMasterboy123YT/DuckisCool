@@ -71,6 +71,15 @@ local function toggleNoClip(enable)
         local character = player.Character
         if character then
             setNoClip(character, enable)
+            if enable then
+                -- Connect to character added/removed to handle respawns
+                character.AncestryChanged:Connect(function(_, parent)
+                    if not parent then
+                        -- Character is removed, disable noclip
+                        setNoClip(character, false)
+                    end
+                end)
+            end
         end
     end
 end
@@ -156,18 +165,6 @@ MainTab:AddToggle({
             print("NoClip disabled.")
         end
     end    
-})
-
--- Example button in the Main tab
-MainTab:AddButton({
-    Name = "Test Button", 
-    Callback = function()
-        OrionLib:MakeNotification({
-            Name = "Button Clicked", 
-            Content = "You clicked the Test Button!", 
-            Duration = 5
-        })
-    end
 })
 
 -- Create AutoFarm Tab
