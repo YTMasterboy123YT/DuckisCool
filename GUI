@@ -1,142 +1,23 @@
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Orion/main/source'))()
 
 local Window = OrionLib:MakeWindow({
-    Name = "Player Management Script", 
-    HidePremium = false, 
-    SaveConfig = true, 
-    ConfigFolder = "PlayerManagement",
-    IntroEnabled = true, 
-    IntroText = "Welcome to Player Management Script!", 
-    IntroIcon = "https://i.imgur.com/dWXaDfO.jpg"
+    Name = "Ducks Private GUI",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "OrionTest",
+    Icon = "https://i.etsystatic.com/35554607/r/il/e67969/4676121144/il_fullxfull.4676121144_a16q.jpg",
+    IntroEnabled = true,
+    IntroText = "Ducks Private Script",
+    IntroIcon = "https://i.etsystatic.com/35554607/r/il/e67969/4676121144/il_fullxfull.4676121144_a16q.jpg"
 })
 
--- Global variables
-_G.noKillList = {}
-_G.killList = {}
-local punching = false
-local toolName = "Punch"
-
--- Function to set tool cooldowns
-local function setToolCooldowns()
-    local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or LocalPlayer.Character:FindFirstChild(toolName)
-    if tool then
-        local cooldown = tool:FindFirstChild("attackTime")
-        if cooldown then
-            cooldown.Value = 0.1
-        end
-    end
-end
-
-local function autoUseTool()
-    setToolCooldowns()
-
-    while punching do
-        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
-
-        if tool then
-            if tool.Parent ~= character then
-                humanoid:EquipTool(tool)
-            end
-            tool:Activate()
-            wait(0.1)
-        else
-            wait(0.5)
-        end
-    end
-end
-
-local function toggleAutoPunch(value)
-    punching = value
-
-    if punching then
-        print("Auto-punching started.")
-        autoUseTool()
-    else
-        print("Auto-punching stopped.")
-    end
-end
-
--- Main Tab
-local MainTab = Window:MakeTab({
-    Name = "Main Tab",
-    Icon = "rbxassetid://132359476107633",
-    PremiumOnly = false
-})
-
-MainTab:AddLabel("Main Controls")
-
--- Player Tab
-local PlayerTab = Window:MakeTab({
-    Name = "Player Tab",
-    Icon = "rbxassetid://132359476107633",
-    PremiumOnly = false
-})
-
-local function updatePlayerButtons()
-    PlayerTab:Clear() -- Clear previous buttons
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        PlayerTab:AddToggle({
-            Name = player.Name,
-            Default = _G.noKillList[player.Name] or false,
-            Callback = function(Value)
-                _G.noKillList[player.Name] = Value
-                print(player.Name .. " is " .. (Value and "added to no-kill list." or "removed from no-kill list."))
-            end,
-            Flag = player.Name -- Unique flag for saving state
-        })
-    end
-end
-
--- Update player buttons on player added/removed
-Players.PlayerAdded:Connect(function()
-    wait(1) -- Wait for the player to fully load
-    updatePlayerButtons()
-end)
-
-Players.PlayerRemoving:Connect(function()
-    updatePlayerButtons() -- Update when a player leaves
-end)
-
--- Initial button setup
-updatePlayerButtons()
-
--- Killer Tab
-local KillerTab = Window:MakeTab({
-    Name = "Killer Tab",
-    Icon = "rbxassetid://132359476107633",
-    PremiumOnly = false
-})
-
--- Auto Hit Toggle
-KillerTab:AddToggle({
-    Name = "Auto Hit",
-    Default = false,
-    Callback = function(Value)
-        _G.autoHitActive = Value
-        if Value then
-            toggleAutoPunch(true)
-        else
-            toggleAutoPunch(false)
-        end
-    end
-})
-
--- Kill Selected Button
-KillerTab:AddButton({
-    Name = "Kill Selected Players",
+-- Example button
+local Button = Window:MakeButton({
+    Name = "Click Me!",
     Callback = function()
-        for _, player in ipairs(Players:GetPlayers()) do
-            if _G.noKillList[player.Name] == nil then
-                -- Code to kill the player or handle logic
-                print("Killing " .. player.Name)
-            end
-        end
+        print("Button clicked!")
     end
 })
 
-print("Script Loaded. Use the tabs to manage game settings and player interactions.")
+-- Show the window
+OrionLib:Init()
