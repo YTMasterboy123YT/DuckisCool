@@ -17,6 +17,79 @@ local LocalPlayer = Players.LocalPlayer
 local noKillList = {}
 local killList = {}
 
+-- Main Tab
+local MainTab = Window:MakeTab({
+    Name = "Main Tab",
+    Icon = "rbxassetid://132359476107633",
+    PremiumOnly = false
+})
+
+MainTab:AddLabel("Main Tab - Duck")
+
+-- Speed Changer
+MainTab:AddTextbox({
+    Name = "Speed Changer",
+    Default = "16",
+    TextDisappear = true,
+    Callback = function(Value)
+        local speedValue = tonumber(Value) or 16
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.WalkSpeed = speedValue
+                end
+            end
+        end
+    end
+})
+
+-- Jump Changer
+MainTab:AddTextbox({
+    Name = "Jump Changer",
+    Default = "50",
+    TextDisappear = true,
+    Callback = function(Value)
+        local jumpPowerValue = tonumber(Value) or 50
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.JumpPower = jumpPowerValue
+                end
+            end
+        end
+    end
+})
+
+-- Gravity Changer
+MainTab:AddTextbox({
+    Name = "Gravity Changer",
+    Default = "196.2",
+    TextDisappear = true,
+    Callback = function(Value)
+        local gravityValue = tonumber(Value) or 196.2
+        workspace.Gravity = gravityValue
+    end
+})
+
+-- Set Time of Day Dropdown
+MainTab:AddDropdown({
+    Name = "Set Time of Day",
+    Options = {"Morning", "Afternoon", "Night"},
+    Callback = function(selected)
+        if selected == "Morning" then
+            game.Lighting.ClockTime = 6
+        elseif selected == "Afternoon" then
+            game.Lighting.ClockTime = 12
+        elseif selected == "Night" then
+            game.Lighting.ClockTime = 18
+        end
+    end
+})
+
 -- Killer Tab
 local KillerTab = Window:MakeTab({
     Name = "Killer Tab",
@@ -79,11 +152,19 @@ KillerTab:AddToggle({
     end
 })
 
+-- Players Tab
+local PlayersTab = Window:MakeTab({
+    Name = "Players",
+    Icon = "rbxassetid://132359476107633",
+    PremiumOnly = false
+})
+
 -- Function to create player buttons with glow effect
 local function createPlayerButton(playerName)
     local isSelected = false
 
-    local button = KillerTab:AddButton({
+    -- Create button for the player
+    local button = PlayersTab:AddButton({
         Name = playerName,
         Callback = function()
             isSelected = not isSelected -- Toggle selection
@@ -99,7 +180,7 @@ local function createPlayerButton(playerName)
                 noKillList[playerName] = nil -- Remove from No-Kill List
             end
 
-            -- Update Kill List
+            -- Update Kill List based on selection
             for _, player in ipairs(Players:GetPlayers()) do
                 if not noKillList[player.Name] then
                     killList[player.Name] = true -- Add to Kill List
@@ -111,14 +192,13 @@ local function createPlayerButton(playerName)
     })
 end
 
--- Create buttons for all players
+-- Create buttons for all players in the Players Tab
 for _, player in ipairs(Players:GetPlayers()) do
     createPlayerButton(player.Name)
 end
 
 print("Player buttons created with selection toggle and glow effect.")
 
--- Auto Hit Functionality (Toggle)
--- Add additional tabs here as needed
+-- Additional tabs and functionalities can be added here
 
 print("Script Loaded. Use the tabs to manage game settings and player interactions.")
