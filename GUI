@@ -196,6 +196,23 @@ LocalPlayer.Chatted:Connect(function(message)
     end
 end)
 
+-- Button to teleport all players not in the no-kill list
+KillerTab:AddButton({
+    Name = "Teleport All (No Kill List)",
+    Callback = function()
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            local targetCharacter = otherPlayer.Character
+
+            if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
+                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
+                end
+            end
+        end
+        showNotification("Teleported all players not in the no-kill list.")
+    end
+})
+
 print("Type '/kill (User)' to bring a user's parts to you continuously.")
 print("Type '/off' to stop teleporting players.")
 print("Type '/nk \"User1\" \"User2\"' to add two users to the no-kill list.")
