@@ -69,6 +69,7 @@ local function bringUserParts(user)
     end
 end
 
+-- Main Tab
 local MainTab = Window:MakeTab({
     Name = "Main Tab",
     Icon = "rbxassetid://132359476107633",
@@ -123,6 +124,7 @@ MainTab:AddTextbox({
     end
 })
 
+-- Dropdown for setting game time
 MainTab:AddDropdown({
     Name = "Set Time of Day",
     Options = {"Morning", "Afternoon", "Night"},
@@ -137,6 +139,7 @@ MainTab:AddDropdown({
     end
 })
 
+-- Killer Tab
 local KillerTab = Window:MakeTab({
     Name = "Killer Tab",
     Icon = "rbxassetid://132359476107633",
@@ -150,6 +153,7 @@ for _, player in ipairs(Players:GetPlayers()) do
     table.insert(playerNames, player.Name)
 end
 
+-- No-Kill List Multi-Select
 KillerTab:AddDropdown({
     Name = "Select Players for No-Kill List",
     Options = playerNames,
@@ -162,6 +166,7 @@ KillerTab:AddDropdown({
     end
 })
 
+-- Kill List Multi-Select
 KillerTab:AddDropdown({
     Name = "Select Players for Kill List",
     Options = playerNames,
@@ -175,6 +180,7 @@ KillerTab:AddDropdown({
     end
 })
 
+-- Button to toggle player teleportation
 KillerTab:AddButton({
     Name = "Toggle Teleport Players",
     Callback = function()
@@ -188,6 +194,7 @@ KillerTab:AddButton({
     end
 })
 
+-- Auto Hit Toggle
 local autoHitActive = false
 KillerTab:AddToggle({
     Name = "Auto Hit",
