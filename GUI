@@ -5,10 +5,10 @@ local Window = OrionLib:MakeWindow({
     HidePremium = false,
     SaveConfig = true,
     ConfigFolder = "OrionTest",
-    Icon = "https://i.etsystatic.com/35554607/r/il/e67969/4676121144/il_fullxfull.4676121144_a16q.jpg",
+    Icon = "rbxassetid://112270259150403",
     IntroEnabled = true,
     IntroText = "Ducks Private Script",
-    IntroIcon = "https://i.etsystatic.com/35554607/r/il/e67969/4676121144/il_fullxfull.4676121144_a16q.jpg"
+    IntroIcon = "rbxassetid://112270259150403"
 })
 
 -- Example button
