@@ -164,19 +164,17 @@ local function createPlayerButton(playerName)
     local isSelected = false
 
     -- Create button for the player
-    local button = PlayersTab:AddButton({
+    PlayersTab:AddButton({
         Name = playerName,
         Callback = function()
             isSelected = not isSelected -- Toggle selection
 
             -- Change button appearance based on selection
             if isSelected then
-                button.TextColor3 = Color3.fromRGB(0, 255, 0) -- Change text color to green
-                button.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Darker background
+                PlayersTab:SetButtonColor(playerName, Color3.fromRGB(0, 255, 0)) -- Change button color to green
                 noKillList[playerName] = true -- Add to No-Kill List
             else
-                button.TextColor3 = Color3.fromRGB(255, 255, 255) -- Reset text color
-                button.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Reset background
+                PlayersTab:SetButtonColor(playerName, Color3.fromRGB(255, 255, 255)) -- Reset button color
                 noKillList[playerName] = nil -- Remove from No-Kill List
             end
 
