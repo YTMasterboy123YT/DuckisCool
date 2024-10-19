@@ -10,20 +10,15 @@ local Window = OrionLib:MakeWindow({
     IntroIcon = "https://i.imgur.com/dWXaDfO.jpg" -- Direct image link
 })
 
---[[ 
-Name = <string> - The name of the UI. 
-HidePremium = <bool> - Whether or not the user details shows Premium status or not. 
-SaveConfig = <bool> - Toggles the config saving in the UI. 
-ConfigFolder = <string> - The name of the folder where the configs are saved. 
-IntroEnabled = <bool> - Whether or not to show the intro animation. 
-IntroText = <string> - Text to show in the intro animation. 
-IntroIcon = <string> - URL to the image you want to use in the intro animation. 
-Icon = <string> - URL to the image you want displayed on the window. 
-CloseCallback = <function> - Function to execute when the window is closed. 
-]]
+-- Create Main Tab
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://132359476107633", -- Asset ID for all tabs
+    PremiumOnly = false
+})
 
--- Example button to show how the GUI works
-Window:MakeButton({
+MainTab:AddLabel("This is the main tab!")
+MainTab:AddButton({
     Name = "Test Button", 
     Callback = function()
         OrionLib:MakeNotification({
@@ -34,4 +29,31 @@ Window:MakeButton({
     end
 })
 
--- Add more UI elements as needed
+-- Create AutoFarm Tab
+local AutoFarmTab = Window:MakeTab({
+    Name = "AutoFarm",
+    Icon = "rbxassetid://132359476107633", -- Asset ID for all tabs
+    PremiumOnly = false
+})
+
+AutoFarmTab:AddLabel("AutoFarm features coming soon!")
+
+-- Create Killer Tab
+local KillerTab = Window:MakeTab({
+    Name = "Killer",
+    Icon = "rbxassetid://132359476107633", -- Asset ID for all tabs
+    PremiumOnly = false
+})
+
+KillerTab:AddLabel("Killer features coming soon!")
+
+-- Create Misc Tab
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://132359476107633", -- Asset ID for all tabs
+    PremiumOnly = false
+})
+
+MiscTab:AddLabel("Miscellaneous features coming soon!")
+
+-- Add more elements to each tab as needed
