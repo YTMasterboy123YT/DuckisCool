@@ -1,70 +1,26 @@
--- Ensure this script runs in a LocalScript
+-- Define services
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local Lighting = game:GetService("Lighting")
 local LocalPlayer = Players.LocalPlayer
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))() -- Load Orion library
+local UserInputService = game:GetService("UserInputService")
+local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Orion/main/source.lua'))()
 
--- Global variables
-_G.noKillList = {}
-local punching = false
-local hitSpeed = 0.1 -- Default hit speed
-
--- Create the Orion window
+-- Create the main GUI
 local Window = OrionLib:MakeWindow({
-    Name = "Your Game Name",
-    Icon = "rbxassetid://95093869224117",
+    Name = "Game Utility",
+    IntroIcon = "rbxassetid://95093869224117",
     HidePremium = false,
 })
 
--- Function to show notifications
-local function showNotification(message)
-    OrionLib:MakeNotification({
-        Name = "Notification",
-        Content = message,
-        Time = 5,
-    })
-end
+-- Main Tab
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false,
+})
 
--- Auto hit functionality
-local function setToolCooldowns()
-    local tool = LocalPlayer.Backpack:FindFirstChild("Punch") or LocalPlayer.Character:FindFirstChild("Punch")
-    if tool and tool:FindFirstChild("attackTime") then
-        tool.attackTime.Value = hitSpeed
-    end
-end
-
-local function autoUseTool()
-    setToolCooldowns()
-    while punching do
-        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        local tool = LocalPlayer.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
-
-        if tool then
-            if tool.Parent ~= character then
-                humanoid:EquipTool(tool)
-            end
-            tool:Activate()
-            wait(hitSpeed) -- Use hitSpeed for the delay
-        else
-            wait(0.5)
-        end
-    end
-end
-
-local function toggleAutoPunch(value)
-    punching = value
-    if punching then
-        print("Auto-punching started.")
-        autoUseTool()
-    else
-        print("Auto-punching stopped.")
-    end
-end
-
--- Lighting settings for time of day
+-- Time settings function
 local function setLighting(timeOfDay)
+    local Lighting = game:GetService("Lighting")
     if timeOfDay == "morning" then
         Lighting.Brightness = 2
         Lighting.ColorShift_Tint = Color3.fromRGB(255, 200, 150)
@@ -80,7 +36,16 @@ local function setLighting(timeOfDay)
     end
 end
 
--- Function to enable no-clip
+-- Dropdown for time of day
+MainTab:AddDropdown({
+    Name = "Time of Day",
+    Options = {"morning", "afternoon", "night"},
+    Callback = function(selectedTime)
+        setLighting(selectedTime)
+    end,
+})
+
+-- NoClip function
 local function setNoClip(character, value)
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
@@ -89,90 +54,31 @@ local function setNoClip(character, value)
     end
 end
 
-local function toggleNoClip(value)
-    for _, player in ipairs(Players:GetPlayers()) do
-        local character = player.Character
-        if character then
-            setNoClip(character, value) -- Enable or disable no-clip
+MainTab:AddButton({
+    Name = "Enable NoClip",
+    Callback = function()
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                setNoClip(character, true) -- Enable no clip
+            end
         end
-    end
-end
+    end,
+})
 
--- Function to enable infinite jump
+-- Infinite Jump function
 local function enableInfiniteJump()
     UserInputService.JumpRequest:Connect(function()
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+        local character = LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
         end
     end)
-    showNotification("Infinite Jump Enabled")
 end
 
--- Main Tab
-local MainTab = Window:MakeTab({
-    Name = "Main",
-    Icon = "rbxassetid://95093869224117",
-    PremiumOnly = false,
-})
-
-MainTab:AddTextbox({
-    Name = "Walk Speed",
-    Default = "16",
-    TextDisappear = true,
-    Callback = function(Value)
-        local speed = tonumber(Value) or 16
-        LocalPlayer.Character.Humanoid.WalkSpeed = speed
-    end    
-})
-
-MainTab:AddTextbox({
-    Name = "Jump Power",
-    Default = "50",
-    TextDisappear = true,
-    Callback = function(Value)
-        local jumpPower = tonumber(Value) or 50
-        LocalPlayer.Character.Humanoid.JumpPower = jumpPower
-    end    
-})
-
-MainTab:AddTextbox({
-    Name = "Gravity",
-    Default = "196.2",
-    TextDisappear = true,
-    Callback = function(Value)
-        local gravity = tonumber(Value) or 196.2
-        workspace.Gravity = gravity
-    end    
-})
-
--- Time Dropdown
-MainTab:AddDropdown({
-    Name = "Time of Day",
-    Options = {"morning", "afternoon", "night"},
-    CurrentOption = "morning",
-    Callback = function(Selected)
-        setLighting(Selected)
-        showNotification("Time set to: " .. Selected)
-    end,
-})
-
--- No-Clip Dropdown
-MainTab:AddDropdown({
-    Name = "Toggle No-Clip",
-    Options = {"Enable", "Disable"},
-    CurrentOption = "Disable",
-    Callback = function(Selected)
-        if Selected == "Enable" then
-            toggleNoClip(true)
-            showNotification("No-Clip Enabled")
-        elseif Selected == "Disable" then
-            toggleNoClip(false)
-            showNotification("No-Clip Disabled")
-        end
-    end,
-})
-
--- Infinite Jump Button
 MainTab:AddButton({
     Name = "Enable Infinite Jump",
     Callback = function()
@@ -180,20 +86,95 @@ MainTab:AddButton({
     end,
 })
 
--- Auto Farm Tab
-local AutoFarmTab = Window:MakeTab({
-    Name = "Auto Farm",
+-- Stats Tab
+local StatsTab = Window:MakeTab({
+    Name = "Stats",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false,
 })
 
-AutoFarmTab:AddDropdown({
-    Name = "Select Rock",
-    Options = {"Muscle King Mountain", "Frozen Rock", "Rock Of Legends"},
-    CurrentOption = "Muscle King Mountain",
-    Callback = function(Selected)
-        -- Your logic for teleporting the selected rock
-        -- Implement teleport logic here based on the selected rock
+-- Function to create and display a stats GUI
+local function createStatsGui(stats)
+    local statsGui = Instance.new("ScreenGui")
+    local frame = Instance.new("Frame")
+    local closeButton = Instance.new("TextButton")
+
+    statsGui.Name = "StatsGui"
+    statsGui.Parent = game.CoreGui
+
+    frame.Size = UDim2.new(0.5, 0, 0.5, 0)
+    frame.Position = UDim2.new(0.5, -125, 0.5, -125)
+    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    frame.BorderSizePixel = 0
+    frame.Parent = statsGui
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, 0, 0.2, 0)
+    titleLabel.Text = "Stats"
+    titleLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.TextScaled = true
+    titleLabel.Parent = frame
+
+    local statsList = Instance.new("TextLabel")
+    statsList.Size = UDim2.new(1, 0, 0.6, 0)
+    statsList.Position = UDim2.new(0, 0, 0.2, 0)
+    statsList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    statsList.TextColor3 = Color3.fromRGB(255, 255, 255)
+    statsList.TextScaled = true
+    statsList.TextWrapped = true
+    statsList.TextSize = 20
+    statsList.Text = stats
+    statsList.Parent = frame
+
+    closeButton.Size = UDim2.new(0.4, 0, 0.1, 0)
+    closeButton.Position = UDim2.new(0.5, -80, 0.85, 0)
+    closeButton.Text = "Close"
+    closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.Parent = frame
+
+    closeButton.MouseButton1Click:Connect(function()
+        statsGui:Destroy()
+    end)
+end
+
+-- Function to display stats for a player
+local function displayPlayerStats(player)
+    local statsString = ""
+
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if leaderstats then
+        for _, stat in pairs(leaderstats:GetChildren()) do
+            statsString = statsString .. stat.Name .. ": " .. tostring(stat.Value) .. "\n"
+        end
+    else
+        statsString = "No leaderstats found."
+    end
+
+    local additionalStats = {"Durability", "Agility", "goodKarma", "evilKarma", "Gems", "muscleKingTime"}
+    for _, statName in ipairs(additionalStats) do
+        local stat = player:FindFirstChild(statName)
+        if stat then
+            statsString = statsString .. statName .. ": " .. tostring(stat.Value) .. "\n"
+        else
+            statsString = statsString .. statName .. " not found.\n"
+        end
+    end
+
+    createStatsGui(statsString)
+end
+
+-- Dropdown for players in Stats tab
+StatsTab:AddDropdown({
+    Name = "Select Player",
+    Options = Players:GetPlayers(),
+    CurrentOption = Players.LocalPlayer.Name,
+    Callback = function(selectedPlayer)
+        local player = Players:FindFirstChild(selectedPlayer)
+        if player then
+            displayPlayerStats(player)
+        end
     end,
 })
 
@@ -204,22 +185,72 @@ local KillerTab = Window:MakeTab({
     PremiumOnly = false,
 })
 
+local punching = false
+local toolName = "Punch"
+
+-- Function to set tool cooldowns
+local function setToolCooldowns()
+    local tools = {
+        {name = toolName, type = "attackTime"}
+    }
+
+    for _, toolInfo in pairs(tools) do
+        local tool = LocalPlayer.Backpack:FindFirstChild(toolInfo.name) or LocalPlayer.Character:FindFirstChild(toolInfo.name)
+        if tool then
+            local cooldown = tool:FindFirstChild(toolInfo.type)
+            if cooldown then
+                cooldown.Value = 0.1 -- Set the cooldown value
+            end
+        end
+    end
+end
+
+local function autoUseTool()
+    setToolCooldowns()
+    while punching do
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
+
+        if tool then
+            if tool.Parent ~= character then
+                humanoid:EquipTool(tool)
+            end
+            tool:Activate()
+            wait(0.1)
+        else
+            wait(0.5)
+        end
+    end
+end
+
+local function toggleAutoPunch(value)
+    punching = value
+    if punching then
+        autoUseTool()
+    end
+end
+
 KillerTab:AddToggle({
     Name = "Auto Hit",
     Default = false,
-    Callback = function(Value)
-        toggleAutoPunch(Value)
+    Callback = function(state)
+        toggleAutoPunch(state)
     end,
 })
 
-KillerTab:AddTextbox({
-    Name = "Hit Speed",
-    Default = "0.1",
-    TextDisappear = true,
-    Callback = function(Value)
-        hitSpeed = tonumber(Value) or hitSpeed
+KillerTab:AddTextBox({
+    Name = "Hit Speed (seconds)",
+    PlaceholderText = "Enter hit speed",
+    Text = "0.1",
+    Callback = function(hitSpeed)
+        local speed = tonumber(hitSpeed)
+        if speed then
+            wait(speed)
+        end
     end,
 })
 
--- Final setup for GUI
-Window:Init()
+KillerTab:AddParagraph("Commands", "Use these commands in chat:\n/kill\n/Off\n/NK \"User\"")
+
+print("Game Utility Loaded!")
