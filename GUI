@@ -13,9 +13,9 @@ local Window = OrionLib:MakeWindow({
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Global lists for no-kill and kill players
-local noKillList = {}
-local killList = {}
+-- Global variables
+_G.noKillList = {}
+_G.killList = {}
 
 -- Main Tab
 local MainTab = Window:MakeTab({
@@ -26,7 +26,7 @@ local MainTab = Window:MakeTab({
 
 MainTab:AddLabel("Main Tab - Duck")
 
--- Speed Changer
+-- Add textboxes for speed, jump, and gravity
 MainTab:AddTextbox({
     Name = "Speed Changer",
     Default = "16",
@@ -45,7 +45,6 @@ MainTab:AddTextbox({
     end
 })
 
--- Jump Changer
 MainTab:AddTextbox({
     Name = "Jump Changer",
     Default = "50",
@@ -64,7 +63,6 @@ MainTab:AddTextbox({
     end
 })
 
--- Gravity Changer
 MainTab:AddTextbox({
     Name = "Gravity Changer",
     Default = "196.2",
@@ -72,21 +70,6 @@ MainTab:AddTextbox({
     Callback = function(Value)
         local gravityValue = tonumber(Value) or 196.2
         workspace.Gravity = gravityValue
-    end
-})
-
--- Set Time of Day Dropdown
-MainTab:AddDropdown({
-    Name = "Set Time of Day",
-    Options = {"Morning", "Afternoon", "Night"},
-    Callback = function(selected)
-        if selected == "Morning" then
-            game.Lighting.ClockTime = 6
-        elseif selected == "Afternoon" then
-            game.Lighting.ClockTime = 12
-        elseif selected == "Night" then
-            game.Lighting.ClockTime = 18
-        end
     end
 })
 
@@ -152,51 +135,52 @@ KillerTab:AddToggle({
     end
 })
 
--- Players Tab
-local PlayersTab = Window:MakeTab({
-    Name = "Players",
+-- Player Tab
+local PlayerTab = Window:MakeTab({
+    Name = "Players Tab",
     Icon = "rbxassetid://132359476107633",
     PremiumOnly = false
 })
 
--- Function to create player buttons with glow effect
-local function createPlayerButton(playerName)
-    local isSelected = false
+PlayerTab:AddLabel("Select Players for No-Kill List")
 
-    -- Create button for the player
-    PlayersTab:AddButton({
-        Name = playerName,
-        Callback = function()
-            isSelected = not isSelected -- Toggle selection
-
-            -- Change button appearance based on selection
-            if isSelected then
-                PlayersTab:SetButtonColor(playerName, Color3.fromRGB(0, 255, 0)) -- Change button color to green
-                noKillList[playerName] = true -- Add to No-Kill List
+-- Create toggle buttons for each player
+for _, player in ipairs(Players:GetPlayers()) do
+    PlayerTab:AddToggle({
+        Name = player.Name,
+        Default = false,
+        Callback = function(Value)
+            if Value then
+                _G.noKillList[player.Name] = true
+                print(player.Name .. " added to No-Kill list.")
             else
-                PlayersTab:SetButtonColor(playerName, Color3.fromRGB(255, 255, 255)) -- Reset button color
-                noKillList[playerName] = nil -- Remove from No-Kill List
-            end
-
-            -- Update Kill List based on selection
-            for _, player in ipairs(Players:GetPlayers()) do
-                if not noKillList[player.Name] then
-                    killList[player.Name] = true -- Add to Kill List
-                else
-                    killList[player.Name] = nil -- Remove from Kill List
-                end
+                _G.noKillList[player.Name] = nil
+                print(player.Name .. " removed from No-Kill list.")
             end
         end
     })
 end
 
--- Create buttons for all players in the Players Tab
-for _, player in ipairs(Players:GetPlayers()) do
-    createPlayerButton(player.Name)
-end
+-- Function to update player list when a player joins or leaves
+Players.PlayerAdded:Connect(function(player)
+    PlayerTab:AddToggle({
+        Name = player.Name,
+        Default = false,
+        Callback = function(Value)
+            if Value then
+                _G.noKillList[player.Name] = true
+                print(player.Name .. " added to No-Kill list.")
+            else
+                _G.noKillList[player.Name] = nil
+                print(player.Name .. " removed from No-Kill list.")
+            end
+        end
+    })
+end)
 
-print("Player buttons created with selection toggle and glow effect.")
-
--- Additional tabs and functionalities can be added here
+Players.PlayerRemoving:Connect(function(player)
+    _G.noKillList[player.Name] = nil
+    print(player.Name .. " removed from No-Kill list.")
+end)
 
 print("Script Loaded. Use the tabs to manage game settings and player interactions.")
