@@ -1,28 +1,36 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
+local Window = OrionLib:MakeWindow({
+    Name = "Player Management Script", 
+    HidePremium = false, 
+    SaveConfig = true, 
+    ConfigFolder = "PlayerManagement",
+    IntroEnabled = true, 
+    IntroText = "Welcome to Player Management Script!", 
+    IntroIcon = "https://i.imgur.com/dWXaDfO.jpg"
+})
+
+-- Global variables
+_G.noKillList = {}
+_G.killList = {}
 local punching = false
 local toolName = "Punch"
 
 -- Function to set tool cooldowns
 local function setToolCooldowns()
-    local tools = {
-        {name = toolName, type = "attackTime"}
-    }
-
-    for _, toolInfo in pairs(tools) do
-        local tool = LocalPlayer.Backpack:FindFirstChild(toolInfo.name) or LocalPlayer.Character:FindFirstChild(toolInfo.name)
-        if tool then
-            local cooldown = tool:FindFirstChild(toolInfo.type) -- Assuming attackTime is an object
-            if cooldown then
-                cooldown.Value = 0.1 -- Set the cooldown value
-            end
+    local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or LocalPlayer.Character:FindFirstChild(toolName)
+    if tool then
+        local cooldown = tool:FindFirstChild("attackTime")
+        if cooldown then
+            cooldown.Value = 0.1
         end
     end
 end
 
 local function autoUseTool()
-    setToolCooldowns() -- Call to set cooldowns before starting to hit
+    setToolCooldowns()
 
     while punching do
         local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -34,9 +42,9 @@ local function autoUseTool()
                 humanoid:EquipTool(tool)
             end
             tool:Activate()
-            wait(0.1) -- Set to 0.1 seconds for faster hitting
+            wait(0.1)
         else
-            wait(0.5) -- Wait before checking again if the tool is not found
+            wait(0.5)
         end
     end
 end
@@ -52,6 +60,83 @@ local function toggleAutoPunch(value)
     end
 end
 
--- Example call to start/stop punching
-toggleAutoPunch(true) -- Start
--- toggleAutoPunch(false) -- Call this to stop 
+-- Main Tab
+local MainTab = Window:MakeTab({
+    Name = "Main Tab",
+    Icon = "rbxassetid://132359476107633",
+    PremiumOnly = false
+})
+
+MainTab:AddLabel("Main Controls")
+
+-- Player Tab
+local PlayerTab = Window:MakeTab({
+    Name = "Player Tab",
+    Icon = "rbxassetid://132359476107633",
+    PremiumOnly = false
+})
+
+local function updatePlayerButtons()
+    PlayerTab:Clear() -- Clear previous buttons
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        PlayerTab:AddToggle({
+            Name = player.Name,
+            Default = _G.noKillList[player.Name] or false,
+            Callback = function(Value)
+                _G.noKillList[player.Name] = Value
+                print(player.Name .. " is " .. (Value and "added to no-kill list." or "removed from no-kill list."))
+            end,
+            Flag = player.Name -- Unique flag for saving state
+        })
+    end
+end
+
+-- Update player buttons on player added/removed
+Players.PlayerAdded:Connect(function()
+    wait(1) -- Wait for the player to fully load
+    updatePlayerButtons()
+end)
+
+Players.PlayerRemoving:Connect(function()
+    updatePlayerButtons() -- Update when a player leaves
+end)
+
+-- Initial button setup
+updatePlayerButtons()
+
+-- Killer Tab
+local KillerTab = Window:MakeTab({
+    Name = "Killer Tab",
+    Icon = "rbxassetid://132359476107633",
+    PremiumOnly = false
+})
+
+-- Auto Hit Toggle
+KillerTab:AddToggle({
+    Name = "Auto Hit",
+    Default = false,
+    Callback = function(Value)
+        _G.autoHitActive = Value
+        if Value then
+            toggleAutoPunch(true)
+        else
+            toggleAutoPunch(false)
+        end
+    end
+})
+
+-- Kill Selected Button
+KillerTab:AddButton({
+    Name = "Kill Selected Players",
+    Callback = function()
+        for _, player in ipairs(Players:GetPlayers()) do
+            if _G.noKillList[player.Name] == nil then
+                -- Code to kill the player or handle logic
+                print("Killing " .. player.Name)
+            end
+        end
+    end
+})
+
+print("Script Loaded. Use the tabs to manage game settings and player interactions.")
