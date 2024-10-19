@@ -1,22 +1,47 @@
 local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Orion/main/source'))()
 
+local introIcon = "rbxassetid://95093869224117"
+local tabIcon = "rbxassetid://112270259150403"
+
 local Window = OrionLib:MakeWindow({
     Name = "Ducks Private GUI",
     HidePremium = false,
     SaveConfig = true,
     ConfigFolder = "OrionTest",
-    Icon = "rbxassetid://112270259150403",
+    Icon = introIcon,
     IntroEnabled = true,
     IntroText = "Ducks Private Script",
-    IntroIcon = "rbxassetid://112270259150403"
+    IntroIcon = introIcon
 })
 
--- Example button
-local Button = Window:MakeButton({
-    Name = "Click Me!",
-    Callback = function()
-        print("Button clicked!")
-    end
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = tabIcon,
+    PremiumOnly = false
+})
+
+local AutoFarmTab = Window:MakeTab({
+    Name = "Auto Farm",
+    Icon = tabIcon,
+    PremiumOnly = false
+})
+
+local KillerTab = Window:MakeTab({
+    Name = "Killer",
+    Icon = tabIcon,
+    PremiumOnly = false
+})
+
+local PlayerTab = Window:MakeTab({
+    Name = "Player",
+    Icon = tabIcon,
+    PremiumOnly = false
+})
+
+local StatsTab = Window:MakeTab({
+    Name = "Stats",
+    Icon = tabIcon,
+    PremiumOnly = false
 })
 
 -- Show the window
