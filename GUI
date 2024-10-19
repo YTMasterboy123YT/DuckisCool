@@ -20,28 +20,92 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
-local AutoFarmTab = Window:MakeTab({
-    Name = "Auto Farm",
-    Icon = tabIcon,
-    PremiumOnly = false
+-- Text Boxes
+local TextBox1 = MainTab:MakeTextBox({
+    Name = "Text Box 1",
+    PlaceholderText = "Enter text here...",
+    Callback = function(text)
+        print("Text Box 1: " .. text)
+    end
 })
 
-local KillerTab = Window:MakeTab({
-    Name = "Killer",
-    Icon = tabIcon,
-    PremiumOnly = false
+local TextBox2 = MainTab:MakeTextBox({
+    Name = "Text Box 2",
+    PlaceholderText = "Enter more text...",
+    Callback = function(text)
+        print("Text Box 2: " .. text)
+    end
 })
 
-local PlayerTab = Window:MakeTab({
-    Name = "Player",
-    Icon = tabIcon,
-    PremiumOnly = false
+local TextBox3 = MainTab:MakeTextBox({
+    Name = "Text Box 3",
+    PlaceholderText = "Enter additional text...",
+    Callback = function(text)
+        print("Text Box 3: " .. text)
+    end
 })
 
-local StatsTab = Window:MakeTab({
-    Name = "Stats",
-    Icon = tabIcon,
-    PremiumOnly = false
+-- Speed Change Functionality
+local speedValue = 16 -- Default speed value
+
+local SpeedButton = MainTab:MakeButton({
+    Name = "Change Speed",
+    Callback = function()
+        changeSpeed(speedValue)
+        print("Speed changed to " .. speedValue)
+    end
+})
+
+local SpeedSlider = MainTab:MakeSlider({
+    Name = "Set Speed",
+    Min = 0,
+    Max = 100,
+    Default = speedValue,
+    Callback = function(value)
+        speedValue = value
+    end
+})
+
+-- Jump Power Change Functionality
+local jumpPowerValue = 50 -- Default jump power value
+
+local JumpButton = MainTab:MakeButton({
+    Name = "Change Jump Power",
+    Callback = function()
+        changeJumpPower(jumpPowerValue)
+        print("Jump power changed to " .. jumpPowerValue)
+    end
+})
+
+local JumpSlider = MainTab:MakeSlider({
+    Name = "Set Jump Power",
+    Min = 0,
+    Max = 200,
+    Default = jumpPowerValue,
+    Callback = function(value)
+        jumpPowerValue = value
+    end
+})
+
+-- Gravity Change Functionality
+local gravityValue = 196.2 -- Default gravity value
+
+local GravityButton = MainTab:MakeButton({
+    Name = "Change Gravity",
+    Callback = function()
+        changeGravity(gravityValue)
+        print("Gravity changed to " .. gravityValue)
+    end
+})
+
+local GravitySlider = MainTab:MakeSlider({
+    Name = "Set Gravity",
+    Min = 0,
+    Max = 1000,
+    Default = gravityValue,
+    Callback = function(value)
+        gravityValue = value
+    end
 })
 
 -- Show the window
