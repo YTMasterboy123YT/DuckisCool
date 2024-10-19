@@ -117,6 +117,7 @@ local KillerTab = Window:MakeTab({
 })
 
 -- Hit Speed Textbox
+local hitSpeed = 0.1
 KillerTab:AddTextbox({
     Name = "Hit Speed",
     Default = "0.1",
@@ -129,7 +130,6 @@ KillerTab:AddTextbox({
 -- Auto Hit Toggle
 local punching = false
 local toolName = "Punch"
-local hitSpeed = 0.1
 
 KillerTab:AddToggle({
     Name = "Auto Hit",
@@ -150,7 +150,7 @@ KillerTab:AddToggle({
                     end
                     tool:Activate()
                 end
-                wait(hitSpeed)
+                wait(hitSpeed) -- Use the hit speed from the textbox
             end
         else
             print("Auto-punching stopped.")
