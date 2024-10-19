@@ -7,191 +7,356 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "OrionTest",
     IntroEnabled = true,
     IntroText = "Welcome to Ducks Private Script!", 
-    IntroIcon = "https://i.imgur.com/dWXaDfO.jpg" -- Direct image link
+    IntroIcon = "https://i.imgur.com/dWXaDfO.jpg"
 })
 
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local ScreenGui = Instance.new("ScreenGui")
+local Notification = Instance.new("TextLabel")
 
--- Function to change player speed
-local function changeSpeed(speedValue)
-    for _, player in ipairs(Players:GetPlayers()) do
-        local character = player.Character
-        if character then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.WalkSpeed = speedValue
+-- Global variables for toggle state and no-kill list
+_G.teleportPlayersActive = false
+_G.noKillList = {}
+_G.killList = {}
+
+-- Function to create and display notification
+local function showNotification(message)
+    Notification.Text = message
+    Notification.Size = UDim2.new(0.3, 0, 0.1, 0)
+    Notification.Position = UDim2.new(0.5, -75, 0.1, 0)
+    Notification.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Notification.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Notification.TextScaled = true
+    Notification.Parent = ScreenGui
+
+    ScreenGui.Parent = game.CoreGui
+
+    -- Fade out effect
+    for i = 1, 10 do
+        wait(0.1)
+        Notification.TextTransparency = i / 10
+    end
+
+    -- Remove notification after fading out
+    ScreenGui:Destroy()
+end
+
+-- Function to continuously teleport player characters
+local function teleportPlayers()
+    while _G.teleportPlayersActive do
+        wait(0.1)
+
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            local targetCharacter = otherPlayer.Character
+
+            if otherPlayer ~= LocalPlayer then
+                if _G.noKillList[otherPlayer.Name] then
+                    continue
+                end
+                
+                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
+                end
             end
         end
     end
 end
 
--- Function to change jump power
-local function changeJumpPower(jumpPowerValue)
-    for _, player in ipairs(Players:GetPlayers()) do
-        local character = player.Character
-        if character then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.JumpPower = jumpPowerValue
+-- Function to bring specified user's parts continuously
+local function bringUserParts(user)
+    while _G.killList[user] do
+        wait(0.1)
+
+        local targetPlayer = Players:FindFirstChild(user)
+        if targetPlayer and targetPlayer.Character then
+            for _, part in pairs(targetPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0)
+                end
             end
+        else
+            _G.killList[user] = nil
+            break
         end
     end
 end
 
--- Function to change gravity
-local function changeGravity(gravityValue)
-    workspace.Gravity = gravityValue
+-- Function to create and display player stats
+local function createStatsGui(stats)
+    local statsGui = Instance.new("ScreenGui")
+    local frame = Instance.new("Frame")
+    local closeButton = Instance.new("TextButton")
+
+    statsGui.Name = "StatsGui"
+    statsGui.Parent = game.CoreGui
+
+    frame.Size = UDim2.new(0.5, 0, 0.5, 0)
+    frame.Position = UDim2.new(0.5, -125, 0.5, -125)
+    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    frame.BorderSizePixel = 0
+    frame.Parent = statsGui
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, 0, 0.2, 0)
+    titleLabel.Text = "Stats"
+    titleLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.TextScaled = true
+    titleLabel.Parent = frame
+
+    local statsList = Instance.new("TextLabel")
+    statsList.Size = UDim2.new(1, 0, 0.6, 0)
+    statsList.Position = UDim2.new(0, 0, 0.2, 0)
+    statsList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    statsList.TextColor3 = Color3.fromRGB(255, 255, 255)
+    statsList.TextScaled = true
+    statsList.TextWrapped = true
+    statsList.TextSize = 20
+    statsList.Text = stats
+    statsList.Parent = frame
+
+    closeButton.Size = UDim2.new(0.4, 0, 0.1, 0)
+    closeButton.Position = UDim2.new(0.5, -80, 0.85, 0)
+    closeButton.Text = "Close"
+    closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.Parent = frame
+
+    closeButton.MouseButton1Click:Connect(function()
+        statsGui:Destroy()
+    end)
 end
 
--- Function to enable infinite jump
-local function enableInfiniteJump()
-    for _, player in ipairs(Players:GetPlayers()) do
-        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            UserInputService.JumpRequest:Connect(function()
-                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end)
+-- Function to display stats for a player
+local function displayPlayerStats(player)
+    local statsString = ""
+
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if leaderstats then
+        for _, stat in pairs(leaderstats:GetChildren()) do
+            statsString = statsString .. stat.Name .. ": " .. tostring(stat.Value) .. "\n"
+        end
+    else
+        statsString = "No leaderstats found."
+    end
+
+    local additionalStats = {"Durability", "Agility", "goodKarma", "evilKarma", "Gems", "muscleKingTime"}
+    for _, statName in ipairs(additionalStats) do
+        local stat = player:FindFirstChild(statName)
+        if stat then
+            statsString = statsString .. statName .. ": " .. tostring(stat.Value) .. "\n"
+        else
+            statsString = statsString .. statName .. " not found.\n"
         end
     end
+
+    createStatsGui(statsString)
 end
 
--- Function to enable or disable noclip
-local function setNoClip(character, value)
-    for _, part in ipairs(character:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = not value
-        end
-    end
-end
-
--- Function to toggle noclip for all players
-local function toggleNoClip(enable)
-    for _, player in ipairs(Players:GetPlayers()) do
-        local character = player.Character
-        if character then
-            setNoClip(character, enable)
-            if enable then
-                -- Connect to character added/removed to handle respawns
-                character.AncestryChanged:Connect(function(_, parent)
-                    if not parent then
-                        -- Character is removed, disable noclip
-                        setNoClip(character, false)
-                    end
-                end)
-            end
-        end
-    end
-end
-
--- Create Main Tab
+-- Main Tab
 local MainTab = Window:MakeTab({
-    Name = "Main",
-    Icon = "rbxassetid://132359476107633", -- Asset ID for all tabs
+    Name = "Main Tab",
+    Icon = "rbxassetid://132359476107633",
     PremiumOnly = false
 })
 
-MainTab:AddLabel("This is the main tab!")
+MainTab:AddLabel("Main Tab - Duck")
 
--- Add textboxes for Speed, Jump, and Gravity Changers
+-- Add textboxes for speed, jump, and gravity
 MainTab:AddTextbox({
     Name = "Speed Changer",
-    Default = "Enter speed value",
+    Default = "16",
     TextDisappear = true,
     Callback = function(Value)
-        local speedValue = tonumber(Value)
-        if speedValue then
-            changeSpeed(speedValue)
-            print("Speed changed to:", speedValue)
-        else
-            print("Invalid speed value.")
+        local speedValue = tonumber(Value) or 16
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.WalkSpeed = speedValue
+                end
+            end
         end
     end
 })
 
 MainTab:AddTextbox({
     Name = "Jump Changer",
-    Default = "Enter jump value",
+    Default = "50",
     TextDisappear = true,
     Callback = function(Value)
-        local jumpPowerValue = tonumber(Value)
-        if jumpPowerValue then
-            changeJumpPower(jumpPowerValue)
-            print("Jump power changed to:", jumpPowerValue)
-        else
-            print("Invalid jump value.")
+        local jumpPowerValue = tonumber(Value) or 50
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.JumpPower = jumpPowerValue
+                end
+            end
         end
     end
 })
 
 MainTab:AddTextbox({
     Name = "Gravity Changer",
-    Default = "Enter gravity value",
+    Default = "196.2",
     TextDisappear = true,
     Callback = function(Value)
-        local gravityValue = tonumber(Value)
-        if gravityValue then
-            changeGravity(gravityValue)
-            print("Gravity changed to:", gravityValue)
-        else
-            print("Invalid gravity value.")
+        local gravityValue = tonumber(Value) or 196.2
+        workspace.Gravity = gravityValue
+    end
+})
+
+-- Dropdown for setting game time
+MainTab:AddDropdown({
+    Name = "Set Time of Day",
+    Options = {"Morning", "Afternoon", "Night"},
+    Callback = function(selected)
+        if selected == "Morning" then
+            game.Lighting.ClockTime = 6
+        elseif selected == "Afternoon" then
+            game.Lighting.ClockTime = 12
+        elseif selected == "Night" then
+            game.Lighting.ClockTime = 18
         end
     end
 })
 
--- Add toggles to the Main tab
-MainTab:AddToggle({
-    Name = "Inf Jump",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-            enableInfiniteJump() -- Enable infinite jump when toggle is on
-            print("Infinite Jump enabled.")
-        else
-            print("Infinite Jump disabled.")
-            -- Optional: Add logic to disable infinite jump if needed
-        end
-    end    
-})
-
-MainTab:AddToggle({
-    Name = "NoClip",
-    Default = false,
-    Callback = function(Value)
-        toggleNoClip(Value) -- Enable or disable noclip based on toggle state
-        if Value then
-            print("NoClip enabled.")
-        else
-            print("NoClip disabled.")
-        end
-    end    
-})
-
--- Create AutoFarm Tab
-local AutoFarmTab = Window:MakeTab({
-    Name = "AutoFarm",
-    Icon = "rbxassetid://132359476107633", -- Asset ID for all tabs
-    PremiumOnly = false
-})
-
-AutoFarmTab:AddLabel("AutoFarm features coming soon!")
-
--- Create Killer Tab
+-- Killer Tab
 local KillerTab = Window:MakeTab({
-    Name = "Killer",
-    Icon = "rbxassetid://132359476107633", -- Asset ID for all tabs
+    Name = "Killer Tab",
+    Icon = "rbxassetid://132359476107633",
     PremiumOnly = false
 })
 
-KillerTab:AddLabel("Killer features coming soon!")
+KillerTab:AddLabel("Killer - Duck")
 
--- Create Misc Tab
-local MiscTab = Window:MakeTab({
-    Name = "Misc",
-    Icon = "rbxassetid://132359476107633", -- Asset ID for all tabs
-    PremiumOnly = false
+-- Dropdown for player selection to display stats
+KillerTab:AddDropdown({
+    Name = "Select Player for Stats",
+    Options = {},
+    Callback = function(selected)
+        local targetPlayer = Players:FindFirstChild(selected)
+        if targetPlayer then
+            displayPlayerStats(targetPlayer)
+        end
+    end
 })
 
-MiscTab:AddLabel("Miscellaneous features coming soon!")
+-- Update dropdown options with player names
+local function updateDropdownOptions()
+    local playerNames = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        table.insert(playerNames, player.Name)
+    end
+    KillerTab:UpdateDropdownOptions("Select Player for Stats", playerNames)
+end
 
--- Add more elements to each tab as needed
+-- Update the dropdown on player added/removed
+Players.PlayerAdded:Connect(updateDropdownOptions)
+Players.PlayerRemoving:Connect(updateDropdownOptions)
+updateDropdownOptions() -- Initial call to populate dropdown
+
+-- Dropdown for no-kill list management
+KillerTab:AddDropdown({
+    Name = "Select Player for No-Kill List",
+    Options = {},
+    Callback = function(selected)
+        local targetPlayer = Players:FindFirstChild(selected)
+        if targetPlayer then
+            if _G.noKillList[selected] then
+                _G.noKillList[selected] = nil
+                showNotification(selected .. " removed from no-kill list.")
+            else
+                _G.noKillList[selected] = true
+                showNotification(selected .. " added to no-kill list.")
+            end
+        end
+    end
+})
+
+-- Dropdown for kill list management
+KillerTab:AddDropdown({
+    Name = "Select Player for Kill List",
+    Options = {},
+    Callback = function(selected)
+        local targetPlayer = Players:FindFirstChild(selected)
+        if targetPlayer then
+            _G.killList[selected] = true
+            showNotification("Started bringing " .. selected .. "'s parts to you.")
+            bringUserParts(selected)
+        end
+    end
+})
+
+-- Button to toggle player teleportation
+KillerTab:AddButton({
+    Name = "Toggle Teleport Players",
+    Callback = function()
+        _G.teleportPlayersActive = not _G.teleportPlayersActive
+        if _G.teleportPlayersActive then
+            teleportPlayers()
+            showNotification("Started teleporting players.")
+        else
+            showNotification("Stopped teleporting players.")
+        end
+    end
+})
+
+-- Auto hit button
+KillerTab:AddToggle({
+    Name = "Auto Hit",
+    Default = false,
+    Callback = function(Value)
+        local punching = Value
+        local toolName = "Punch"
+        
+        local function setToolCooldowns()
+            local tools = {
+                {name = toolName, type = "attackTime"}
+            }
+
+            for _, toolInfo in pairs(tools) do
+                local tool = LocalPlayer.Backpack:FindFirstChild(toolInfo.name) or LocalPlayer.Character:FindFirstChild(toolInfo.name)
+                if tool then
+                    local cooldown = tool:FindFirstChild(toolInfo.type)
+                    if cooldown then
+                        cooldown.Value = 0.1
+                    end
+                end
+            end
+        end
+
+        local function autoUseTool()
+            setToolCooldowns()
+
+            while punching do
+                local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
+
+                if tool then
+                    if tool.Parent ~= character then
+                        humanoid:EquipTool(tool)
+                    end
+                    tool:Activate()
+                    wait(0.1)
+                else
+                    wait(0.5)
+                end
+            end
+        end
+
+        if punching then
+            print("Auto-hitting started.")
+            autoUseTool()
+        else
+            print("Auto-hitting stopped.")
+        end
+    end
+})
+
+print("Script Loaded. Use the tabs to manage game settings and player interactions.")
