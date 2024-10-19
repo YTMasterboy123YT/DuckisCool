@@ -10,6 +10,71 @@ local Window = OrionLib:MakeWindow({
     IntroIcon = "https://i.imgur.com/dWXaDfO.jpg" -- Direct image link
 })
 
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+-- Function to change player speed
+local function changeSpeed(speedValue)
+    for _, player in ipairs(Players:GetPlayers()) do
+        local character = player.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.WalkSpeed = speedValue
+            end
+        end
+    end
+end
+
+-- Function to change jump power
+local function changeJumpPower(jumpPowerValue)
+    for _, player in ipairs(Players:GetPlayers()) do
+        local character = player.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.JumpPower = jumpPowerValue
+            end
+        end
+    end
+end
+
+-- Function to change gravity
+local function changeGravity(gravityValue)
+    workspace.Gravity = gravityValue
+end
+
+-- Function to enable infinite jump
+local function enableInfiniteJump()
+    for _, player in ipairs(Players:GetPlayers()) do
+        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            UserInputService.JumpRequest:Connect(function()
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end)
+        end
+    end
+end
+
+-- Function to enable or disable noclip
+local function setNoClip(character, value)
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = not value
+        end
+    end
+end
+
+-- Function to toggle noclip for all players
+local function toggleNoClip(enable)
+    for _, player in ipairs(Players:GetPlayers()) do
+        local character = player.Character
+        if character then
+            setNoClip(character, enable)
+        end
+    end
+end
+
 -- Create Main Tab
 local MainTab = Window:MakeTab({
     Name = "Main",
@@ -18,6 +83,82 @@ local MainTab = Window:MakeTab({
 })
 
 MainTab:AddLabel("This is the main tab!")
+
+-- Add textboxes for Speed, Jump, and Gravity Changers
+MainTab:AddTextbox({
+    Name = "Speed Changer",
+    Default = "Enter speed value",
+    TextDisappear = true,
+    Callback = function(Value)
+        local speedValue = tonumber(Value)
+        if speedValue then
+            changeSpeed(speedValue)
+            print("Speed changed to:", speedValue)
+        else
+            print("Invalid speed value.")
+        end
+    end
+})
+
+MainTab:AddTextbox({
+    Name = "Jump Changer",
+    Default = "Enter jump value",
+    TextDisappear = true,
+    Callback = function(Value)
+        local jumpPowerValue = tonumber(Value)
+        if jumpPowerValue then
+            changeJumpPower(jumpPowerValue)
+            print("Jump power changed to:", jumpPowerValue)
+        else
+            print("Invalid jump value.")
+        end
+    end
+})
+
+MainTab:AddTextbox({
+    Name = "Gravity Changer",
+    Default = "Enter gravity value",
+    TextDisappear = true,
+    Callback = function(Value)
+        local gravityValue = tonumber(Value)
+        if gravityValue then
+            changeGravity(gravityValue)
+            print("Gravity changed to:", gravityValue)
+        else
+            print("Invalid gravity value.")
+        end
+    end
+})
+
+-- Add toggles to the Main tab
+MainTab:AddToggle({
+    Name = "Inf Jump",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            enableInfiniteJump() -- Enable infinite jump when toggle is on
+            print("Infinite Jump enabled.")
+        else
+            print("Infinite Jump disabled.")
+            -- Optional: Add logic to disable infinite jump if needed
+        end
+    end    
+})
+
+MainTab:AddToggle({
+    Name = "NoClip",
+    Default = false,
+    Callback = function(Value)
+        toggleNoClip(Value) -- Enable or disable noclip based on toggle state
+        if Value then
+            print("NoClip enabled.")
+        else
+            print("NoClip disabled.")
+        end
+    end    
+})
+
+-- Example button in the Main tab
 MainTab:AddButton({
     Name = "Test Button", 
     Callback = function()
