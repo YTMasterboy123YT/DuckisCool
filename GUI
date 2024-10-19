@@ -188,11 +188,13 @@ KillerTab:AddButton({
     end
 })
 
+local autoHitActive = false
 KillerTab:AddToggle({
     Name = "Auto Hit",
     Default = false,
     Callback = function(Value)
-        local punching = Value
+        autoHitActive = Value
+        
         local toolName = "Punch"
         
         local function setToolCooldowns()
@@ -214,7 +216,7 @@ KillerTab:AddToggle({
         local function autoUseTool()
             setToolCooldowns()
 
-            while punching do
+            while autoHitActive do
                 local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
                 local humanoid = character:FindFirstChildOfClass("Humanoid")
                 local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
@@ -231,7 +233,7 @@ KillerTab:AddToggle({
             end
         end
 
-        if punching then
+        if autoHitActive then
             print("Auto-hitting started.")
             autoUseTool()
         else
