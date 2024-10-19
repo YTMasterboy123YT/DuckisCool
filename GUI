@@ -1,89 +1,86 @@
-local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Orion/main/source'))()
-
-local introIcon = "rbxassetid://95093869224117"
-local tabIcon = "rbxassetid://112270259150403"
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
 local Window = OrionLib:MakeWindow({
-    Name = "Ducks Private GUI",
-    HidePremium = false,
-    SaveConfig = true,
+    Name = "My Game GUI", 
+    HidePremium = false, 
+    SaveConfig = true, 
     ConfigFolder = "OrionTest",
-    Icon = introIcon,
     IntroEnabled = true,
-    IntroText = "Ducks Private Script",
-    IntroIcon = introIcon
+    IntroText = "Welcome to My Game GUI!",
+    IntroIcon = "https://i.imgur.com/dWXaDfO.jpg"
 })
 
 -- Main Tab
 local MainTab = Window:MakeTab({
     Name = "Main",
-    Icon = tabIcon,
+    Icon = "rbxassetid://132359476107633",
     PremiumOnly = false
 })
 
--- Speed Textbox
-MainTab:MakeTextbox({
-    Name = "Speed",
-    Default = "16", -- Default speed value
+MainTab:AddLabel("Main Features")
+
+-- Speed Changer
+MainTab:AddTextbox({
+    Name = "Speed Changer",
+    Default = "16",
     TextDisappear = true,
     Callback = function(Value)
-        local speedValue = tonumber(Value)
-        if speedValue then
-            changeSpeed(speedValue)
-            print("Speed changed to " .. speedValue)
-        else
-            print("Invalid speed value.")
+        local speedValue = tonumber(Value) or 16
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.WalkSpeed = speedValue
+                end
+            end
         end
     end
 })
 
--- Jump Power Textbox
-MainTab:MakeTextbox({
-    Name = "Jump Power",
-    Default = "50", -- Default jump power value
+-- Jump Changer
+MainTab:AddTextbox({
+    Name = "Jump Changer",
+    Default = "50",
     TextDisappear = true,
     Callback = function(Value)
-        local jumpPowerValue = tonumber(Value)
-        if jumpPowerValue then
-            changeJumpPower(jumpPowerValue)
-            print("Jump power changed to " .. jumpPowerValue)
-        else
-            print("Invalid jump power value.")
+        local jumpPowerValue = tonumber(Value) or 50
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.JumpPower = jumpPowerValue
+                end
+            end
         end
     end
 })
 
--- Gravity Textbox
-MainTab:MakeTextbox({
-    Name = "Gravity",
-    Default = "196.2", -- Default gravity value
+-- Gravity Changer
+MainTab:AddTextbox({
+    Name = "Gravity Changer",
+    Default = "196.2",
     TextDisappear = true,
     Callback = function(Value)
-        local gravityValue = tonumber(Value)
-        if gravityValue then
-            changeGravity(gravityValue)
-            print("Gravity changed to " .. gravityValue)
-        else
-            print("Invalid gravity value.")
+        local gravityValue = tonumber(Value) or 196.2
+        workspace.Gravity = gravityValue
+    end
+})
+
+-- Dropdown for setting game time
+MainTab:AddDropdown({
+    Name = "Set Time of Day",
+    Options = {"Morning", "Afternoon", "Night"},
+    Callback = function(selected)
+        if selected == "Morning" then
+            game.Lighting.ClockTime = 6
+        elseif selected == "Afternoon" then
+            game.Lighting.ClockTime = 12
+        elseif selected == "Night" then
+            game.Lighting.ClockTime = 18
         end
     end
 })
 
--- Settings Tab
-local SettingsTab = Window:MakeTab({
-    Name = "Settings",
-    Icon = "rbxassetid://4483345998", -- Change this icon as needed
-    PremiumOnly = false
-})
-
--- Example functionality for the Settings tab
-SettingsTab:MakeButton({
-    Name = "Reset Settings",
-    Callback = function()
-        print("Settings have been reset.")
-        -- Add your reset logic here
-    end
-})
-
--- Show the window
-OrionLib:Init()
+print("Main Tab Loaded with settings!")
