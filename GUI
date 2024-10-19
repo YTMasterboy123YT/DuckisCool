@@ -1,267 +1,75 @@
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-
-local Window = OrionLib:MakeWindow({
-    Name = "Ducks Private Script", 
-    HidePremium = false, 
-    SaveConfig = true, 
-    ConfigFolder = "OrionTest",
+local AutoKillWindow = OrionLib:MakeWindow({
+    Name = "Auto Kill - Duck",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "AutoKillConfig",
     IntroEnabled = true,
-    IntroText = "Welcome to Ducks Private Script!", 
+    IntroText = "Welcome to Auto Kill!",
     IntroIcon = "https://i.imgur.com/dWXaDfO.jpg"
 })
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local ScreenGui = Instance.new("ScreenGui")
-local Notification = Instance.new("TextLabel")
 
--- Global variables for toggle state and no-kill and kill lists
-_G.teleportPlayersActive = false
-_G.noKillList = {}
-_G.killList = {}
-
--- Function to create and display notification
-local function showNotification(message)
-    Notification.Text = message
-    Notification.Size = UDim2.new(0.3, 0, 0.1, 0)
-    Notification.Position = UDim2.new(0.5, -75, 0.1, 0)
-    Notification.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    Notification.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Notification.TextScaled = true
-    Notification.Parent = ScreenGui
-
-    ScreenGui.Parent = game.CoreGui
-
-    -- Fade out effect
-    for i = 1, 10 do
-        wait(0.1)
-        Notification.TextTransparency = i / 10
-    end
-
-    -- Remove notification after fading out
-    ScreenGui:Destroy()
-end
-
--- Function to continuously teleport player characters
-local function teleportPlayers()
-    while _G.teleportPlayersActive do
-        wait(0.1)
-
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            local targetCharacter = otherPlayer.Character
-
-            if otherPlayer ~= LocalPlayer then
-                if not _G.noKillList[otherPlayer.Name] then
-                    if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                        targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
-                    end
-                end
-            end
-        end
-    end
-end
-
--- Function to bring specified user's parts continuously
-local function bringUserParts(user)
-    while _G.killList[user] do
-        wait(0.1)
-
-        local targetPlayer = Players:FindFirstChild(user)
-        if targetPlayer and targetPlayer.Character then
-            for _, part in pairs(targetPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0)
-                end
-            end
-        else
-            _G.killList[user] = nil -- Remove from kill list if the player is not found
-            break
-        end
-    end
-end
-
--- Main Tab
-local MainTab = Window:MakeTab({
-    Name = "Main Tab",
-    Icon = "rbxassetid://132359476107633",
-    PremiumOnly = false
-})
-
-MainTab:AddLabel("Main Tab - Duck")
-
--- Add textboxes for speed, jump, and gravity
-MainTab:AddTextbox({
-    Name = "Speed Changer",
-    Default = "16",
-    TextDisappear = true,
-    Callback = function(Value)
-        local speedValue = tonumber(Value) or 16
-        for _, player in ipairs(Players:GetPlayers()) do
-            local character = player.Character
-            if character then
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid.WalkSpeed = speedValue
-                end
-            end
-        end
-    end
-})
-
-MainTab:AddTextbox({
-    Name = "Jump Changer",
-    Default = "50",
-    TextDisappear = true,
-    Callback = function(Value)
-        local jumpPowerValue = tonumber(Value) or 50
-        for _, player in ipairs(Players:GetPlayers()) do
-            local character = player.Character
-            if character then
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid.JumpPower = jumpPowerValue
-                end
-            end
-        end
-    end
-})
-
-MainTab:AddTextbox({
-    Name = "Gravity Changer",
-    Default = "196.2",
-    TextDisappear = true,
-    Callback = function(Value)
-        local gravityValue = tonumber(Value) or 196.2
-        workspace.Gravity = gravityValue
-    end
-})
-
--- Dropdown for setting game time
-MainTab:AddDropdown({
-    Name = "Set Time of Day",
-    Options = {"Morning", "Afternoon", "Night"},
-    Callback = function(selected)
-        if selected == "Morning" then
-            game.Lighting.ClockTime = 6
-        elseif selected == "Afternoon" then
-            game.Lighting.ClockTime = 12
-        elseif selected == "Night" then
-            game.Lighting.ClockTime = 18
-        end
-    end
-})
-
--- Killer Tab
-local KillerTab = Window:MakeTab({
-    Name = "Killer Tab",
-    Icon = "rbxassetid://132359476107633",
-    PremiumOnly = false
-})
-
-KillerTab:AddLabel("Killer - Duck")
-
--- Dropdown for player selection for no-kill list
+-- Gather player names for the dropdown
 local playerNames = {}
 for _, player in ipairs(Players:GetPlayers()) do
     table.insert(playerNames, player.Name)
 end
 
-KillerTab:AddDropdown({
-    Name = "Select Players for No-Kill List",
-    Options = playerNames,
-    MultiSelect = true,
+-- Dropdown for selecting players to auto kill
+AutoKillWindow:MakeTab({
+    Name = "Auto Kill",
+    Icon = "rbxassetid://132359476107633",
+    PremiumOnly = false
+})
+
+AutoKillWindow:AddLabel("Auto Kill - Duck")
+
+AutoKillWindow:AddDropdown({
+    Name = "Select Players for Auto Kill",
+    Options = playerNames, -- List of player names
+    MultiSelect = true, -- Enable multiple selection
     Callback = function(selectedOptions)
-        for _, playerName in ipairs(selectedOptions) do
-            if _G.noKillList[playerName] then
-                _G.noKillList[playerName] = nil -- Remove from no-kill list if already there
-                showNotification(playerName .. " removed from no-kill list.")
-            else
-                _G.noKillList[playerName] = true -- Add to no-kill list
-                showNotification(playerName .. " added to no-kill list.")
-            end
-        end
-    end
+        _G.autoKillTargets = selectedOptions -- Store selected targets globally
+    end,
 })
 
--- Dropdown for kill list management
-KillerTab:AddDropdown({
-    Name = "Select Players for Kill List",
-    Options = playerNames,
-    MultiSelect = true,
-    Callback = function(selectedOptions)
-        for _, playerName in ipairs(selectedOptions) do
-            _G.killList[playerName] = true -- Add user to kill list
-            showNotification("Started bringing " .. playerName .. "'s parts to you.")
-            bringUserParts(playerName) -- Start bringing their parts continuously
-        end
-    end
-})
-
--- Button to toggle player teleportation
-KillerTab:AddButton({
-    Name = "Toggle Teleport Players",
-    Callback = function()
-        _G.teleportPlayersActive = not _G.teleportPlayersActive
-        if _G.teleportPlayersActive then
-            teleportPlayers() -- Start teleporting players
-            showNotification("Started teleporting players.")
-        else
-            showNotification("Stopped teleporting players.")
-        end
-    end
-})
-
--- Auto hit button
-KillerTab:AddToggle({
-    Name = "Auto Hit",
+-- Auto kill toggle
+AutoKillWindow:AddToggle({
+    Name = "Enable Auto Kill",
     Default = false,
     Callback = function(Value)
-        local punching = Value
-        local toolName = "Punch"
+        local autoKilling = Value
         
-        local function setToolCooldowns()
-            local tools = {
-                {name = toolName, type = "attackTime"}
-            }
-
-            for _, toolInfo in pairs(tools) do
-                local tool = LocalPlayer.Backpack:FindFirstChild(toolInfo.name) or LocalPlayer.Character:FindFirstChild(toolInfo.name)
-                if tool then
-                    local cooldown = tool:FindFirstChild(toolInfo.type)
-                    if cooldown then
-                        cooldown.Value = 0.1
+        local function performAutoKill()
+            while autoKilling do
+                wait(0.1) -- Adjust delay as needed
+                
+                for _, targetName in ipairs(_G.autoKillTargets) do
+                    local targetPlayer = Players:FindFirstChild(targetName)
+                    if targetPlayer and targetPlayer.Character then
+                        local targetHumanoid = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
+                        if targetHumanoid then
+                            -- Perform the killing action (e.g., attack)
+                            local tool = LocalPlayer.Backpack:FindFirstChild("Punch") or LocalPlayer.Character:FindFirstChild("Punch")
+                            if tool then
+                                -- Equip and activate the tool
+                                LocalPlayer.Character.Humanoid:EquipTool(tool)
+                                tool:Activate()
+                            end
+                        end
                     end
                 end
             end
         end
 
-        local function autoUseTool()
-            setToolCooldowns()
-
-            while punching do
-                local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
-
-                if tool then
-                    if tool.Parent ~= character then
-                        humanoid:EquipTool(tool)
-                    end
-                    tool:Activate()
-                    wait(0.1)
-                else
-                    wait(0.5)
-                end
-            end
-        end
-
-        if punching then
-            print("Auto-hitting started.")
-            autoUseTool()
+        if autoKilling then
+            print("Auto Kill enabled.")
+            performAutoKill()
         else
-            print("Auto-hitting stopped.")
+            print("Auto Kill disabled.")
         end
     end
 })
 
-print("Script Loaded. Use the tabs to manage game settings and player interactions.")
