@@ -1,1 +1,192 @@
-local Neverlose_Main = loadstring(game:HttpGet"https://github.com/Mana42138/Neverlose-UI/blob/main/Source.lua")()
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+
+local Window = OrionLib:MakeWindow({
+    Name = "Ducks Private Script",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "OrionTest",
+    IntroEnabled = true,
+    IntroText = "Welcome to Ducks Private Script!",
+    IntroIcon = "https://i.imgur.com/dWXaDfO.jpg"
+})
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Global variables for No-Kill and Kill lists
+_G.noKillList = {}
+_G.killList = {}
+
+-- Main Tab
+local MainTab = Window:MakeTab({
+    Name = "Main Tab",
+    Icon = "rbxassetid://132359476107633",
+    PremiumOnly = false
+})
+
+MainTab:AddLabel("Main Tab - Duck")
+
+-- Speed Changer
+MainTab:AddTextbox({
+    Name = "Speed Changer",
+    Default = "16",
+    TextDisappear = true,
+    Callback = function(Value)
+        local speedValue = tonumber(Value) or 16
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.WalkSpeed = speedValue
+                end
+            end
+        end
+    end
+})
+
+-- Jump Changer
+MainTab:AddTextbox({
+    Name = "Jump Changer",
+    Default = "50",
+    TextDisappear = true,
+    Callback = function(Value)
+        local jumpPowerValue = tonumber(Value) or 50
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.JumpPower = jumpPowerValue
+                end
+            end
+        end
+    end
+})
+
+-- Gravity Changer
+MainTab:AddTextbox({
+    Name = "Gravity Changer",
+    Default = "196.2",
+    TextDisappear = true,
+    Callback = function(Value)
+        local gravityValue = tonumber(Value) or 196.2
+        workspace.Gravity = gravityValue
+    end
+})
+
+-- Dropdown for setting game time
+MainTab:AddDropdown({
+    Name = "Set Time of Day",
+    Options = {"Morning", "Afternoon", "Night"},
+    Callback = function(selected)
+        if selected == "Morning" then
+            game.Lighting.ClockTime = 6
+        elseif selected == "Afternoon" then
+            game.Lighting.ClockTime = 12
+        elseif selected == "Night" then
+            game.Lighting.ClockTime = 18
+        end
+    end
+})
+
+-- Killer Tab
+local KillerTab = Window:MakeTab({
+    Name = "Killer Tab",
+    Icon = "rbxassetid://132359476107633",
+    PremiumOnly = false
+})
+
+KillerTab:AddLabel("Killer - Duck")
+
+-- Auto Hit Toggle
+KillerTab:AddToggle({
+    Name = "Auto Hit",
+    Default = false,
+    Callback = function(value)
+        local punching = value
+        local toolName = "Punch"
+
+        local function setToolCooldowns()
+            local tools = {
+                {name = toolName, type = "attackTime"}
+            }
+
+            for _, toolInfo in pairs(tools) do
+                local tool = LocalPlayer.Backpack:FindFirstChild(toolInfo.name) or LocalPlayer.Character:FindFirstChild(toolInfo.name)
+                if tool then
+                    local cooldown = tool:FindFirstChild(toolInfo.type)
+                    if cooldown then
+                        cooldown.Value = 0.1
+                    end
+                end
+            end
+        end
+
+        local function autoUseTool()
+            setToolCooldowns()
+
+            while punching do
+                local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
+
+                if tool then
+                    if tool.Parent ~= character then
+                        humanoid:EquipTool(tool)
+                    end
+                    tool:Activate()
+                    wait(0.1)
+                else
+                    wait(0.5)
+                end
+            end
+        end
+
+        if punching then
+            autoUseTool()
+        end
+    end
+})
+
+-- Button to Clear No-Kill List
+KillerTab:AddButton({
+    Name = "Remove All from No-Kill List",
+    Callback = function()
+        _G.noKillList = {}
+    end
+})
+
+-- Players Tab
+local PlayersTab = Window:MakeTab({
+    Name = "Players Tab",
+    Icon = "rbxassetid://132359476107633",
+    PremiumOnly = false
+})
+
+PlayersTab:AddLabel("Manage Players - Duck")
+
+-- Function to create buttons for each player
+local function createPlayerButtons()
+    for _, player in ipairs(Players:GetPlayers()) do
+        PlayersTab:AddButton({
+            Name = player.Name,
+            Callback = function()
+                -- Add player to No-Kill List
+                _G.noKillList[player.Name] = true
+
+                -- Add others to Kill List
+                for _, otherPlayer in ipairs(Players:GetPlayers()) do
+                    if otherPlayer.Name ~= player.Name then
+                        _G.killList[otherPlayer.Name] = true
+                    end
+                end
+            end
+        })
+    end
+end
+
+-- Call the function to create buttons
+createPlayerButtons()
+
+print("Script Loaded. Use the tabs to manage game settings and player interactions.")
