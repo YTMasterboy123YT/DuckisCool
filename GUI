@@ -1,5 +1,91 @@
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
--- Define services
+-- Create the main window
+local Window = OrionLib:MakeWindow({
+    Name = "Game Title",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "OrionTest",
+    IntroEnabled = true,
+    IntroText = "Welcome!",
+    IntroIcon = "http://www.roblox.com/asset/?id=132359476107633",
+    Icon = "http://www.roblox.com/asset/?id=132359476107633"
+})
+
+-- Main Tab
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "http://www.roblox.com/asset/?id=132359476107633",
+    PremiumOnly = false
+})
+
+-- Killer Tab
+local KillerTab = Window:MakeTab({
+    Name = "Killer",
+    Icon = "http://www.roblox.com/asset/?id=132359476107633",
+    PremiumOnly = false
+})
+
+-- Auto Farm Tab
+local AutoFarmTab = Window:MakeTab({
+    Name = "Auto Farm",
+    Icon = "http://www.roblox.com/asset/?id=132359476107633",
+    PremiumOnly = false
+})
+
+-- Main Functions
+MainTab:AddSlider({
+    Name = "Walk Speed",
+    Min = 16,
+    Max = 500,
+    Default = 16,
+    Color = Color3.fromRGB(255, 0, 0),
+    Increment = 1,
+    Callback = function(value)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
+    end
+})
+
+MainTab:AddSlider({
+    Name = "Jump Power",
+    Min = 50,
+    Max = 500,
+    Default = 50,
+    Color = Color3.fromRGB(0, 255, 0),
+    Increment = 1,
+    Callback = function(value)
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = value
+    end
+})
+
+MainTab:AddTextbox({
+    Name = "Hit Speed",
+    Default = "0.1",
+    TextDisappear = true,
+    Callback = function(value)
+        local tools = {
+            "Punch",
+            "Ground Slam",
+            "Stomp",
+            "Handstands",
+            "Pushups",
+            "Weight",
+            "Situps"
+        }
+        
+        for _, toolName in ipairs(tools) do
+            local tool = game.Players.LocalPlayer.Backpack:FindFirstChild(toolName) or game.Players.LocalPlayer.Character:FindFirstChild(toolName)
+            if tool then
+                local attackTime = tool:FindFirstChild("attackTime") or tool:FindFirstChild("repTime")
+                if attackTime then
+                    attackTime.Value = tonumber(value) -- Set the value to the input
+                end
+            end
+        end
+    end
+})
+
+-- Killer Functions
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local ScreenGui = Instance.new("ScreenGui")
@@ -9,6 +95,7 @@ local Notification = Instance.new("TextLabel")
 _G.teleportPlayersActive = false
 _G.noKillList = {}
 _G.killList = {}
+_G.lastAddedUser = nil -- Store the last added user
 
 -- Function to create and display notification
 local function showNotification(message)
@@ -63,7 +150,7 @@ local function bringUserParts(user)
 
         if targetPlayer and targetPlayer.Character then
             for _, part in pairs(targetPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") then
+                if part:IsA("BasePart") and not _G.noKillList[targetPlayer.Name] then
                     part.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0) -- Bring parts above the local player
                 end
             end
@@ -77,35 +164,41 @@ end
 -- Chat command to toggle player teleportation and manage no-kill and kill lists
 LocalPlayer.Chatted:Connect(function(message)
     local args = message:split(" ")
-
-    if args[1]:lower() == "on" then
-        _G.teleportPlayersActive = true
-        teleportPlayers() -- Start teleporting players
-        showNotification("Started teleporting players.")
-    elseif args[1]:lower() == "off" then
-        _G.teleportPlayersActive = false -- Stop teleporting players
+    
+    if args[1]:lower() == "/kill" and args[2] then
+        local targetUser = args[2]
+        _G.killList[targetUser] = true
+        showNotification("Started bringing " .. targetUser .. "'s parts to you.")
+        bringUserParts(targetUser)
+    elseif args[1]:lower() == "/off" then
+        _G.teleportPlayersActive = false
         showNotification("Stopped teleporting players.")
-    elseif args[1]:lower() == ";nokill" then
-        for i = 2, #args do
-            local user = args[i]
-            if not _G.noKillList[user] then
-                _G.noKillList[user] = true -- Add each user to no-kill list
+    elseif args[1]:lower() == "/nk" and args[2] then
+        local user1 = args[2]:gsub('"', '') -- First user
+        if user1 ~= "" and not _G.noKillList[user1] then
+            _G.noKillList[user1] = true
+            _G.lastAddedUser = user1 -- Store last added user
+        end
+        
+        if args[3] then
+            local user2 = args[3]:gsub('"', '') -- Second user
+            if user2 ~= "" and not _G.noKillList[user2] then
+                _G.noKillList[user2] = true
+            end
+            showNotification("Added to no-kill list: " .. user1 .. ", " .. user2)
+        else
+            if _G.lastAddedUser then
+                showNotification("Added to no-kill list: " .. user1 .. " and previous user: " .. _G.lastAddedUser)
+            else
+                showNotification("Added to no-kill list: " .. user1)
             end
         end
-        showNotification("Added to no-kill list: " .. table.concat(args, ", ", 2))
-    elseif args[1]:lower() == ";kill" and args[2] then
-        local targetUser = args[2]
-        _G.killList[targetUser] = true -- Add user to kill list
-        showNotification("Started bringing " .. targetUser .. "'s parts to you.")
-        bringUserParts(targetUser) -- Start bringing their parts continuously
-    elseif args[1]:lower() == ";stopkill" and args[2] then
-        local targetUser = args[2]
-        _G.killList[targetUser] = nil -- Remove the user from the kill list
-        showNotification("Stopped bringing " .. targetUser .. "'s parts.")
     end
 end)
 
-print("Type 'on' to start teleporting players, 'off' to stop.")
-print("Type ';NoKill (User1) (User2)...' to add multiple users to the no-kill list.")
-print("Type ';Kill (User)' to bring a user's parts to you continuously.")
-print("Type ';StopKill (User)' to stop bringing a user's parts.")
+print("Type '/kill (User)' to bring a user's parts to you continuously.")
+print("Type '/off' to stop teleporting players.")
+print("Type '/nk \"User1\" \"User2\"' to add two users to the no-kill list.")
+
+-- Finalize the GUI
+OrionLib:Init()
