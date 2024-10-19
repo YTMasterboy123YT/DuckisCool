@@ -1,63 +1,78 @@
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-
--- Create the main window
-local MainWindow = OrionLib:MakeWindow({
-    Name = "Multi-Select Example",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "MultiSelectConfig",
-    IntroEnabled = true,
-    IntroText = "Welcome to the Multi-Select GUI!",
-    IntroIcon = "https://i.imgur.com/dWXaDfO.jpg"
-})
-
+-- Services
 local Players = game:GetService("Players")
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local PlayerList = Instance.new("Frame")
+local ActionButton = Instance.new("TextButton")
+local SelectedPlayers = {}
 
--- Gather player names for the dropdown
-local playerNames = {}
-for _, player in ipairs(Players:GetPlayers()) do
-    table.insert(playerNames, player.Name)
+-- Setup GUI
+ScreenGui.Parent = game.CoreGui
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0.3, 0, 0.4, 0)
+Frame.Position = UDim2.new(0.5, -75, 0.5, -100)
+Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+
+Title.Parent = Frame
+Title.Size = UDim2.new(1, 0, 0.1, 0)
+Title.Text = "Player Selector"
+Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextScaled = true
+
+PlayerList.Parent = Frame
+PlayerList.Size = UDim2.new(1, 0, 0.8, 0)
+PlayerList.Position = UDim2.new(0, 0, 0.1, 0)
+PlayerList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+PlayerList.LayoutOrder = 1
+
+-- Create checkboxes for each player
+local function createCheckbox(playerName)
+    local Checkbox = Instance.new("TextButton")
+    Checkbox.Size = UDim2.new(1, 0, 0.1, 0)
+    Checkbox.Text = playerName
+    Checkbox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    Checkbox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Checkbox.TextScaled = true
+    Checkbox.Parent = PlayerList
+
+    Checkbox.MouseButton1Click:Connect(function()
+        if SelectedPlayers[playerName] then
+            SelectedPlayers[playerName] = nil
+            Checkbox.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Deselect
+        else
+            SelectedPlayers[playerName] = true
+            Checkbox.BackgroundColor3 = Color3.fromRGB(0, 200, 0) -- Select
+        end
+    end)
 end
 
--- Create the tab for the multi-select feature
-local MultiSelectTab = MainWindow:MakeTab({
-    Name = "Multi-Select",
-    Icon = "rbxassetid://132359476107633",
-    PremiumOnly = false
-})
+-- Add checkboxes for all players
+for _, player in ipairs(Players:GetPlayers()) do
+    createCheckbox(player.Name)
+end
 
-MultiSelectTab:AddLabel("Select Multiple Players")
+-- Action button
+ActionButton.Parent = Frame
+ActionButton.Size = UDim2.new(1, 0, 0.1, 0)
+ActionButton.Position = UDim2.new(0, 0, 0.9, 0)
+ActionButton.Text = "Perform Action"
+ActionButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+ActionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ActionButton.TextScaled = true
 
--- Dropdown for selecting multiple players
-MultiSelectTab:AddDropdown({
-    Name = "Select Players",
-    Options = playerNames, -- List of player names
-    MultiSelect = true, -- Enable multiple selection
-    Callback = function(selectedOptions)
-        -- This function will be called with the selected players
-        print("Selected Players: ", table.concat(selectedOptions, ", "))
-    end,
-})
-
--- Button to perform an action with the selected players
-MultiSelectTab:AddButton({
-    Name = "Perform Action",
-    Callback = function()
-        -- Get selected players from the dropdown
-        local selectedPlayers = MultiSelectTab.Flags["Dropdown1"] -- Replace "Dropdown1" with your dropdown's flag if different
-
-        if #selectedPlayers > 0 then
-            for _, playerName in ipairs(selectedPlayers) do
-                local player = Players:FindFirstChild(playerName)
-                if player then
-                    print("Performing action on: " .. playerName)
-                    -- Perform your desired action on the player
-                end
-            end
-        else
-            print("No players selected.")
+ActionButton.MouseButton1Click:Connect(function()
+    for playerName, _ in pairs(SelectedPlayers) do
+        print("Performing action on: " .. playerName)
+        -- Here you can add your desired action for each selected player
+    end
+    SelectedPlayers = {} -- Clear selection after action
+    for _, checkbox in ipairs(PlayerList:GetChildren()) do
+        if checkbox:IsA("TextButton") then
+            checkbox.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Reset checkbox color
         end
-    end,
-})
+    end
+end)
 
-print("GUI Loaded. Use the dropdown to select players and perform actions.")
+print("Player Selector GUI Loaded. Use the checkboxes to select players and perform actions.")
