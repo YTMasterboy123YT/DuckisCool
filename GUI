@@ -12,15 +12,15 @@ local Window = OrionLib:MakeWindow({
 
 local Players = game:GetService("Players")
 
--- Table to store selected players
-local SelectedPlayers = {}
+-- Table to store selected options
+local SelectedOptions = {}
 
--- Function to update selected players
-local function updateSelectedPlayers(playerName)
-    if SelectedPlayers[playerName] then
-        SelectedPlayers[playerName] = nil
+-- Function to update selected options
+local function updateSelectedOptions(option)
+    if SelectedOptions[option] then
+        SelectedOptions[option] = nil
     else
-        SelectedPlayers[playerName] = true
+        SelectedOptions[option] = true
     end
 end
 
@@ -33,44 +33,35 @@ local MainTab = Window:MakeTab({
 
 MainTab:AddLabel("Main Tab - Duck")
 
--- Dropdown for player selection
+-- Dropdown for number selection
+local numberOptions = {}
+for i = 1, 10 do
+    table.insert(numberOptions, tostring(i)) -- Add numbers 1 to 10 as strings
+end
+
 MainTab:AddDropdown({
-    Name = "Select Players",
-    Options = {},
+    Name = "Select Numbers",
+    Options = numberOptions,
     MultiSelect = true,  -- Enable multiple selection
     Callback = function(selectedOptions)
-        for _, playerName in ipairs(selectedOptions) do
-            updateSelectedPlayers(playerName)
+        for _, option in ipairs(selectedOptions) do
+            updateSelectedOptions(option)
         end
     end,
 })
 
--- Populate dropdown with player names
-local function populatePlayerDropdown()
-    local playerNames = {}
-    for _, player in ipairs(Players:GetPlayers()) do
-        table.insert(playerNames, player.Name)
-    end
-    MainTab:UpdateDropdown({
-        Name = "Select Players",
-        Options = playerNames,
-    })
-end
-
-populatePlayerDropdown()
-
 -- Action Button
 MainTab:AddButton({
-    Name = "Perform Action on Selected Players",
+    Name = "Perform Action on Selected Numbers",
     Callback = function()
-        for playerName, _ in pairs(SelectedPlayers) do
-            if playerName then
-                print("Performing action on: " .. playerName)
-                -- Here you can add your desired action for each selected player
+        for number, _ in pairs(SelectedOptions) do
+            if number then
+                print("Performing action on: " .. number)
+                -- Here you can add your desired action for each selected number
             end
         end
-        SelectedPlayers = {} -- Clear selection after action
+        SelectedOptions = {} -- Clear selection after action
     end
 })
 
-print("Player Selector GUI Loaded. Use the dropdown to select players and perform actions.")
+print("Number Selector GUI Loaded. Use the dropdown to select numbers and perform actions.")
