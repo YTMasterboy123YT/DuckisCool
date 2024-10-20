@@ -1,2 +1,7 @@
+local player = game.Players.LocalPlayer
 local lift = workspace.machinesFolder["Muscle King Lift"]
-lift.CFrame = CFrame.new(0, 5, 0) * CFrame.Angles(0, math.rad(90), 0)
+
+if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+    local playerPosition = player.Character.HumanoidRootPart.Position
+    lift.CFrame = CFrame.new(playerPosition + Vector3.new(5, 0, 0)) -- Adjust the Vector3 values as needed
+end
