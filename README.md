@@ -7,11 +7,11 @@ while true do
         local clone = muscleKingMountain:Clone()
         clone.Parent = game.Workspace
 
-        -- Set the CFrame to your character's position
-        local characterPosition = character.PrimaryPart.Position
-        clone:SetPrimaryPartCFrame(CFrame.new(characterPosition.x, characterPosition.y, characterPosition.z))
-    else
-        print("Muscle King Mountain not found!")
+        local rockPart = clone:FindFirstChild("Rock")
+        if rockPart then
+            rockPart.CFrame = CFrame.new(-8972, 27, -6061) * CFrame.Angles(0, math.rad(180), 0)
+            rockPart.Size = Vector3.new(141, 123, 149)
+        end
     end
 
     wait(1)
