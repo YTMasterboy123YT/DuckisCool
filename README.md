@@ -1,17 +1,16 @@
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local muscleKingMountain = game.Workspace.machinesFolder:FindFirstChild("Muscle King Mountain")
-local rockPart = muscleKingMountain:FindFirstChild("Rock")
+local originalRock = muscleKingMountain:FindFirstChild("Rock")
 
-while true do
-    if rockPart then
-        -- Set the CFrame of the Rock part to the RightHand's CFrame
-        local rightHand = character:FindFirstChild("RightHand")
-        if rightHand then
-            rockPart.CFrame = rightHand.CFrame * CFrame.new(0, 0, -2) -- Adjust position relative to RightHand
-            rockPart.Size = Vector3.new(141, 123, 149)
-        end
+if originalRock then
+    local clone = originalRock:Clone()
+    clone.Name = "Muscle King"
+    clone.Parent = game.Workspace
+
+    local rightHand = character:FindFirstChild("RightHand")
+    if rightHand then
+        clone.CFrame = rightHand.CFrame * CFrame.new(0, 0, -2)
+        clone.Size = Vector3.new(2, 1, 1)
     end
-
-    wait(1)
 end
