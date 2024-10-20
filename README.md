@@ -12,8 +12,15 @@ while true do
             local clone = muscleKingLift:Clone()
             clone.Parent = game.Workspace
             
-            -- Set the new position near the right hand
-            clone.CFrame = rightHand.CFrame * CFrame.new(0, 0, -2) -- Adjust the offset as needed
+            -- Find the primary part of the model (if set)
+            local primaryPart = clone.PrimaryPart or clone:FindFirstChildWhichIsA("Part")
+
+            if primaryPart then
+                -- Set the new position near the right hand
+                primaryPart.CFrame = rightHand.CFrame * CFrame.new(0, 0, -2) -- Adjust the offset as needed
+            else
+                print("No primary part found in Muscle King Lift model!")
+            end
         end
     else
         print("Muscle King Lift not found!")
