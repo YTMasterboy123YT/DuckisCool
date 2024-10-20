@@ -4,15 +4,16 @@ local muscleKingMountain = game.Workspace.machinesFolder:FindFirstChild("Muscle 
 
 while true do
     if muscleKingMountain then
-        -- Get your position
-        local playerPosition = character.PrimaryPart.Position
-        
         -- Get the right hand position
         local rightHand = character:FindFirstChild("RightHand")
         
         if rightHand then
+            -- Clone the rock
+            local clone = muscleKingMountain:Clone()
+            clone.Parent = game.Workspace
+            
             -- Set the new position near the right hand
-            muscleKingMountain.CFrame = rightHand.CFrame * CFrame.new(0, 0, -2) -- Adjust the offset as needed
+            clone.CFrame = rightHand.CFrame * CFrame.new(0, 0, -2) -- Adjust the offset as needed
         end
     else
         print("Muscle King Mountain not found!")
