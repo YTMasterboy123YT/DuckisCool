@@ -1,5 +1,7 @@
 local player = game.Players.LocalPlayer
+player.CharacterAdded:Wait() -- Wait for the character to load
 local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart") -- Wait for HumanoidRootPart
 local muscleKingLift = game.Workspace.machinesFolder:FindFirstChild("Muscle King Lift")
 
 while true do
