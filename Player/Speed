@@ -1,13 +1,5 @@
-local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
 
-local function changeSpeed(speedValue)
-    for _, player in ipairs(Players:GetPlayers()) do
-        local character = player.Character
-        if character then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.WalkSpeed = speedValue
-            end
-        end
-    end
-end
+changeSizeSpeedRemote:InvokeServer("changeSize", 2)
+changeSizeSpeedSpeedRemote:InvokeServer("changeSpeed", 200)
