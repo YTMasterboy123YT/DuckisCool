@@ -3,7 +3,7 @@ local backpack = player:WaitForChild("Backpack")
 local character = player.Character or player.CharacterAdded:Wait()
 
 local function equipAndUsePunchTool()
-    local punchTool = backpack:FindFirstChild("PunchTool") -- Replace "PunchTool" with the actual name of your punch tool
+    local punchTool = backpack:FindFirstChild("Punch") -- Updated to "Punch"
     if punchTool then
         character:WaitForChild("Humanoid"):EquipTool(punchTool)
         wait(0.1) -- Small delay to ensure the tool is equipped
