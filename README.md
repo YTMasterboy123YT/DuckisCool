@@ -1,32 +1,28 @@
--- Create a ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
--- Create a TextButton
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 200, 0, 50)
-button.Position = UDim2.new(0.5, -100, 0.5, -25)
-button.Text = "Teleport Rock"
-button.Parent = screenGui
+-- Button for Punching Left Hand
+local leftPunchButton = Instance.new("TextButton")
+leftPunchButton.Size = UDim2.new(0, 200, 0, 50)
+leftPunchButton.Position = UDim2.new(0.5, -100, 0.5, -25)
+leftPunchButton.Text = "Punch Left"
+leftPunchButton.Parent = screenGui
+
+-- Button for Punching Right Hand
+local rightPunchButton = Instance.new("TextButton")
+rightPunchButton.Size = UDim2.new(0, 200, 0, 50)
+rightPunchButton.Position = UDim2.new(0.5, -100, 0.6, -25)
+rightPunchButton.Text = "Punch Right"
+rightPunchButton.Parent = screenGui
 
 local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local muscleKingMountain = game.Workspace.machinesFolder:FindFirstChild("Muscle King Mountain")
-local rockPart = muscleKingMountain:FindFirstChild("Rock")
 
-local originalPosition = rockPart.Position
-local originalSize = rockPart.Size
-local isOn = false
+-- Event for Left Punch
+leftPunchButton.MouseButton1Click:Connect(function()
+    player.muscleEvent:FireServer("punch", "leftHand")
+end)
 
-button.MouseButton1Click:Connect(function()
-    isOn = not isOn
-    if isOn then
-        rockPart.Position = character.RightHand.Position  -- Adjusted positioning
-        rockPart.Size = Vector3.new(2, 1, 1)
-        button.Text = "Return Rock"
-    else
-        rockPart.Position = originalPosition
-        rockPart.Size = originalSize
-        button.Text = "Teleport Rock"
-    end
+-- Event for Right Punch
+rightPunchButton.MouseButton1Click:Connect(function()
+    player.muscleEvent:FireServer("punch", "rightHand")
 end)
