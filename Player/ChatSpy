@@ -1,0 +1,17 @@
+local Players = game:GetService("Players")
+
+local function onPlayerChatted(player, message)
+    print(player.Name .. ": " .. message)
+end
+
+for _, player in pairs(Players:GetPlayers()) do
+    player.Chatted:Connect(function(message)
+        onPlayerChatted(player, message)
+    end)
+end
+
+Players.PlayerAdded:Connect(function(player)
+    player.Chatted:Connect(function(message)
+        onPlayerChatted(player, message)
+    end)
+end)
