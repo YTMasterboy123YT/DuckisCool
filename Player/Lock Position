@@ -1,0 +1,20 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+local lockedPosition = character.HumanoidRootPart.Position
+
+local function lockPosition()
+    while true do
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            character.HumanoidRootPart.CFrame = CFrame.new(lockedPosition)
+        end
+        wait(0.1)
+    end
+end
+
+lockPosition()
+
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    lockedPosition = character.HumanoidRootPart.Position
+end)
