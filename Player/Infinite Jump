@@ -12,5 +12,4 @@ local function enableInfiniteJump()
     end
 end
 
--- Call this function to enable infinite jump for all players
 enableInfiniteJump()
