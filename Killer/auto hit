@@ -1,57 +1,61 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local punching = false
-local toolName = "Punch"
+_G.noKillList = {}
+_G.autoKillActive = true
+_G.teleportPlayersActive = true
 
--- Function to set tool cooldowns
-local function setToolCooldowns()
-    local tools = {
-        {name = toolName, type = "attackTime"}
-    }
+local function addToNoKillList(displayName)
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.DisplayName:lower() == displayName:lower() then
+            _G.noKillList[player.Name] = true
+            break
+        end
+    end
+end
 
-    for _, toolInfo in pairs(tools) do
-        local tool = LocalPlayer.Backpack:FindFirstChild(toolInfo.name) or LocalPlayer.Character:FindFirstChild(toolInfo.name)
-        if tool then
-            local cooldown = tool:FindFirstChild(toolInfo.type) -- Assuming attackTime is an object
-            if cooldown then
-                cooldown.Value = 0.1 -- Set the cooldown value
+local function makePlayersInvisible()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local character = player.Character
+            if character then
+                for _, part in pairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.Transparency = 1
+                    end
+                    if part:IsA("BillboardGui") then
+                        part.Enabled = false
+                    end
+                end
             end
         end
     end
 end
 
-local function autoUseTool()
-    setToolCooldowns() -- Call to set cooldowns before starting to hit
-
-    while punching do
-        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
-
-        if tool then
-            if tool.Parent ~= character then
-                humanoid:EquipTool(tool)
+local function autoKill()
+    while _G.autoKillActive do
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
+                LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+                LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
             end
-            tool:Activate()
-            wait(0.1) -- Set to 0.1 seconds for faster hitting
-        else
-            wait(0.5) -- Wait before checking again if the tool is not found
         end
+        wait(0.1)
     end
 end
 
-local function toggleAutoPunch(value)
-    punching = value
+spawn(autoKill)
+makePlayersInvisible()
 
-    if punching then
-        print("Auto-punching started.")
-        autoUseTool()
-    else
-        print("Auto-punching stopped.")
+LocalPlayer.Chatted:Connect(function(message)
+    if message:sub(1, 7):lower() == ";nokill" then
+        local displayName = message:sub(9):trim()
+        addToNoKillList(displayName)
     end
-end
+end)
 
--- Example call to start/stop punching
-toggleAutoPunch(true) -- Start
--- toggleAutoPunch(false) -- Call this to stop 
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        makePlayersInvisible() -- Make new players invisible as well
+    end)
+end)
