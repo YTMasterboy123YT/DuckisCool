@@ -1,0 +1,11 @@
+local player = game.Players.LocalPlayer
+
+local function antiAFK()
+    while true do
+        player.Idled:Wait()
+        player:Move(Vector3.new(0, 0, 0))
+        wait(1)
+    end
+end
+
+antiAFK()
