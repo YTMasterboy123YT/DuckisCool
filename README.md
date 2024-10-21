@@ -1,28 +1,24 @@
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
--- Button for Punching Left Hand
-local leftPunchButton = Instance.new("TextButton")
-leftPunchButton.Size = UDim2.new(0, 200, 0, 50)
-leftPunchButton.Position = UDim2.new(0.5, -100, 0.5, -25)
-leftPunchButton.Text = "Punch Left"
-leftPunchButton.Parent = screenGui
-
--- Button for Punching Right Hand
-local rightPunchButton = Instance.new("TextButton")
-rightPunchButton.Size = UDim2.new(0, 200, 0, 50)
-rightPunchButton.Position = UDim2.new(0.5, -100, 0.6, -25)
-rightPunchButton.Text = "Punch Right"
-rightPunchButton.Parent = screenGui
+local punchButton = Instance.new("TextButton")
+punchButton.Size = UDim2.new(0, 200, 0, 50)
+punchButton.Position = UDim2.new(0.5, -100, 0.5, -25)
+punchButton.Text = "Punch Left"
+punchButton.Parent = screenGui
 
 local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
 
--- Event for Left Punch
-leftPunchButton.MouseButton1Click:Connect(function()
-    player.muscleEvent:FireServer("punch", "leftHand")
-end)
+local isLeftHand = true  -- Toggle variable for left/right punch
 
--- Event for Right Punch
-rightPunchButton.MouseButton1Click:Connect(function()
-    player.muscleEvent:FireServer("punch", "rightHand")
+punchButton.MouseButton1Click:Connect(function()
+    if isLeftHand then
+        player.muscleEvent:FireServer("punch", "leftHand")  -- Fire punch event for left hand
+        punchButton.Text = "Punch Right"  -- Update button text
+    else
+        player.muscleEvent:FireServer("punch", "rightHand")  -- Fire punch event for right hand
+        punchButton.Text = "Punch Left"  -- Update button text
+    end
+    isLeftHand = not isLeftHand  -- Toggle the hand
 end)
