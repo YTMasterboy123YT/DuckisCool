@@ -1,0 +1,7 @@
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+
+while true do
+    mouse1click() -- Simulates a mouse click
+    wait(0.1) -- Adjust the wait time for how fast you want to click
+end
