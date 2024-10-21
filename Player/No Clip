@@ -11,6 +11,6 @@ end
 for _, player in ipairs(Players:GetPlayers()) do
     local character = player.Character
     if character then
-        setNoClip(character, true) -- Enable no clip
+        setNoClip(character, true)
     end
 end
