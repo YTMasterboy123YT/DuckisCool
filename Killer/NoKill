@@ -18,10 +18,9 @@ local function makePlayerVisible(player)
     if character then
         for _, part in pairs(character:GetDescendants()) do
             if part:IsA("BasePart") then
-                part.Transparency = 0  -- Set transparency to 0
-            end
-            if part:IsA("BillboardGui") then
-                part.Enabled = true  -- Enable name tags
+                part.Transparency = 0
+            elseif part:IsA("BillboardGui") then
+                part.Enabled = true
             end
         end
     end
@@ -36,6 +35,8 @@ end)
 
 Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function()
-        makePlayerVisible(player)  -- Ensure new players are visible if on no-kill list
+        if _G.noKillList[player.Name] then
+            makePlayerVisible(player)
+        end
     end)
 end)
