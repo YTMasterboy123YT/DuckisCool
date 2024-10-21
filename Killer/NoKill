@@ -4,8 +4,13 @@ local LocalPlayer = Players.LocalPlayer
 _G.noKillList = {}
 _G.teleportPlayersActive = true
 
-local function addToNoKillList(playerName)
-    _G.noKillList[playerName] = true
+local function addToNoKillList(displayName)
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.DisplayName:lower() == displayName:lower() then
+            _G.noKillList[player.Name] = true
+            break
+        end
+    end
 end
 
 local function teleportPlayers()
@@ -27,7 +32,7 @@ teleportPlayers()
 
 LocalPlayer.Chatted:Connect(function(message)
     if message:sub(1, 7):lower() == ";nokill" then
-        local playerName = message:sub(9)
-        addToNoKillList(playerName)
+        local displayName = message:sub(9):trim()
+        addToNoKillList(displayName)
     end
 end)
