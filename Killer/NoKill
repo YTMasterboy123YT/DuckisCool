@@ -1,0 +1,33 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+_G.noKillList = {}
+_G.teleportPlayersActive = true
+
+local function addToNoKillList(playerName)
+    _G.noKillList[playerName] = true
+end
+
+local function teleportPlayers()
+    while _G.teleportPlayersActive do
+        wait(0.1)
+
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
+                local targetCharacter = otherPlayer.Character
+                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
+                end
+            end
+        end
+    end
+end
+
+teleportPlayers()
+
+LocalPlayer.Chatted:Connect(function(message)
+    if message:sub(1, 7):lower() == ";nokill" then
+        local playerName = message:sub(9)
+        addToNoKillList(playerName)
+    end
+end)
