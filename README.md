@@ -13,14 +13,14 @@ local muscleEvent = player:WaitForChild("muscleEvent")
 local muscleKingMountain = game.Workspace.machinesFolder:FindFirstChild("Muscle King Mountain")
 local rockPart = muscleKingMountain:FindFirstChild("Rock")
 
--- Remove HoopParticle and RockEmitter
+-- Remove hoopParticle and rockEmitter
 if rockPart then
-    local hoopParticle = rockPart:FindFirstChild("HoopParticle")
+    local hoopParticle = rockPart:FindFirstChild("hoopParticle")
     if hoopParticle then
         hoopParticle:Destroy()
     end
 
-    local rockEmitter = rockPart:FindFirstChild("RockEmitter")
+    local rockEmitter = rockPart:FindFirstChild("rockEmitter")
     if rockEmitter then
         rockEmitter:Destroy()
     end
