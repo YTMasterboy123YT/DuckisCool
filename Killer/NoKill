@@ -2,37 +2,40 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 _G.noKillList = {}
-_G.teleportPlayersActive = true
 
 local function addToNoKillList(displayName)
     for _, player in pairs(Players:GetPlayers()) do
         if player.DisplayName:lower() == displayName:lower() then
             _G.noKillList[player.Name] = true
+            makePlayerVisible(player)
             break
         end
     end
 end
 
-local function teleportPlayers()
-    while _G.teleportPlayersActive do
-        wait(0.1)
-
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
-                local targetCharacter = otherPlayer.Character
-                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
-                end
+local function makePlayerVisible(player)
+    local character = player.Character
+    if character then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 0  -- Set transparency to 0
+            end
+            if part:IsA("BillboardGui") then
+                part.Enabled = true  -- Enable name tags
             end
         end
     end
 end
-
-teleportPlayers()
 
 LocalPlayer.Chatted:Connect(function(message)
     if message:sub(1, 7):lower() == ";nokill" then
         local displayName = message:sub(9):trim()
         addToNoKillList(displayName)
     end
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        makePlayerVisible(player)  -- Ensure new players are visible if on no-kill list
+    end)
 end)
