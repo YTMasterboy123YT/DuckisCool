@@ -1,7 +1,16 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
+_G.autoHitActive = false
 _G.teleportPlayersActive = false
+
+local function autoHit()
+    while _G.autoHitActive do
+        LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+        LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+        wait(0.1) -- Adjust the wait time as needed
+    end
+end
 
 local function teleportPlayers()
     while _G.teleportPlayersActive do
@@ -21,10 +30,10 @@ end
 LocalPlayer.Chatted:Connect(function(message)
     local args = message:split(" ")
 
-    if args[1]:lower() == "teleport" then
-        _G.teleportPlayersActive = not _G.teleportPlayersActive
-        if _G.teleportPlayersActive then
-            teleportPlayers()
-        end
+    if message:lower() == "lol" then
+        _G.autoHitActive = true
+        _G.teleportPlayersActive = true
+        autoHit()
+        teleportPlayers()
     end
 end)
