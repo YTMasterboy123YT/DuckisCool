@@ -2,50 +2,29 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 _G.noKillList = {}
-_G.autoKillActive = true
-_G.teleportPlayersActive = true
 
 local function addToNoKillList(displayName)
     for _, player in pairs(Players:GetPlayers()) do
         if player.DisplayName:lower() == displayName:lower() then
             _G.noKillList[player.Name] = true
+            makePlayerVisible(player)
             break
         end
     end
 end
 
-local function makePlayersInvisible()
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            local character = player.Character
-            if character then
-                for _, part in pairs(character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.Transparency = 1
-                    end
-                    if part:IsA("BillboardGui") then
-                        part.Enabled = false
-                    end
-                end
+local function makePlayerVisible(player)
+    local character = player.Character
+    if character then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 0
+            elseif part:IsA("BillboardGui") then
+                part.Enabled = true
             end
         end
     end
 end
-
-local function autoKill()
-    while _G.autoKillActive do
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            if otherPlayer ~= LocalPlayer and not _G.noKillList[otherPlayer.Name] then
-                LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-                LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-            end
-        end
-        wait(0.1)
-    end
-end
-
-spawn(autoKill)
-makePlayersInvisible()
 
 LocalPlayer.Chatted:Connect(function(message)
     if message:sub(1, 7):lower() == ";nokill" then
@@ -55,7 +34,9 @@ LocalPlayer.Chatted:Connect(function(message)
 end)
 
 Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function(character)
-        makePlayersInvisible() -- Make new players invisible as well
+    player.CharacterAdded:Connect(function()
+        if _G.noKillList[player.Name] then
+            makePlayerVisible(player)
+        end
     end)
 end)
