@@ -15,7 +15,7 @@ local Window = Fluent:CreateWindow({
     Title = "Speed Hub X " .. Fluent.Version, 
     SubTitle = "By Duck", 
     TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
+    Size = UDim2.fromOffset(560, 440),
     Acrylic = true,
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.LeftControl
@@ -83,17 +83,6 @@ InfiniteJumpToggle:OnChanged(function(value)
     enableInfiniteJump()
 end)
 
--- Button for FPS Booster
-Tabs.Main:AddButton({
-    Title = "FPS BOOSTER",
-    Description = "Boosts FPS",
-    Callback = function()
-        local UserSettings = UserSettings():GetService("UserGameSettings")
-        UserSettings.GraphicsQuality = 1
-        UserSettings:SetThirdPartyGraphicsQuality(1)
-    end
-})
-
 -- Anti AFK Toggle
 local antiAFKEnabled = false
 
@@ -129,6 +118,39 @@ LockPositionToggle:OnChanged(function(value)
         while lockPositionEnabled do
             character.HumanoidRootPart.CFrame = CFrame.new(lockedPosition)
             wait(0.1)
+        end
+    end
+end)
+
+-- NoClip Toggle
+local noClipEnabled = false
+
+local NoClipToggle = Tabs.Main:AddToggle("NoClip", {
+    Title = "No Clip",
+    Default = false,
+})
+
+NoClipToggle:OnChanged(function(value)
+    noClipEnabled = value
+    local character = player.Character or player.CharacterAdded:Wait()
+
+    if noClipEnabled then
+        for _, part in ipairs(character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+
+        character.ChildAdded:Connect(function(part)
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end)
+    else
+        for _, part in ipairs(character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
         end
     end
 end)
