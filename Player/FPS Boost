@@ -1,0 +1,16 @@
+local UserSettings = UserSettings():GetService("UserGameSettings")
+
+UserSettings.GraphicsQuality = 1
+UserSettings:SetThirdPartyGraphicsQuality(1)
+
+local function setQuality()
+    UserSettings.GraphicsQuality = 1
+end
+
+setQuality()
+
+UserSettings.Changed:Connect(function(property)
+    if property == "GraphicsQuality" then
+        setQuality()
+    end
+end)
