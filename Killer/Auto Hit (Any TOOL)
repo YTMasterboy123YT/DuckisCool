@@ -1,7 +1,31 @@
 local player = game.Players.LocalPlayer
 local mouse = player:GetMouse()
 
-while true do
-    mouse1click() -- Simulates a mouse click
-    wait(0.1) -- Adjust the wait time for how fast you want to click
+-- Change "PunchTool" to the actual name of your punch tool
+local punchToolName = "PunchTool"
+
+-- Function to equip the punch tool
+local function equipPunchTool()
+    local backpack = player.Backpack
+    local character = player.Character or player.CharacterAdded:Wait()
+
+    -- Check if the tool exists in the backpack
+    local punchTool = backpack:FindFirstChild(punchToolName)
+    if punchTool then
+        punchTool.Parent = character -- Move the tool to the character to equip it
+    end
 end
+
+-- Auto-hit function
+local function autoHit()
+    while true do
+        if player.Character and player.Character:FindFirstChild(punchToolName) then
+            mouse1click() -- Simulates a mouse click to punch
+        end
+        wait(0.5) -- Adjust the wait time for how often you want to hit
+    end
+end
+
+-- Equip the tool and start auto-hitting
+equipPunchTool()
+autoHit()
