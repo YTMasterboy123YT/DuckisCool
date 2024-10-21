@@ -2,22 +2,24 @@ local player = game.Players.LocalPlayer
 local backpack = player:WaitForChild("Backpack")
 local character = player.Character or player.CharacterAdded:Wait()
 
-local function equipAndUsePunchTool()
-    local punchTool = backpack:FindFirstChild("Punch") -- Updated to "Punch"
+local function equipAndAutoHit()
+    local punchTool = backpack:FindFirstChild("Punch") -- Use the correct name for your tool
     if punchTool then
         character:WaitForChild("Humanoid"):EquipTool(punchTool)
         wait(0.1) -- Small delay to ensure the tool is equipped
 
-        -- Simulate using the tool
-        punchTool:Activate()
+        while true do
+            punchTool:Activate() -- Simulate using the tool
+            wait(1) -- Adjust this to change how often it hits (1 second here)
+        end
     end
 end
 
--- Call the function to equip and use the tool
-equipAndUsePunchTool()
+-- Call the function to equip and auto hit
+equipAndAutoHit()
 
 -- Optional: Call this function when the player spawns
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
-    equipAndUsePunchTool()
+    equipAndAutoHit()
 end)
