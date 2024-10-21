@@ -37,6 +37,14 @@ local function makePlayersInvisible()
                     for _, part in pairs(targetCharacter:GetChildren()) do
                         if part:IsA("BasePart") then
                             part.Transparency = 1
+                        elseif part:IsA("Accessory") then
+                            part.Handle.Transparency = 1
+                        end
+                    end
+
+                    for _, descendant in pairs(targetCharacter:GetDescendants()) do
+                        if descendant:IsA("BillboardGui") then
+                            descendant.Enabled = false
                         end
                     end
                 end
