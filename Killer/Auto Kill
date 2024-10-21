@@ -8,19 +8,19 @@ local function autoHit()
     while _G.autoHitActive do
         LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
         LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-        wait(0.1) -- Adjust the wait time as needed
+        wait(0.1)
     end
 end
 
 local function teleportPlayers()
     while _G.teleportPlayersActive do
-        wait(0.1) -- Adjust delay as needed
+        wait(0.1)
 
         for _, otherPlayer in pairs(Players:GetPlayers()) do
             if otherPlayer ~= LocalPlayer then
                 local targetCharacter = otherPlayer.Character
                 if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0)) -- Teleport above the local player
+                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
                 end
             end
         end
@@ -28,12 +28,10 @@ local function teleportPlayers()
 end
 
 LocalPlayer.Chatted:Connect(function(message)
-    local args = message:split(" ")
-
     if message:lower() == "lol" then
         _G.autoHitActive = true
         _G.teleportPlayersActive = true
-        autoHit()
-        teleportPlayers()
+        spawn(autoHit)
+        spawn(teleportPlayers)
     end
 end)
