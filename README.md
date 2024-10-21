@@ -9,15 +9,21 @@ punchButton.Parent = screenGui
 
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
+local muscleEvent = player:WaitForChild("muscleEvent")  -- Ensure muscleEvent exists
+local muscleKingMountain = game.Workspace.machinesFolder:FindFirstChild("Muscle King Mountain")
+local rockPart = muscleKingMountain:FindFirstChild("Rock")
 
 local isLeftHand = true  -- Toggle variable for left/right punch
 
 punchButton.MouseButton1Click:Connect(function()
+    -- Teleport the rock to the appropriate hand
     if isLeftHand then
-        player.muscleEvent:FireServer("punch", "leftHand")  -- Fire punch event for left hand
+        rockPart.Position = character.LeftHand.Position
+        muscleEvent:FireServer("punch", "leftHand")  -- Fire punch event for left hand
         punchButton.Text = "Punch Right"  -- Update button text
     else
-        player.muscleEvent:FireServer("punch", "rightHand")  -- Fire punch event for right hand
+        rockPart.Position = character.RightHand.Position
+        muscleEvent:FireServer("punch", "rightHand")  -- Fire punch event for right hand
         punchButton.Text = "Punch Left"  -- Update button text
     end
     isLeftHand = not isLeftHand  -- Toggle the hand
