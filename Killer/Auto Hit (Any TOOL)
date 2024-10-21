@@ -2,12 +2,17 @@ local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 
 local function autoHit()
-    local punchTool = player.Backpack:FindFirstChild("Punch") -- Find the punch tool in the backpack
-    if punchTool then
-        while true do
-            punchTool:Activate() -- Simulate using the tool
-            wait(1) -- Adjust this to change how often it hits (1 second here)
+    while true do
+        -- Check if the player is using a specific tool
+        local punchTool = character:FindFirstChild("Punch") -- Replace with your desired tool name
+
+        if punchTool and punchTool.Enabled then -- Check if the tool is enabled
+            -- Simulate using the tool
+            punchTool:Activate() -- Call the tool's activate method
+            print("Auto hit with Punch!") -- Placeholder for action
         end
+
+        wait(0.1) -- Adjusted for faster auto hit every 0.1 seconds
     end
 end
 
