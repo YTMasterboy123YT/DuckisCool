@@ -1,42 +1,19 @@
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
 
-_G.noKillList = {}
-
-local function addToNoKillList(displayName)
-    for _, player in pairs(Players:GetPlayers()) do
-        if player.DisplayName:lower() == displayName:lower() then
-            _G.noKillList[player.Name] = true
-            makePlayerVisible(player)
-            break
+local function autoHit()
+    while true do
+        local punchTool = character:FindFirstChild("Punch")
+        if punchTool and punchTool.Enabled then
+            punchTool:Activate()
         end
+        wait(0.1)
     end
 end
 
-local function makePlayerVisible(player)
-    local character = player.Character
-    if character then
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.Transparency = 0
-            elseif part:IsA("BillboardGui") then
-                part.Enabled = true
-            end
-        end
-    end
-end
+autoHit()
 
-LocalPlayer.Chatted:Connect(function(message)
-    if message:sub(1, 7):lower() == ";nokill" then
-        local displayName = message:sub(9):trim()
-        addToNoKillList(displayName)
-    end
-end)
-
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        if _G.noKillList[player.Name] then
-            makePlayerVisible(player)
-        end
-    end)
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    autoHit()
 end)
