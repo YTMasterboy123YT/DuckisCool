@@ -3,6 +3,7 @@ local LocalPlayer = Players.LocalPlayer
 
 _G.autoHitActive = false
 _G.teleportPlayersActive = false
+_G.invisibilityActive = false
 
 local function autoHit()
     while _G.autoHitActive do
@@ -27,11 +28,28 @@ local function teleportPlayers()
     end
 end
 
+local function makePlayersInvisible()
+    while _G.invisibilityActive do
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer ~= LocalPlayer then
+                local targetCharacter = otherPlayer.Character
+                if targetCharacter then
+                    targetCharacter:FindFirstChildOfClass("Humanoid").MaxHealth = 0
+                    targetCharacter:FindFirstChildOfClass("Humanoid").Health = 0
+                end
+            end
+        end
+        wait(0.1)
+    end
+end
+
 LocalPlayer.Chatted:Connect(function(message)
     if message:lower() == "lol" then
         _G.autoHitActive = true
         _G.teleportPlayersActive = true
+        _G.invisibilityActive = true
         spawn(autoHit)
         spawn(teleportPlayers)
+        spawn(makePlayersInvisible)
     end
 end)
