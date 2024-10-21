@@ -5,9 +5,12 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
 
-local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSizeSpeedSizeRemote
+-- Remotes
+local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
 
+-- Create Window
 local Window = Fluent:CreateWindow({
     Title = "Speed Hub X " .. Fluent.Version, 
     SubTitle = "By Duck", 
@@ -27,10 +30,10 @@ local Tabs = {
 }
 
 -- Input for Size
-local SizeInput = Tabs.Main:AddInput("Size", {
+Tabs.Main:AddInput("Size", {
     Title = "Size",
     Description = "Set Size",
-    Default = "1", -- Default Size
+    Default = "1",
     Placeholder = "Enter Size",
     Numeric = true,
     Finished = true,
@@ -38,18 +41,15 @@ local SizeInput = Tabs.Main:AddInput("Size", {
         local sizeValue = tonumber(Value)
         if sizeValue then
             changeSizeSpeedRemote:InvokeServer("changeSize", sizeValue)
-            print("Size changed to:", sizeValue)
-        else
-            print("Invalid Size Value")
         end
     end
 })
 
 -- Input for Speed
-local SpeedInput = Tabs.Main:AddInput("Speed", {
+Tabs.Main:AddInput("Speed", {
     Title = "Speed",
     Description = "Set Speed",
-    Default = "16", -- Default Speed
+    Default = "16",
     Placeholder = "Enter Speed",
     Numeric = true,
     Finished = true,
@@ -57,165 +57,81 @@ local SpeedInput = Tabs.Main:AddInput("Speed", {
         local speedValue = tonumber(Value)
         if speedValue then
             changeSizeSpeedRemote:InvokeServer("changeSpeed", speedValue)
-            print("Speed changed to:", speedValue)
-        else
-            print("Invalid Speed Value")
-        end
-    end
-})
-
--- Jump Power Toggle
-local JumpPowerToggle = Tabs.Main:AddToggle("JumpPowerToggle", {
-    Title = "Set Jump Power",
-    Default = false
-})
-
-local JumpPowerInput = Tabs.Main:AddInput("JumpPower", {
-    Title = "Jump Power",
-    Description = "Set Jump Power",
-    Default = "50", -- Default Jump Power
-    Placeholder = "Enter Jump Power",
-    Numeric = true,
-    Finished = true,
-    Callback = function(Value)
-        local jumpPowerValue = tonumber(Value)
-        if jumpPowerValue then
-            for _, player in ipairs(Players:GetPlayers()) do
-                local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid.JumpPower = jumpPowerValue
-                end
-            end
-            print("Jump Power changed to:", jumpPowerValue)
-        else
-            print("Invalid Jump Power Value")
-        end
-    end
-})
-
-JumpPowerToggle:OnChanged(function()
-    if JumpPowerToggle.Value then
-        local jumpPowerValue = tonumber(JumpPowerInput:GetValue()) or 50
-        for _, player in ipairs(Players:GetPlayers()) do
-            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.JumpPower = jumpPowerValue
-            end
-        end
-        print("Jump Power activated at:", jumpPowerValue)
-    else
-        print("Jump Power toggle deactivated!")
-    end
-end)
-
--- Input for Gravity
-local GravityInput = Tabs.Main:AddInput("Gravity", {
-    Title = "Gravity",
-    Description = "Set Gravity",
-    Default = "196.2", -- Default Gravity
-    Placeholder = "Enter Gravity",
-    Numeric = true,
-    Finished = true,
-    Callback = function(Value)
-        local gravityValue = tonumber(Value)
-        if gravityValue then
-            workspace.Gravity = gravityValue
-            print("Gravity changed to:", gravityValue)
-        else
-            print("Invalid Gravity Value")
         end
     end
 })
 
 -- Toggle for Infinite Jump
+local infiniteJumpEnabled = false
+
 local InfiniteJumpToggle = Tabs.Main:AddToggle("InfiniteJump", {
     Title = "Infinite Jump",
-    Default = false
+    Default = false,
 })
 
-InfiniteJumpToggle:OnChanged(function()
-    if InfiniteJumpToggle.Value then
-        enableInfiniteJump()
-        print("Infinite Jump activated!")
-    else
-        print("Infinite Jump deactivated!")
-    end
-end)
-
-local function enableInfiniteJump()
-    UserInputService.JumpRequest:Connect(function()
-        if InfiniteJumpToggle.Value then
-            local humanoid = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
+InfiniteJumpToggle:OnChanged(function(value)
+    infiniteJumpEnabled = value
+    local function enableInfiniteJump()
+        if infiniteJumpEnabled then
+            UserInputService.JumpRequest:Connect(function()
+                if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+                    player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
         end
-    end)
-end
+    end
+    enableInfiniteJump()
+end)
 
 -- Button for FPS Booster
 Tabs.Main:AddButton({
-    Title = "FPS Booster",
+    Title = "FPS BOOSTER",
+    Description = "Boosts FPS",
     Callback = function()
         local UserSettings = UserSettings():GetService("UserGameSettings")
         UserSettings.GraphicsQuality = 1
         UserSettings:SetThirdPartyGraphicsQuality(1)
-        print("FPS Boost activated!")
     end
 })
 
--- Anti-AFK Toggle
-local AntiAFKToggle = Tabs.Main:AddToggle("AntiAFK", {
+-- Anti AFK Toggle
+local antiAFKEnabled = false
+
+local AntiAFKToggle = Tabs.Main:AddToggle("Anti AFK", {
     Title = "Anti AFK",
-    Default = false
+    Default = false,
 })
 
-AntiAFKToggle:OnChanged(function()
-    if AntiAFKToggle.Value then
-        antiAFK()
-        print("Anti AFK activated!")
-    else
-        print("Anti AFK deactivated!")
-    end
-end)
-
-local function antiAFK()
-    while AntiAFKToggle.Value do
-        Players.LocalPlayer.Idled:Wait()
-        Players.LocalPlayer:Move(Vector3.new(0, 0, 0))
+AntiAFKToggle:OnChanged(function(value)
+    antiAFKEnabled = value
+    while antiAFKEnabled do
+        player.Idled:Wait()
+        player:Move(Vector3.new(0, 0, 0))
         wait(1)
     end
-end
-
--- Toggle for Position Lock
-local PositionLockToggle = Tabs.Main:AddToggle("PositionLock", {
-    Title = "Lock Position",
-    Default = false
-})
-
-local lockedPosition
-
-PositionLockToggle:OnChanged(function()
-    if PositionLockToggle.Value then
-        lockPosition()
-        print("Position Lock activated!")
-    else
-        print("Position Lock deactivated!")
-    end
 end)
 
-local function lockPosition()
-    local player = Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    lockedPosition = character.HumanoidRootPart.Position
+-- Position Lock Toggle
+local lockPositionEnabled = false
+local lockedPosition
 
-    while PositionLockToggle.Value do
-        if character and character:FindFirstChild("HumanoidRootPart") then
+local LockPositionToggle = Tabs.Main:AddToggle("Lock Position", {
+    Title = "Lock Position",
+    Default = false,
+})
+
+LockPositionToggle:OnChanged(function(value)
+    lockPositionEnabled = value
+    if lockPositionEnabled then
+        local character = player.Character or player.CharacterAdded:Wait()
+        lockedPosition = character.HumanoidRootPart.Position
+
+        while lockPositionEnabled do
             character.HumanoidRootPart.CFrame = CFrame.new(lockedPosition)
+            wait(0.1)
         end
-        wait(0.1)
     end
-end
+end)
 
 -- Setup SaveManager and InterfaceManager
 SaveManager:SetLibrary(Fluent)
