@@ -1,0 +1,4 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+
+changeSizeRemote:InvokeServer("changeSize", 2)
