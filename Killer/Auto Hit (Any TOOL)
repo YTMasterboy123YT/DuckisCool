@@ -2,31 +2,31 @@ local player = game.Players.LocalPlayer
 local backpack = player:WaitForChild("Backpack")
 local character = player.Character or player.CharacterAdded:Wait()
 
--- Define your tools and their properties
-local toolsConfig = {
-    {name = "Punch", type = "attackTime", value = 0.1},
-    {name = "Ground Slam", type = "attackTime", value = 0.1},
-    {name = "Stomp", type = "attackTime", value = 0.1},
-    {name = "Handstands", type = "repTime", value = 0.1},
-    {name = "Pushups", type = "repTime", value = 0.1},
-    {name = "Weight", type = "repTime", value = 0.1},
-    {name = "Situps", type = "repTime", value = 0.1}
+local tools = {
+    {name = "Punch", type = "attackTime"},
+    {name = "Ground Slam", type = "attackTime"},
+    {name = "Stomp", type = "attackTime"},
+    {name = "Handstands", type = "repTime"},
+    {name = "Pushups", type = "repTime"},
+    {name = "Weight", type = "repTime"},
+    {name = "Situps", type = "repTime"}
 }
 
--- Function to set tool properties
+-- Function to set tool cooldowns
 local function setToolProperties()
-    for _, toolConfig in ipairs(toolsConfig) do
-        local tool = backpack:FindFirstChild(toolConfig.name)
+    for _, toolInfo in pairs(tools) do
+        local tool = backpack:FindFirstChild(toolInfo.name)
         if tool then
-            -- Check if the tool supports attributes
-            if tool:IsA("Tool") then
-                tool:SetAttribute(toolConfig.type, toolConfig.value)
-                print(toolConfig.name .. " " .. toolConfig.type .. " set to " .. toolConfig.value)
+            -- Look for the cooldown object
+            local cooldown = tool:FindFirstChild(toolInfo.type) 
+            if cooldown and cooldown:IsA("NumberValue") then
+                cooldown.Value = 0.1 -- Set the cooldown value to 0.1 seconds
+                print(toolInfo.name .. " " .. toolInfo.type .. " set to " .. cooldown.Value)
             else
-                print(toolConfig.name .. " is not a Tool.")
+                print("Cooldown object not found or is not a NumberValue for " .. toolInfo.name)
             end
         else
-            print(toolConfig.name .. " not found in backpack.")
+            print(toolInfo.name .. " not found in backpack.")
         end
     end
 end
@@ -34,17 +34,14 @@ end
 -- Function to auto hit
 local function autoHit()
     while true do
-        local equippedTool = character:FindFirstChildOfClass("Tool")
+        local equippedTool = character:FindFirstChildOfClass("Tool") -- Finds any equipped tool
         if equippedTool and equippedTool.Enabled then
-            equippedTool:Activate()
-            print("Auto hit with " .. equippedTool.Name)
+            equippedTool:Activate() -- Call the tool's activate method
+            print("Auto hit with " .. equippedTool.Name) -- Log the auto hit action
         end
-        wait(0.1)
+        wait(0.1) -- Auto hit every 0.1 seconds
     end
 end
-
--- Wait a moment to ensure tools are in the backpack
-wait(1) -- Adjust this if needed
 
 -- Set tool properties
 setToolProperties()
@@ -55,7 +52,7 @@ autoHit()
 -- Handle character respawn
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
-    wait(1) -- Wait again to ensure tools are loaded
-    setToolProperties()
-    autoHit()
+    backpack = player:WaitForChild("Backpack") -- Update backpack reference
+    setToolProperties() -- Reapply tool properties when character respawns
+    autoHit() -- Restart auto hit for the new character
 end)
