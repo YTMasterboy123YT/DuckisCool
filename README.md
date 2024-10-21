@@ -1,16 +1,23 @@
+local button = script.Parent
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local muscleKingMountain = game.Workspace.machinesFolder:FindFirstChild("Muscle King Mountain")
-local originalRock = muscleKingMountain:FindFirstChild("Rock")
+local rockPart = muscleKingMountain:FindFirstChild("Rock")
 
-if originalRock then
-    local clone = originalRock:Clone()
-    clone.Name = "Muscle King"
-    clone.Parent = game.Workspace
+local originalPosition = rockPart.Position
+local isOn = false
 
-    local rightHand = character:FindFirstChild("RightHand")
-    if rightHand then
-        clone.CFrame = rightHand.CFrame * CFrame.new(0, 0, -2)
-        clone.Size = Vector3.new(2, 1, 1)
+button.Size = UDim2.new(0, 200, 0, 50)
+button.Position = UDim2.new(0.5, -100, 0.5, -25)
+button.Text = "Teleport Rock"
+
+button.MouseButton1Click:Connect(function()
+    isOn = not isOn
+    if isOn then
+        button.Text = "Return Rock"
+        rockPart.Position = character.RightHand.Position + Vector3.new(0, 0, -2)
+    else
+        button.Text = "Teleport Rock"
+        rockPart.Position = originalPosition
     end
-end
+end)
