@@ -4,7 +4,7 @@ screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 local punchButton = Instance.new("TextButton")
 punchButton.Size = UDim2.new(0, 200, 0, 50)
 punchButton.Position = UDim2.new(0.5, -100, 0.5, -25)
-punchButton.Text = "Punch Left"
+punchButton.Text = "Start Punching!"
 punchButton.Parent = screenGui
 
 local player = game.Players.LocalPlayer
@@ -12,31 +12,41 @@ local character = player.Character or player.CharacterAdded:Wait()
 local muscleEvent = player:WaitForChild("muscleEvent")
 local muscleKingMountain = game.Workspace.machinesFolder:FindFirstChild("Muscle King Mountain")
 local rockPart = muscleKingMountain:FindFirstChild("Rock")
+local punchTool = player.Backpack:FindFirstChild("Punch")  -- Replace with your punch tool name
 
--- Remove hoopParticle and rockEmitter
-if rockPart then
-    local hoopParticle = rockPart:FindFirstChild("hoopParticle")
-    if hoopParticle then
-        hoopParticle:Destroy()
-    end
+local isPunching = false
+local punchLoop
 
-    local rockEmitter = rockPart:FindFirstChild("rockEmitter")
-    if rockEmitter then
-        rockEmitter:Destroy()
+-- Function to equip punch tool
+local function equipPunch()
+    if punchTool and not character:FindFirstChild(punchTool.Name) then
+        punchTool.Parent = character  -- Equip the punch
     end
 end
 
-local isLeftHand = true
-
 punchButton.MouseButton1Click:Connect(function()
-    if isLeftHand then
-        rockPart.Position = character.LeftHand.Position
-        muscleEvent:FireServer("punch", "leftHand")
-        punchButton.Text = "Punch Right"
+    if not isPunching then
+        equipPunch()  -- Equip the punch tool
+
+        -- Teleport the rock to the player's position
+        if rockPart then
+            rockPart.Position = character.HumanoidRootPart.Position
+        end
+
+        -- Start the punch loop
+        isPunching = true
+        punchButton.Text = "Stop Punching!"
+        
+        punchLoop = game:GetService("RunService").Heartbeat:Connect(function()
+            muscleEvent:FireServer("punch", "leftHand")
+            muscleEvent:FireServer("punch", "rightHand")
+        end)
     else
-        rockPart.Position = character.RightHand.Position
-        muscleEvent:FireServer("punch", "rightHand")
-        punchButton.Text = "Punch Left"
+        -- Stop the punch loop
+        if punchLoop then
+            punchLoop:Disconnect()
+        end
+        isPunching = false
+        punchButton.Text = "Start Punching!"
     end
-    isLeftHand = not isLeftHand
 end)
