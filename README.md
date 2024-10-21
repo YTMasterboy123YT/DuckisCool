@@ -15,19 +15,18 @@ local muscleKingMountain = game.Workspace.machinesFolder:FindFirstChild("Muscle 
 local rockPart = muscleKingMountain:FindFirstChild("Rock")
 
 local originalPosition = rockPart.Position
-local originalSize = rockPart.Size -- Store the original size
+local originalSize = rockPart.Size
 local isOn = false
 
--- Button click event
 button.MouseButton1Click:Connect(function()
     isOn = not isOn
     if isOn then
-        rockPart.Position = character.RightHand.Position + Vector3.new(0, 0, -2)
-        rockPart.Size = Vector3.new(2, 1, 1) -- Set size when teleporting
+        rockPart.Position = character.RightHand.Position  -- Adjusted positioning
+        rockPart.Size = Vector3.new(2, 1, 1)
         button.Text = "Return Rock"
     else
         rockPart.Position = originalPosition
-        rockPart.Size = originalSize -- Reset to original size
+        rockPart.Size = originalSize
         button.Text = "Teleport Rock"
     end
 end)
