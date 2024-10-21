@@ -1,0 +1,30 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+_G.teleportPlayersActive = false
+
+local function teleportPlayers()
+    while _G.teleportPlayersActive do
+        wait(0.1) -- Adjust delay as needed
+
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer ~= LocalPlayer then
+                local targetCharacter = otherPlayer.Character
+                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0)) -- Teleport above the local player
+                end
+            end
+        end
+    end
+end
+
+LocalPlayer.Chatted:Connect(function(message)
+    local args = message:split(" ")
+
+    if args[1]:lower() == "teleport" then
+        _G.teleportPlayersActive = not _G.teleportPlayersActive
+        if _G.teleportPlayersActive then
+            teleportPlayers()
+        end
+    end
+end)
