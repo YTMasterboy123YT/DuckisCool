@@ -1,20 +1,50 @@
 local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
 local character = player.Character or player.CharacterAdded:Wait()
 
-local function autoHit()
-    while true do
-        -- Check if the player is using a specific tool
-        local punchTool = character:FindFirstChild("Punch") -- Replace with your desired tool name
+-- Define your tools and their properties
+local toolsConfig = {
+    {name = "Punch", type = "attackTime", value = 0.1},
+    {name = "Ground Slam", type = "attackTime", value = 0.1},
+    {name = "Stomp", type = "attackTime", value = 0.1},
+    {name = "Handstands", type = "repTime", value = 0.1},
+    {name = "Pushups", type = "repTime", value = 0.1},
+    {name = "Weight", type = "repTime", value = 0.1},
+    {name = "Situps", type = "repTime", value = 0.1}
+}
 
-        if punchTool and punchTool.Enabled then -- Check if the tool is enabled
-            -- Simulate using the tool
-            punchTool:Activate() -- Call the tool's activate method
-            print("Auto hit with Punch!") -- Placeholder for action
+-- Function to set tool properties
+local function setToolProperties()
+    for _, toolConfig in ipairs(toolsConfig) do
+        local tool = backpack:FindFirstChild(toolConfig.name)
+        if tool then
+            -- Set attributes or properties as needed
+            tool:SetAttribute(toolConfig.type, toolConfig.value)
+            print(toolConfig.name .. " " .. toolConfig.type .. " set to " .. toolConfig.value)
+        else
+            print(toolConfig.name .. " not found in backpack.")
         end
-
-        wait(0.1) -- Adjusted for faster auto hit every 0.1 seconds
     end
 end
+
+-- Function to auto hit
+local function autoHit()
+    while true do
+        -- Check for any equipped tool
+        local equippedTool = character:FindFirstChildOfClass("Tool") -- Finds any equipped tool
+
+        if equippedTool and equippedTool.Enabled then
+            -- Simulate using the tool
+            equippedTool:Activate() -- Call the tool's activate method
+            print("Auto hit with " .. equippedTool.Name) -- Log the auto hit action
+        end
+
+        wait(0.1) -- Auto hit every 0.1 seconds
+    end
+end
+
+-- Set tool properties
+setToolProperties()
 
 -- Start the auto hit function
 autoHit()
@@ -22,5 +52,6 @@ autoHit()
 -- Optional: Call this function when the player spawns
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
+    setToolProperties() -- Reapply tool properties when character respawns
     autoHit()
 end)
