@@ -18,9 +18,13 @@ local function setToolProperties()
     for _, toolConfig in ipairs(toolsConfig) do
         local tool = backpack:FindFirstChild(toolConfig.name)
         if tool then
-            -- Set attributes or properties as needed
-            tool:SetAttribute(toolConfig.type, toolConfig.value)
-            print(toolConfig.name .. " " .. toolConfig.type .. " set to " .. toolConfig.value)
+            -- Check if the tool supports attributes
+            if tool:IsA("Tool") then
+                tool:SetAttribute(toolConfig.type, toolConfig.value)
+                print(toolConfig.name .. " " .. toolConfig.type .. " set to " .. toolConfig.value)
+            else
+                print(toolConfig.name .. " is not a Tool.")
+            end
         else
             print(toolConfig.name .. " not found in backpack.")
         end
@@ -30,18 +34,17 @@ end
 -- Function to auto hit
 local function autoHit()
     while true do
-        -- Check for any equipped tool
-        local equippedTool = character:FindFirstChildOfClass("Tool") -- Finds any equipped tool
-
+        local equippedTool = character:FindFirstChildOfClass("Tool")
         if equippedTool and equippedTool.Enabled then
-            -- Simulate using the tool
-            equippedTool:Activate() -- Call the tool's activate method
-            print("Auto hit with " .. equippedTool.Name) -- Log the auto hit action
+            equippedTool:Activate()
+            print("Auto hit with " .. equippedTool.Name)
         end
-
-        wait(0.1) -- Auto hit every 0.1 seconds
+        wait(0.1)
     end
 end
+
+-- Wait a moment to ensure tools are in the backpack
+wait(1) -- Adjust this if needed
 
 -- Set tool properties
 setToolProperties()
@@ -49,9 +52,10 @@ setToolProperties()
 -- Start the auto hit function
 autoHit()
 
--- Optional: Call this function when the player spawns
+-- Handle character respawn
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
-    setToolProperties() -- Reapply tool properties when character respawns
+    wait(1) -- Wait again to ensure tools are loaded
+    setToolProperties()
     autoHit()
 end)
