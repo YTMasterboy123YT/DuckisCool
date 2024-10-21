@@ -12,47 +12,34 @@ local tools = {
     {name = "Situps", type = "repTime"}
 }
 
--- Function to set tool cooldowns
 local function setToolProperties()
     for _, toolInfo in pairs(tools) do
         local tool = backpack:FindFirstChild(toolInfo.name)
         if tool then
-            -- Look for the cooldown object
             local cooldown = tool:FindFirstChild(toolInfo.type) 
             if cooldown and cooldown:IsA("NumberValue") then
-                cooldown.Value = 0.1 -- Set the cooldown value to 0.1 seconds
-                print(toolInfo.name .. " " .. toolInfo.type .. " set to " .. cooldown.Value)
-            else
-                print("Cooldown object not found or is not a NumberValue for " .. toolInfo.name)
+                cooldown.Value = 0.1
             end
-        else
-            print(toolInfo.name .. " not found in backpack.")
         end
     end
 end
 
--- Function to auto hit
 local function autoHit()
     while true do
-        local equippedTool = character:FindFirstChildOfClass("Tool") -- Finds any equipped tool
+        local equippedTool = character:FindFirstChildOfClass("Tool")
         if equippedTool and equippedTool.Enabled then
-            equippedTool:Activate() -- Call the tool's activate method
-            print("Auto hit with " .. equippedTool.Name) -- Log the auto hit action
+            equippedTool:Activate()
         end
-        wait(0.1) -- Auto hit every 0.1 seconds
+        wait(0.1)
     end
 end
 
--- Set tool properties
 setToolProperties()
-
--- Start the auto hit function
 autoHit()
 
--- Handle character respawn
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
-    backpack = player:WaitForChild("Backpack") -- Update backpack reference
-    setToolProperties() -- Reapply tool properties when character respawns
-    autoHit() -- Restart auto hit for the new character
+    backpack = player:WaitForChild("Backpack")
+    setToolProperties()
+    autoHit()
 end)
