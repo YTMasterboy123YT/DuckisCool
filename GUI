@@ -27,7 +27,7 @@ local Tabs = {
 -- Main Tab Inputs
 local SizeInput = Tabs.Main:AddInput("Size", {
     Title = "Set Size",
-    Description = "Set Size",
+    Description = "Change your character's size.",
     Default = "1",
     Placeholder = "Enter Size",
     Numeric = true,
@@ -35,14 +35,14 @@ local SizeInput = Tabs.Main:AddInput("Size", {
     Callback = function(Value)
         local sizeValue = tonumber(Value)
         if sizeValue then
-            ReplicatedStorage.rEvents.changeSizeSpeedRemote:InvokeServer("changeSize", sizeValue)
+            ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSize", sizeValue)
         end
     end
 })
 
 local SpeedInput = Tabs.Main:AddInput("Speed", {
     Title = "Set Speed",
-    Description = "Set Speed",
+    Description = "Change your character's speed.",
     Default = "16",
     Placeholder = "Enter Speed",
     Numeric = true,
@@ -50,36 +50,112 @@ local SpeedInput = Tabs.Main:AddInput("Speed", {
     Callback = function(Value)
         local speedValue = tonumber(Value)
         if speedValue then
-            ReplicatedStorage.rEvents.changeSizeSpeedRemote:InvokeServer("changeSpeed", speedValue)
+            ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSpeed", speedValue)
         end
     end
 })
 
--- Killer Tab
-local autoHitActive = false
+-- NoClip Feature
+local noclipActive = false
 
-local function setToolProperties()
-    local backpack = LocalPlayer:WaitForChild("Backpack")
-    local tools = {
-        {name = "Punch", type = "attackTime"},
-        {name = "Ground Slam", type = "attackTime"},
-        {name = "Stomp", type = "attackTime"},
-        {name = "Handstands", type = "repTime"},
-        {name = "Pushups", type = "repTime"},
-        {name = "Weight", type = "repTime"},
-        {name = "Situps", type = "repTime"}
-    }
+local function toggleNoClip()
+    noclipActive = not noclipActive
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-    for _, toolInfo in pairs(tools) do
-        local tool = backpack:FindFirstChild(toolInfo.name)
-        if tool then
-            local cooldown = tool:FindFirstChild(toolInfo.type)
-            if cooldown and cooldown:IsA("NumberValue") then
-                cooldown.Value = 0.1
+    if noclipActive then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+
+        while noclipActive do
+            humanoidRootPart.CFrame = humanoidRootPart.CFrame
+            wait(0.1)
+        end
+    else
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
             end
         end
     end
 end
+
+Tabs.Main:AddToggle("NoClip", {
+    Title = "Enable NoClip",
+    Default = false,
+    Callback = function(State)
+        if State then
+            toggleNoClip()
+        else
+            noclipActive = false
+            toggleNoClip()
+        end
+    end
+})
+
+-- Environmental Effects Feature
+local environmentActive = false
+
+local function toggleEnvironmentEffects()
+    environmentActive = not environmentActive
+    if environmentActive then
+        game.Lighting.TimeOfDay = "12:00:00" -- Set to noon
+    else
+        game.Lighting.TimeOfDay = "18:00:00" -- Set to evening
+    end
+end
+
+Tabs.Main:AddToggle("Environmental Effects", {
+    Title = "Enable Environmental Effects",
+    Default = false,
+    Callback = function(State)
+        toggleEnvironmentEffects()
+    end
+})
+
+-- Speed Aura Feature
+local speedAuraActive = false
+local auraParticle
+
+local function toggleSpeedAura()
+    speedAuraActive = not speedAuraActive
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+    if speedAuraActive then
+        auraParticle = Instance.new("ParticleEmitter")
+        auraParticle.Parent = character:WaitForChild("HumanoidRootPart")
+        auraParticle.Texture = "rbxassetid://12345678" -- Replace with your particle texture ID
+        auraParticle.Lifetime = NumberRange.new(1)
+        auraParticle.Rate = 100
+        auraParticle.Size = NumberSequence.new(0.5, 1)
+        auraParticle.Velocity = NumberRange.new(1, 2)
+
+        while speedAuraActive do
+            local speed = character:FindFirstChildOfClass("Humanoid").WalkSpeed
+            auraParticle.Enabled = speed > 16 -- Change this threshold as needed
+            wait(0.1)
+        end
+    else
+        if auraParticle then
+            auraParticle:Destroy()
+        end
+    end
+end
+
+Tabs.Main:AddToggle("Speed Aura", {
+    Title = "Enable Speed Aura",
+    Default = false,
+    Callback = function(State)
+        toggleSpeedAura()
+    end
+})
+
+-- Killer Tab (Add features as needed)
+-- Example feature: Auto Hit
+local autoHitActive = false
 
 local function autoHit()
     while autoHitActive do
@@ -98,89 +174,18 @@ Tabs.Killer:AddToggle("Auto Hit", {
     Callback = function(State)
         autoHitActive = State
         if State then
-            setToolProperties()
             autoHit()
         end
     end
 })
 
--- Misc Tab
-local function antiAFK()
-    while true do
-        LocalPlayer.Idled:Wait()
-        LocalPlayer:Move(Vector3.new(0, 0, 0))
-        wait(1)
-    end
-end
+-- Misc Tab (Add features as needed)
+Tabs.Misc:AddLabel("Misc Features")
+-- You can add more features here
 
-local lockPositionActive = false
-local lockedPosition = LocalPlayer.Character.HumanoidRootPart.Position
-
-local function lockPosition()
-    while lockPositionActive do
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(lockedPosition)
-        end
-        wait(0.1)
-    end
-end
-
-Tabs.Misc:AddToggle("Anti AFK", {
-    Title = "Enable Anti AFK",
-    Default = false,
-    Callback = function(State)
-        if State then
-            antiAFK()
-        end
-    end
-})
-
-Tabs.Misc:AddToggle("Lock Position", {
-    Title = "Enable Lock Position",
-    Default = false,
-    Callback = function(State)
-        lockPositionActive = State
-        if State then
-            lockedPosition = LocalPlayer.Character.HumanoidRootPart.Position
-            lockPosition()
-        end
-    end
-})
-
--- TOOLSpeed Tab
-local toolsToSet = {
-    {"Punch", "attackTime"},
-    {"Ground Slam", "attackTime"},
-    {"Stomp", "attackTime"},
-    {"Handstands", "repTime"},
-    {"Pushups", "repTime"},
-    {"Weight", "repTime"},
-    {"Situps", "repTime"}
-}
-
-for _, toolInfo in ipairs(toolsToSet) do
-    Tabs.TOOLSpeed:AddInput(toolInfo[1] .. " Cooldown", {
-        Title = toolInfo[1],
-        Description = "Set " .. toolInfo[1] .. " cooldown",
-        Default = "0.1",
-        Placeholder = "Enter cooldown",
-        Numeric = true,
-        Finished = true,
-        Callback = function(Value)
-            local cooldownValue = tonumber(Value)
-            if cooldownValue then
-                local backpack = LocalPlayer:WaitForChild("Backpack")
-                local tool = backpack:FindFirstChild(toolInfo[1])
-                if tool then
-                    local cooldown = tool:FindFirstChild(toolInfo[2])
-                    if cooldown and cooldown:IsA("NumberValue") then
-                        cooldown.Value = cooldownValue
-                    end
-                end
-            end
-        end
-    })
-end
+-- TOOLSpeed Tab (Add features as needed)
+Tabs.TOOLSpeed:AddLabel("Tool Speed Adjustments")
+-- You can add more features here
 
 -- Setup SaveManager and InterfaceManager
 SaveManager:SetLibrary(Fluent)
