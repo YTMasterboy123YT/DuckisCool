@@ -3,11 +3,8 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
-
 local LocalPlayer = Players.LocalPlayer
-local backpack = LocalPlayer:WaitForChild("Backpack")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Window = Fluent:CreateWindow({
     Title = "Speed Hub X " .. Fluent.Version,
@@ -23,13 +20,14 @@ local Window = Fluent:CreateWindow({
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
-    FarmSpeed = Window:AddTab({ Title = "FarmSpeed", Icon = "" }),
-    Misc = Window:AddTab({ Title = "Misc", Icon = "" }) -- New Misc tab
-})
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
+    TOOLSpeed = Window:AddTab({ Title = "TOOLSpeed", Icon = "" }),
+}
 
--- Main Tab: Set Size and Speed
-Tabs.Main:AddInput("SetSize", {
+-- Main Tab Inputs
+local SizeInput = Tabs.Main:AddInput("Size", {
     Title = "Set Size",
+    Description = "Set Size",
     Default = "1",
     Placeholder = "Enter Size",
     Numeric = true,
@@ -37,13 +35,14 @@ Tabs.Main:AddInput("SetSize", {
     Callback = function(Value)
         local sizeValue = tonumber(Value)
         if sizeValue then
-            ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSize", sizeValue)
+            ReplicatedStorage.rEvents.changeSizeSpeedRemote:InvokeServer("changeSize", sizeValue)
         end
     end
 })
 
-Tabs.Main:AddInput("SetSpeed", {
+local SpeedInput = Tabs.Main:AddInput("Speed", {
     Title = "Set Speed",
+    Description = "Set Speed",
     Default = "16",
     Placeholder = "Enter Speed",
     Numeric = true,
@@ -51,65 +50,26 @@ Tabs.Main:AddInput("SetSpeed", {
     Callback = function(Value)
         local speedValue = tonumber(Value)
         if speedValue then
-            ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSpeed", speedValue)
+            ReplicatedStorage.rEvents.changeSizeSpeedRemote:InvokeServer("changeSpeed", speedValue)
         end
     end
 })
 
--- Anti AFK
-local function antiAFK()
-    while true do
-        LocalPlayer.Idled:Wait()
-        LocalPlayer:Move(Vector3.new(0, 0, 0))
-        wait(1)
-    end
-end
-
-Tabs.Misc:AddToggle("AntiAFK", {
-    Title = "Anti AFK",
-    Default = false,
-    Callback = function(state)
-        if state then
-            antiAFK()
-        end
-    end
-})
-
--- Lock Position
-local lockPositionActive = false
-local function lockPosition()
-    while lockPositionActive do
-        LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
-        wait(0.1)
-    end
-end
-
-Tabs.Misc:AddToggle("LockPosition", {
-    Title = "Lock Position",
-    Default = false,
-    Callback = function(state)
-        lockPositionActive = state
-        if state then
-            lockPosition()
-        end
-    end
-})
-
--- Auto Hit in Killer Tab
-local player = LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-
-local tools = {
-    {name = "Punch", type = "attackTime"},
-    {name = "Ground Slam", type = "attackTime"},
-    {name = "Stomp", type = "attackTime"},
-    {name = "Handstands", type = "repTime"},
-    {name = "Pushups", type = "repTime"},
-    {name = "Weight", type = "repTime"},
-    {name = "Situps", type = "repTime"}
-}
+-- Killer Tab
+local autoHitActive = false
 
 local function setToolProperties()
+    local backpack = LocalPlayer:WaitForChild("Backpack")
+    local tools = {
+        {name = "Punch", type = "attackTime"},
+        {name = "Ground Slam", type = "attackTime"},
+        {name = "Stomp", type = "attackTime"},
+        {name = "Handstands", type = "repTime"},
+        {name = "Pushups", type = "repTime"},
+        {name = "Weight", type = "repTime"},
+        {name = "Situps", type = "repTime"}
+    }
+
     for _, toolInfo in pairs(tools) do
         local tool = backpack:FindFirstChild(toolInfo.name)
         if tool then
@@ -122,7 +82,8 @@ local function setToolProperties()
 end
 
 local function autoHit()
-    while true do
+    while autoHitActive do
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
         local equippedTool = character:FindFirstChildOfClass("Tool")
         if equippedTool and equippedTool.Enabled then
             equippedTool:Activate()
@@ -131,39 +92,87 @@ local function autoHit()
     end
 end
 
-local autoHitActive = false
-Tabs.Killer:AddToggle("AutoHit", {
-    Title = "Auto Hit",
+Tabs.Killer:AddToggle("Auto Hit", {
+    Title = "Enable Auto Hit",
     Default = false,
-    Callback = function(state)
-        autoHitActive = state
-        if state then
+    Callback = function(State)
+        autoHitActive = State
+        if State then
             setToolProperties()
-            spawn(autoHit)
+            autoHit()
         end
     end
 })
 
-player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    backpack = player:WaitForChild("Backpack")
-    setToolProperties()
-end)
+-- Misc Tab
+local function antiAFK()
+    while true do
+        LocalPlayer.Idled:Wait()
+        LocalPlayer:Move(Vector3.new(0, 0, 0))
+        wait(1)
+    end
+end
 
--- FarmSpeed Tab: Tool Attribute Inputs
-for _, tool in ipairs(tools) do
-    Tabs.FarmSpeed:AddInput(tool.name .. " Attribute", {
-        Title = tool.name .. " " .. tool.type,
+local lockedPosition = LocalPlayer.Character.HumanoidRootPart.Position
+
+local function lockPosition()
+    while true do
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(lockedPosition)
+        end
+        wait(0.1)
+    end
+end
+
+Tabs.Misc:AddToggle("Anti AFK", {
+    Title = "Enable Anti AFK",
+    Default = false,
+    Callback = function(State)
+        if State then
+            antiAFK()
+        end
+    end
+})
+
+Tabs.Misc:AddToggle("Lock Position", {
+    Title = "Enable Lock Position",
+    Default = false,
+    Callback = function(State)
+        if State then
+            lockPosition()
+        end
+    end
+})
+
+-- TOOLSpeed Tab
+local toolsToSet = {
+    {"Punch", "attackTime"},
+    {"Ground Slam", "attackTime"},
+    {"Stomp", "attackTime"},
+    {"Handstands", "repTime"},
+    {"Pushups", "repTime"},
+    {"Weight", "repTime"},
+    {"Situps", "repTime"}
+}
+
+for _, toolInfo in ipairs(toolsToSet) do
+    Tabs.TOOLSpeed:AddInput(toolInfo[1] .. " Cooldown", {
+        Title = toolInfo[1],
+        Description = "Set " .. toolInfo[1] .. " cooldown",
         Default = "0.1",
-        Placeholder = "Enter Value",
+        Placeholder = "Enter cooldown",
         Numeric = true,
         Finished = true,
         Callback = function(Value)
-            local newValue = tonumber(Value)
-            if newValue then
-                local tool = backpack:FindFirstChild(tool.name)
+            local cooldownValue = tonumber(Value)
+            if cooldownValue then
+                local backpack = LocalPlayer:WaitForChild("Backpack")
+                local tool = backpack:FindFirstChild(toolInfo[1])
                 if tool then
-                    tool[tool.type].Value = newValue
+                    local cooldown = tool:FindFirstChild(toolInfo[2])
+                    if cooldown and cooldown:IsA("NumberValue") then
+                        cooldown.Value = cooldownValue
+                    end
                 end
             end
         end
@@ -175,7 +184,7 @@ SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
 
 Fluent:Notify({
-    Title = "Speed Hub X",
+    Title = "Fluent",
     Content = "The script has been loaded.",
     Duration = 8
 })
