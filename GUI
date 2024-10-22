@@ -2,15 +2,12 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local backpack = LocalPlayer:WaitForChild("Backpack")
 local UserInputService = game:GetService("UserInputService")
-local player = Players.LocalPlayer
 
--- Remotes
-local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-
--- Create Window
+-- Create GUI Window
 local Window = Fluent:CreateWindow({
     Title = "Speed Hub X " .. Fluent.Version, 
     SubTitle = "By Duck", 
@@ -29,137 +26,138 @@ local Tabs = {
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
 }
 
--- Input for Size
-Tabs.Main:AddInput("Size", {
-    Title = "Size",
-    Description = "Set Size",
-    Default = "1",
-    Placeholder = "Enter Size",
+-- Main Tab: Gravity and Jump Power
+Tabs.Main:AddInput("Gravity", {
+    Title = "Set Gravity",
+    Default = "196.2",
+    Placeholder = "Enter Gravity",
     Numeric = true,
     Finished = true,
-    Callback = function(Value)
-        local sizeValue = tonumber(Value)
-        if sizeValue then
-            changeSizeSpeedRemote:InvokeServer("changeSize", sizeValue)
+    Callback = function(value)
+        local gravityValue = tonumber(value)
+        if gravityValue then
+            workspace.Gravity = gravityValue
+            print("Gravity set to:", gravityValue)
+        else
+            print("Invalid Gravity Value")
         end
     end
 })
 
--- Input for Speed
-Tabs.Main:AddInput("Speed", {
-    Title = "Speed",
-    Description = "Set Speed",
-    Default = "16",
-    Placeholder = "Enter Speed",
+Tabs.Main:AddInput("Jump Power", {
+    Title = "Set Jump Power",
+    Default = "50",
+    Placeholder = "Enter Jump Power",
     Numeric = true,
     Finished = true,
-    Callback = function(Value)
-        local speedValue = tonumber(Value)
-        if speedValue then
-            changeSizeSpeedRemote:InvokeServer("changeSpeed", speedValue)
+    Callback = function(value)
+        local jumpPowerValue = tonumber(value)
+        if jumpPowerValue then
+            for _, player in ipairs(Players:GetPlayers()) do
+                local character = player.Character
+                if character then
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid.JumpPower = jumpPowerValue
+                    end
+                end
+            end
+            print("Jump Power set to:", jumpPowerValue)
+        else
+            print("Invalid Jump Power Value")
         end
     end
 })
 
 -- Toggle for Infinite Jump
-local infiniteJumpEnabled = false
-
-local InfiniteJumpToggle = Tabs.Main:AddToggle("InfiniteJump", {
-    Title = "Infinite Jump",
-    Default = false,
-})
-
-InfiniteJumpToggle:OnChanged(function(value)
-    infiniteJumpEnabled = value
-    local function enableInfiniteJump()
-        if infiniteJumpEnabled then
-            UserInputService.JumpRequest:Connect(function()
-                if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
-                    player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-            end)
-        end
-    end
-    enableInfiniteJump()
-end)
-
--- Anti AFK Toggle
-local antiAFKEnabled = false
-
-local AntiAFKToggle = Tabs.Main:AddToggle("Anti AFK", {
-    Title = "Anti AFK",
-    Default = false,
-})
-
-AntiAFKToggle:OnChanged(function(value)
-    antiAFKEnabled = value
-    while antiAFKEnabled do
-        player.Idled:Wait()
-        player:Move(Vector3.new(0, 0, 0))
-        wait(1)
-    end
-end)
-
--- Position Lock Toggle
-local lockPositionEnabled = false
-local lockedPosition
-
-local LockPositionToggle = Tabs.Main:AddToggle("Lock Position", {
-    Title = "Lock Position",
-    Default = false,
-})
-
-LockPositionToggle:OnChanged(function(value)
-    lockPositionEnabled = value
-    if lockPositionEnabled then
-        local character = player.Character or player.CharacterAdded:Wait()
-        lockedPosition = character.HumanoidRootPart.Position
-
-        while lockPositionEnabled do
-            character.HumanoidRootPart.CFrame = CFrame.new(lockedPosition)
-            wait(0.1)
-        end
-    end
-end)
-
--- NoClip Toggle
-local noClipEnabled = false
-
-local NoClipToggle = Tabs.Main:AddToggle("NoClip", {
-    Title = "No Clip",
-    Default = false,
-})
-
-NoClipToggle:OnChanged(function(value)
-    noClipEnabled = value
-    local character = player.Character or player.CharacterAdded:Wait()
-
-    if noClipEnabled then
-        for _, part in ipairs(character:GetChildren()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
-        end
-
-        character.ChildAdded:Connect(function(part)
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
+local infiniteJumpToggle = Tabs.Main:AddToggle("Infinite Jump", { Title = "Enable Infinite Jump", Default = false })
+infiniteJumpToggle:OnChanged(function(state)
+    if state then
+        UserInputService.JumpRequest:Connect(function()
+            LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
         end)
-    else
-        for _, part in ipairs(character:GetChildren()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = true
-            end
-        end
     end
 end)
 
--- Setup SaveManager and InterfaceManager
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
+-- NoClip Functionality
+local noclipToggle = Tabs.Main:AddToggle("NoClip", { Title = "Enable NoClip", Default = false })
+noclipToggle:OnChanged(function(state)
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
--- Notifications
+    if state then
+        while noclipToggle.Value do
+            wait()
+            humanoidRootPart.CanCollide = false
+        end
+    else
+        humanoidRootPart.CanCollide = true
+    end
+end)
+
+-- Killer Tab: Auto Hit and Tool Attributes
+_G.autoHitActive = false
+
+local function autoHit()
+    while _G.autoHitActive do
+        LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+        LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+        wait(0.1)
+    end
+end
+
+local autoHitToggle = Tabs.Killer:AddToggle("Auto Hit", { Title = "Enable Auto Hit", Default = false })
+autoHitToggle:OnChanged(function(state)
+    _G.autoHitActive = state
+    if state then
+        spawn(autoHit)
+    end
+end)
+
+-- Function to set tool attributes
+local function setToolAttributes(toolName, attributeType, value)
+    local tool = backpack:FindFirstChild(toolName)
+    if tool then
+        tool[attributeType].Value = value
+    end
+end
+
+-- Input fields for tool attributes
+local function createToolInput(toolName, attributeType)
+    Tabs.Killer:AddInput(toolName .. " " .. attributeType, {
+        Title = toolName .. " " .. attributeType,
+        Default = "0.1", -- Default value
+        Placeholder = "Enter value for " .. toolName,
+        Numeric = true,
+        Finished = true,
+        Callback = function(value)
+            local numericValue = tonumber(value)
+            if numericValue then
+                setToolAttributes(toolName, attributeType, numericValue)
+                print(toolName .. " " .. attributeType .. " set to " .. numericValue)
+            else
+                print("Invalid value for " .. toolName .. " " .. attributeType)
+            end
+        end
+    })
+end
+
+-- Create inputs for each tool
+local toolsToSet = {
+    {"Punch", "attackTime"},
+    {"Ground Slam", "attackTime"},
+    {"Stomp", "attackTime"},
+    {"Handstands", "repTime"},
+    {"Pushups", "repTime"},
+    {"Weight", "repTime"},
+    {"Situps", "repTime"}
+}
+
+for _, tool in ipairs(toolsToSet) do
+    createToolInput(tool[1], tool[2])
+end
+
+-- Initialize Notifications
 Fluent:Notify({
     Title = "Fluent",
     Content = "The script has been loaded.",
