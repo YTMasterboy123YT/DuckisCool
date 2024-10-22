@@ -113,10 +113,11 @@ local function antiAFK()
     end
 end
 
+local lockPositionActive = false
 local lockedPosition = LocalPlayer.Character.HumanoidRootPart.Position
 
 local function lockPosition()
-    while true do
+    while lockPositionActive do
         if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
             LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(lockedPosition)
         end
@@ -138,7 +139,9 @@ Tabs.Misc:AddToggle("Lock Position", {
     Title = "Enable Lock Position",
     Default = false,
     Callback = function(State)
+        lockPositionActive = State
         if State then
+            lockedPosition = LocalPlayer.Character.HumanoidRootPart.Position
             lockPosition()
         end
     end
