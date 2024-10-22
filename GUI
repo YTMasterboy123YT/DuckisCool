@@ -23,8 +23,9 @@ local Window = Fluent:CreateWindow({
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
-    Miscs = Window:AddTab({ Title = "Misc", Icon = "" })
-}
+    FarmSpeed = Window:AddTab({ Title = "FarmSpeed", Icon = "" }),
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" }) -- New Misc tab
+})
 
 -- Main Tab: Set Size and Speed
 Tabs.Main:AddInput("SetSize", {
@@ -64,49 +65,12 @@ local function antiAFK()
     end
 end
 
-Tabs.Main:AddToggle("AntiAFK", {
+Tabs.Misc:AddToggle("AntiAFK", {
     Title = "Anti AFK",
     Default = false,
     Callback = function(state)
         if state then
             antiAFK()
-        end
-    end
-})
-
--- Infinite Jump
-local infiniteJumpActive = false
-local function enableInfiniteJump()
-    infiniteJumpActive = true
-    UserInputService.JumpRequest:Connect(function()
-        if infiniteJumpActive then
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-    end)
-end
-
-Tabs.Main:AddToggle("InfiniteJump", {
-    Title = "Infinite Jump",
-    Default = false,
-    Callback = function(state)
-        infiniteJumpActive = state
-        if state then
-            enableInfiniteJump()
-        end
-    end
-})
-
--- Gravity Changer
-Tabs.Main:AddInput("SetGravity", {
-    Title = "Set Gravity",
-    Default = "196.2",
-    Placeholder = "Enter Gravity",
-    Numeric = true,
-    Finished = true,
-    Callback = function(Value)
-        local gravityValue = tonumber(Value)
-        if gravityValue then
-            workspace.Gravity = gravityValue
         end
     end
 })
@@ -120,7 +84,7 @@ local function lockPosition()
     end
 end
 
-Tabs.Main:AddToggle("LockPosition", {
+Tabs.Misc:AddToggle("LockPosition", {
     Title = "Lock Position",
     Default = false,
     Callback = function(state)
@@ -131,68 +95,75 @@ Tabs.Main:AddToggle("LockPosition", {
     end
 })
 
--- No Clip
-local noClipActive = false
-local function toggleNoClip()
-    noClipActive = not noClipActive
-    LocalPlayer.Character.Humanoid:ChangeState(noClipActive and Enum.HumanoidStateType.Physics or Enum.HumanoidStateType.GettingUp)
+-- Auto Hit in Killer Tab
+local player = LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+local tools = {
+    {name = "Punch", type = "attackTime"},
+    {name = "Ground Slam", type = "attackTime"},
+    {name = "Stomp", type = "attackTime"},
+    {name = "Handstands", type = "repTime"},
+    {name = "Pushups", type = "repTime"},
+    {name = "Weight", type = "repTime"},
+    {name = "Situps", type = "repTime"}
+}
+
+local function setToolProperties()
+    for _, toolInfo in pairs(tools) do
+        local tool = backpack:FindFirstChild(toolInfo.name)
+        if tool then
+            local cooldown = tool:FindFirstChild(toolInfo.type)
+            if cooldown and cooldown:IsA("NumberValue") then
+                cooldown.Value = 0.1
+            end
+        end
+    end
 end
 
-Tabs.Main:AddToggle("NoClip", {
-    Title = "No Clip",
-    Default = false,
-    Callback = function(state)
-        noClipActive = state
-        toggleNoClip()
-    end
-})
-
--- Killer Tab: Auto Hit
-_G.autoHitActive = false
-
 local function autoHit()
-    while _G.autoHitActive do
-        LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-        LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+    while true do
+        local equippedTool = character:FindFirstChildOfClass("Tool")
+        if equippedTool and equippedTool.Enabled then
+            equippedTool:Activate()
+        end
         wait(0.1)
     end
 end
 
+local autoHitActive = false
 Tabs.Killer:AddToggle("AutoHit", {
     Title = "Auto Hit",
     Default = false,
     Callback = function(state)
-        _G.autoHitActive = state
+        autoHitActive = state
         if state then
+            setToolProperties()
             spawn(autoHit)
         end
     end
 })
 
--- Misc Tab: Tool Attribute Inputs
-local toolsToSet = {
-    {"Punch", "attackTime", 0.1},
-    {"Ground Slam", "attackTime", 0.1},
-    {"Stomp", "attackTime", 0.1},
-    {"Handstands", "repTime", 0.1},
-    {"Pushups", "repTime", 0.1},
-    {"Weight", "repTime", 0.1},
-    {"Situps", "repTime", 0.1}
-}
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    backpack = player:WaitForChild("Backpack")
+    setToolProperties()
+end)
 
-for _, tool in ipairs(toolsToSet) do
-    Tabs.Miscs:AddInput(tool[1] .. " Attribute", {
-        Title = tool[1] .. " " .. tool[2],
-        Default = tostring(tool[3]),
+-- FarmSpeed Tab: Tool Attribute Inputs
+for _, tool in ipairs(tools) do
+    Tabs.FarmSpeed:AddInput(tool.name .. " Attribute", {
+        Title = tool.name .. " " .. tool.type,
+        Default = "0.1",
         Placeholder = "Enter Value",
         Numeric = true,
         Finished = true,
         Callback = function(Value)
             local newValue = tonumber(Value)
             if newValue then
-                local tool = backpack:FindFirstChild(tool[1])
+                local tool = backpack:FindFirstChild(tool.name)
                 if tool then
-                    tool[tool[2]].Value = newValue
+                    tool[tool.type].Value = newValue
                 end
             end
         end
