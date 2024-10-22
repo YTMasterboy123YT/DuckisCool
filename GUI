@@ -24,47 +24,47 @@ local Tabs = {
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
     Stats = Window:AddTab({ Title = "Stats", Icon = "" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
 }
 
--- Main Tab: Gravity and Jump Power
-Tabs.Main:AddInput("Gravity", {
-    Title = "Set Gravity",
-    Default = "196.2",
-    Placeholder = "Enter Gravity",
+-- Main Tab: Set Size and Speed
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSizeSpeedRemote
+
+-- Input for Size
+Tabs.Main:AddInput("Size", {
+    Title = "Set Size",
+    Description = "Set Size",
+    Default = "1", -- Default Size
+    Placeholder = "Enter Size",
     Numeric = true,
     Finished = true,
     Callback = function(value)
-        local gravityValue = tonumber(value)
-        if gravityValue then
-            workspace.Gravity = gravityValue
-            print("Gravity set to:", gravityValue)
+        local sizeValue = tonumber(value)
+        if sizeValue then
+            changeSizeSpeedRemote:InvokeServer("changeSize", sizeValue)
+            print("Size changed to:", sizeValue)
         else
-            print("Invalid Gravity Value")
+            print("Invalid Size Value")
         end
     end
 })
 
-Tabs.Main:AddInput("Jump Power", {
-    Title = "Set Jump Power",
-    Default = "50",
-    Placeholder = "Enter Jump Power",
+-- Input for Speed
+Tabs.Main:AddInput("Speed", {
+    Title = "Set Speed",
+    Description = "Set Speed",
+    Default = "16", -- Default Speed
+    Placeholder = "Enter Speed",
     Numeric = true,
     Finished = true,
     Callback = function(value)
-        local jumpPowerValue = tonumber(value)
-        if jumpPowerValue then
-            for _, player in ipairs(Players:GetPlayers()) do
-                local character = player.Character
-                if character then
-                    local humanoid = character:FindFirstChildOfClass("Humanoid")
-                    if humanoid then
-                        humanoid.JumpPower = jumpPowerValue
-                    end
-                end
-            end
-            print("Jump Power set to:", jumpPowerValue)
+        local speedValue = tonumber(value)
+        if speedValue then
+            changeSizeSpeedRemote:InvokeServer("changeSpeed", speedValue)
+            print("Speed changed to:", speedValue)
         else
-            print("Invalid Jump Power Value")
+            print("Invalid Speed Value")
         end
     end
 })
@@ -95,7 +95,7 @@ noclipToggle:OnChanged(function(state)
     end
 end)
 
--- Killer Tab: Auto Hit and Tool Attributes
+-- Killer Tab: Auto Hit
 _G.autoHitActive = false
 
 local function autoHit()
@@ -114,7 +114,7 @@ autoHitToggle:OnChanged(function(state)
     end
 end)
 
--- Function to set tool attributes
+-- Misc Tab: Tool Attributes Inputs
 local function setToolAttributes(toolName, attributeType, value)
     local tool = backpack:FindFirstChild(toolName)
     if tool then
@@ -122,9 +122,8 @@ local function setToolAttributes(toolName, attributeType, value)
     end
 end
 
--- Input fields for tool attributes
 local function createToolInput(toolName, attributeType)
-    Tabs.Killer:AddInput(toolName .. " " .. attributeType, {
+    Tabs.Misc:AddInput(toolName .. " " .. attributeType, {
         Title = toolName .. " " .. attributeType,
         Default = "0.1", -- Default value
         Placeholder = "Enter value for " .. toolName,
@@ -142,7 +141,7 @@ local function createToolInput(toolName, attributeType)
     })
 end
 
--- Create inputs for each tool
+-- Create inputs for each tool in the Misc tab
 local toolsToSet = {
     {"Punch", "attackTime"},
     {"Ground Slam", "attackTime"},
