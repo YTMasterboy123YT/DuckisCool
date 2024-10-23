@@ -4,7 +4,26 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 
 local player = game.Players.LocalPlayer
 local backpack = player:WaitForChild("Backpack")
+local character = player.Character or player.CharacterAdded:Wait()
 
+local toolsToSet = {
+    {"Punch", "attackTime", 0.1},
+    {"Ground Slam", "attackTime", 0.1},
+    {"Stomp", "attackTime", 0.1},
+    {"Handstands", "repTime", 0.1},
+    {"Pushups", "repTime", 0.1},
+    {"Weight", "repTime", 0.1},
+    {"Situps", "repTime", 0.1}
+}
+
+local function setToolAttributes(toolName, attributeType, value)
+    local tool = backpack:FindFirstChild(toolName)
+    if tool and tool:FindFirstChild(attributeType) then
+        tool[attributeType].Value = value
+    end
+end
+
+-- GUI Setup
 local Window = Fluent:CreateWindow({
     Title = "Fluent " .. Fluent.Version,
     SubTitle = "by dawid",
@@ -18,22 +37,6 @@ local Window = Fluent:CreateWindow({
 -- Main Tab
 local MainTab = Window:AddTab({ Title = "Main", Icon = "" })
 
--- Speed Changer Input
-MainTab:AddInput("SpeedChanger", {
-    Title = "Speed Changer",
-    Default = "200",
-    Placeholder = "Enter speed value",
-    Numeric = true,
-    Finished = true,
-    Callback = function(Value)
-        local speedValue = tonumber(Value)
-        if speedValue then
-            game.ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSpeed", speedValue)
-        end
-    end
-})
-
--- Size Input
 MainTab:AddInput("Size", {
     Title = "Set Size",
     Default = "1",
@@ -43,12 +46,25 @@ MainTab:AddInput("Size", {
     Callback = function(Value)
         local sizeValue = tonumber(Value)
         if sizeValue then
-            game.ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSize", sizeValue)
+            ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSize", sizeValue)
         end
     end
 })
 
--- Daylight System Dropdown
+MainTab:AddInput("Speed", {
+    Title = "Set Speed",
+    Default = "16",
+    Placeholder = "Enter Speed",
+    Numeric = true,
+    Finished = true,
+    Callback = function(Value)
+        local speedValue = tonumber(Value)
+        if speedValue then
+            ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSpeed", speedValue)
+        end
+    end
+})
+
 MainTab:AddDropdown("DaylightSystem", {
     Title = "Daylight System",
     Description = "Select the time of day",
@@ -75,18 +91,15 @@ KillerTab:AddToggle("Auto Hit", {
     Title = "Enable Auto Hit",
     Default = false,
     Callback = function(State)
-        autoHitActive = State
         if State then
             autoHit()
         end
     end
 })
 
-local autoHitActive = false
-
 local function autoHit()
-    while autoHitActive do
-        local equippedTool = player.Character:FindFirstChildOfClass("Tool")
+    while true do
+        local equippedTool = character:FindFirstChildOfClass("Tool")
         if equippedTool and equippedTool.Enabled then
             equippedTool:Activate()
         end
@@ -94,54 +107,28 @@ local function autoHit()
     end
 end
 
--- TOOLSpeed Tab
-local TOOLSpeedTab = Window:AddTab({ Title = "Hit Speed Control", Icon = "" })
-
-local toolsToSet = {
-    {"Punch", "attackTime", 0.1},
-    {"Ground Slam", "attackTime", 0.1},
-    {"Stomp", "attackTime", 0.1},
-    {"Handstands", "repTime", 0.1},
-    {"Pushups", "repTime", 0.1},
-    {"Weight", "repTime", 0.1},
-    {"Situps", "repTime", 0.1}
-}
-
-local function createOrGetIntValue(toolName, attributeType)
-    local tool = backpack:FindFirstChild(toolName)
-    if tool then
-        local attribute = tool:FindFirstChild(attributeType)
-        if not attribute then
-            attribute = Instance.new("IntValue")
-            attribute.Name = attributeType
-            attribute.Parent = tool
-        end
-        return attribute
-    end
-    return nil
-end
-
-local function setToolAttributes(toolName, attributeType, value)
-    local intValue = createOrGetIntValue(toolName, attributeType)
-    if intValue then
-        intValue.Value = value
-    end
-end
+-- Hit Speed Control Tab
+local HitSpeedControlTab = Window:AddTab({ Title = "Hit Speed Control", Icon = "" })
 
 for _, tool in ipairs(toolsToSet) do
-    TOOLSpeedTab:AddInput(tool[1] .. " Speed", {
+    HitSpeedControlTab:AddInput(tool[1] .. " Speed", {
         Default = tostring(tool[3]),
         Numeric = true,
         Callback = function(Value)
-            setToolAttributes(tool[1], tool[2], tonumber(Value) or 0.1)
+            setToolAttributes(tool[1], tool[2], tonumber(Value) or tool[3])
         end
     })
+end
+
+-- Initialize tool attributes at the start
+for _, tool in ipairs(toolsToSet) do
+    setToolAttributes(tool[1], tool[2], tool[3])
 end
 
 -- Settings Tab
 local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
 
--- Addons setup
+-- Addons Setup
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
 
