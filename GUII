@@ -3,8 +3,8 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "Fluent " .. Fluent.Version,
-    SubTitle = "by dawid",
+    Title = "Fluent GUI",
+    SubTitle = "by YourName",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
@@ -12,54 +12,45 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
-local player = game.Players.LocalPlayer
-local backpack = player:WaitForChild("Backpack")
-
--- Function to set game time
-local function setGameTime(timeOfDay)
-    if timeOfDay == "Morning" then
-        game.Lighting.ClockTime = 6
-    elseif timeOfDay == "Afternoon" then
-        game.Lighting.ClockTime = 16
-    elseif timeOfDay == "Night" then
-        game.Lighting.ClockTime = 0
-    else
-        print("Invalid time of day.")
-    end
-end
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Killer = Window:AddTab({ Title = "Killer", Icon = "settings" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
 
 -- Main Tab
-local Main = Window:AddTab({ Title = "Main", Icon = "" })
-
--- Speed Changer Input
-Main:AddInput("Change Speed", {
+Tabs.Main:AddInput("Change Speed", {
     Default = "16",
     Numeric = true,
-    Callback = function(value)
-        player.Character.Humanoid.WalkSpeed = tonumber(value) or 16
+    Callback = function(Value)
+        -- Set player speed
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(Value)
     end
 })
 
--- Size Changer Input
-Main:AddInput("Change Size", {
+Tabs.Main:AddInput("Change Size", {
     Default = "1",
     Numeric = true,
-    Callback = function(value)
-        local size = tonumber(value) or 1
-        player.Character.Humanoid.Scale = Vector3.new(size, size, size)
+    Callback = function(Value)
+        -- Set player size
+        game.Players.LocalPlayer.Character.Humanoid.Scale.Value = tonumber(Value)
     end
 })
 
--- Set Game Time Dropdown
-Main:AddDropdown("Game Time", {
+Tabs.Main:AddDropdown("Game Time", {
     Options = {"Morning", "Afternoon", "Night"},
     Callback = function(selected)
-        setGameTime(selected)
+        if selected == "Morning" then
+            game.Lighting.ClockTime = 6
+        elseif selected == "Afternoon" then
+            game.Lighting.ClockTime = 16
+        elseif selected == "Night" then
+            game.Lighting.ClockTime = 0
+        end
     end
 })
 
--- Run All Codes Button
-local function executeCodes()
+Tabs.Main:AddButton("Run All Codes", function()
     local codes = {
         "Speedy50", "Epicreward500", "Launch250", "Musclestorm50",
         "Spacegems50", "Superpunch100", "Frostgems10", "Galaxycrystal50",
@@ -68,88 +59,44 @@ local function executeCodes()
     }
     for _, code in ipairs(codes) do
         game:GetService("ReplicatedStorage").rEvents.codeRemote:InvokeServer(code)
-        wait(0.1)
     end
-end
+end)
 
-Main:AddButton("Run All Codes", {
-    Name = "Run All Codes",
-    Callback = function()
-        executeCodes()
-    end
-})
-
--- Toggle for trading all players
-local tradingEnabled = false
-
-local function tradeWithAllPlayers()
-    local Players = game:GetService("Players")
-    while tradingEnabled do
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= Players.LocalPlayer then
-                game:GetService("ReplicatedStorage").rEvents.tradingEvent:FireServer("sendTradeRequest", player)
-                wait(0.1)
-            end
-        end
-        wait(5)
-    end
-end
-
-Main:AddToggle("Trade All Players", {
-    Name = "Trade All Players",
+Tabs.Main:AddToggle("Trade All Players", {
     Default = false,
-    Callback = function(state)
-        tradingEnabled = state
-        if tradingEnabled then
-            tradeWithAllPlayers()
+    Callback = function(State)
+        if State then
+            for _, player in pairs(game.Players:GetPlayers()) do
+                if player.Name ~= game.Players.LocalPlayer.Name then
+                    game:GetService("ReplicatedStorage").rEvents.tradingEvent:FireServer("sendTradeRequest", player)
+                end
+            end
         end
     end
 })
 
 -- Killer Tab
-local Killer = Window:AddTab({ Title = "Killer", Icon = "" })
-Killer:AddToggle("Auto Hit", {
-    Name = "Enable Auto Hit",
+Tabs.Killer:AddToggle("Auto Hit", {
     Default = false,
-    Callback = function(state)
-        local tools = {
-            {name = "Punch", type = "attackTime"},
-            {name = "Ground Slam", type = "attackTime"},
-            {name = "Stomp", type = "attackTime"},
-            {name = "Handstands", type = "repTime"},
-            {name = "Pushups", type = "repTime"},
-            {name = "Weight", type = "repTime"},
-            {name = "Situps", type = "repTime"}
-        }
-        while state do
-            for _, toolInfo in pairs(tools) do
-                local tool = backpack:FindFirstChild(toolInfo.name)
-                if tool then
-                    local cooldown = tool:FindFirstChild(toolInfo.type)
-                    if cooldown then
-                        cooldown.Value = 0.1
-                        tool:Activate()
-                    end
-                end
-            end
-            wait(0.1)
+    Callback = function(State)
+        -- Placeholder for auto-hit functionality
+        if State then
+            -- Implement auto-hit if needed
         end
     end
 })
 
 -- Settings Tab
-local Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-Settings:AddLabel("Configuration Settings")
-
--- SaveManager and InterfaceManager Setup
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
+
 SaveManager:IgnoreThemeSettings()
 SaveManager:SetIgnoreIndexes({})
 InterfaceManager:SetFolder("FluentScriptHub")
 SaveManager:SetFolder("FluentScriptHub/specific-game")
-InterfaceManager:BuildInterfaceSection(Settings)
-SaveManager:BuildConfigSection(Settings)
+
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
 
 Window:SelectTab(1)
 
