@@ -87,32 +87,29 @@ Tabs.Main:AddToggle("NoClip", {
     Title = "Enable NoClip",
     Default = false,
     Callback = function(State)
-        if State then
-            toggleNoClip()
-        else
-            noclipActive = false
-            toggleNoClip()
-        end
+        toggleNoClip()
     end
 })
 
--- Environmental Effects Feature
-local environmentActive = false
-
-local function toggleEnvironmentEffects()
-    environmentActive = not environmentActive
-    if environmentActive then
-        game.Lighting.TimeOfDay = "12:00:00" -- Set to noon
-    else
-        game.Lighting.TimeOfDay = "18:00:00" -- Set to evening
+-- Environmental Effects Dropdown
+local function setDayCycle(time)
+    if time == "Noon" then
+        game.Lighting.TimeOfDay = "12:00:00"
+    elseif time == "Evening" then
+        game.Lighting.TimeOfDay = "18:00:00"
+    elseif time == "Night" then
+        game.Lighting.TimeOfDay = "00:00:00"
+    elseif time == "Dawn" then
+        game.Lighting.TimeOfDay = "06:00:00"
     end
 end
 
-Tabs.Main:AddToggle("Environmental Effects", {
-    Title = "Enable Environmental Effects",
-    Default = false,
-    Callback = function(State)
-        toggleEnvironmentEffects()
+Tabs.Main:AddDropdown("DayCycle", {
+    Title = "Select Day Cycle",
+    Options = {"Noon", "Evening", "Night", "Dawn"},
+    Default = "Noon",
+    Callback = function(selected)
+        setDayCycle(selected)
     end
 })
 
@@ -135,7 +132,7 @@ local function toggleSpeedAura()
 
         while speedAuraActive do
             local speed = character:FindFirstChildOfClass("Humanoid").WalkSpeed
-            auraParticle.Enabled = speed > 16 -- Change this threshold as needed
+            auraParticle.Enabled = speed > 16
             wait(0.1)
         end
     else
@@ -153,8 +150,7 @@ Tabs.Main:AddToggle("Speed Aura", {
     end
 })
 
--- Killer Tab (Add features as needed)
--- Example feature: Auto Hit
+-- Killer Tab (Example feature: Auto Hit)
 local autoHitActive = false
 
 local function autoHit()
@@ -181,11 +177,54 @@ Tabs.Killer:AddToggle("Auto Hit", {
 
 -- Misc Tab (Add features as needed)
 Tabs.Misc:AddLabel("Misc Features")
--- You can add more features here
 
--- TOOLSpeed Tab (Add features as needed)
-Tabs.TOOLSpeed:AddLabel("Tool Speed Adjustments")
--- You can add more features here
+-- TOOLSpeed Tab
+local tools = {
+    {name = "Punch", type = "attackTime"},
+    {name = "Ground Slam", type = "attackTime"},
+    {name = "Stomp", type = "attackTime"},
+    {name = "Handstands", type = "repTime"},
+    {name = "Pushups", type = "repTime"},
+    {name = "Weight", type = "repTime"},
+    {name = "Situps", type = "repTime"}
+}
+
+local function setToolProperties(value)
+    local backpack = LocalPlayer:WaitForChild("Backpack")
+    for _, toolInfo in pairs(tools) do
+        local tool = backpack:FindFirstChild(toolInfo.name)
+        if tool then
+            local cooldown = tool:FindFirstChild(toolInfo.type) 
+            if cooldown and cooldown:IsA("NumberValue") then
+                cooldown.Value = value
+            end
+        end
+    end
+end
+
+local ToolSpeedInput = Tabs.TOOLSpeed:AddInput("ToolSpeed", {
+    Title = "Set Tool Speed",
+    Description = "Change the attack/rep speed of the tools.",
+    Default = "0.1",
+    Placeholder = "Enter Tool Speed",
+    Numeric = true,
+    Finished = true,
+    Callback = function(Value)
+        local speedValue = tonumber(Value)
+        if speedValue then
+            setToolProperties(speedValue)
+        end
+    end
+})
+
+-- Call functions
+setToolProperties(0.1)  -- Set default speed
+autoHit()
+
+-- Handle character respawn
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    autoHit()
+end)
 
 -- Setup SaveManager and InterfaceManager
 SaveManager:SetLibrary(Fluent)
