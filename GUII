@@ -14,15 +14,14 @@ local Window = Fluent:CreateWindow({
 
 -- Create Tabs
 local MainTab = Window:AddTab({ Title = "Main", Icon = "" })
-local KillerTab = Window:AddTab({ Title = "Killer", Icon = "settings" })
-local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
+local KillerTab = Window:AddTab({ Title = "Killer", Icon = "" })
+local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "" })
 
 -- Main Tab Controls
 MainTab:AddInput("Change Speed", {
     Default = "0",
     Numeric = true,
     Callback = function(value)
-        -- Change speed logic here
         game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(value) or 0
     end
 })
@@ -31,7 +30,6 @@ MainTab:AddInput("Change Size", {
     Default = "1",
     Numeric = true,
     Callback = function(value)
-        -- Change size logic here
         local character = game.Players.LocalPlayer.Character
         if character then
             character.Humanoid.Scale.Value = tonumber(value) or 1
@@ -82,7 +80,6 @@ KillerTab:AddToggle("Auto Hit", {
     Default = false,
     Callback = function(state)
         if state then
-            -- Logic to set all tool hit speeds to 0.1
             local player = game.Players.LocalPlayer
             local backpack = player:WaitForChild("Backpack")
 
