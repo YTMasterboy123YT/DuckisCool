@@ -16,7 +16,6 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
--- Create Tabs
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
@@ -25,9 +24,8 @@ local Tabs = {
 }
 
 -- Main Tab Inputs
-local SizeInput = Tabs.Main:AddInput("Size", {
+Tabs.Main:AddInput("Size", {
     Title = "Set Size",
-    Description = "Change your character's size.",
     Default = "1",
     Placeholder = "Enter Size",
     Numeric = true,
@@ -40,9 +38,8 @@ local SizeInput = Tabs.Main:AddInput("Size", {
     end
 })
 
-local SpeedInput = Tabs.Main:AddInput("Speed", {
+Tabs.Main:AddInput("Speed", {
     Title = "Set Speed",
-    Description = "Change your character's speed.",
     Default = "16",
     Placeholder = "Enter Speed",
     Numeric = true,
@@ -57,7 +54,6 @@ local SpeedInput = Tabs.Main:AddInput("Speed", {
 
 -- NoClip Feature
 local noclipActive = false
-
 local function toggleNoClip()
     noclipActive = not noclipActive
     local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -91,25 +87,23 @@ Tabs.Main:AddToggle("NoClip", {
     end
 })
 
--- Environmental Effects Dropdown
-local function setDayCycle(time)
-    if time == "Noon" then
-        game.Lighting.TimeOfDay = "12:00:00"
-    elseif time == "Evening" then
-        game.Lighting.TimeOfDay = "18:00:00"
-    elseif time == "Night" then
-        game.Lighting.TimeOfDay = "00:00:00"
-    elseif time == "Dawn" then
-        game.Lighting.TimeOfDay = "06:00:00"
-    end
-end
-
-Tabs.Main:AddDropdown("DayCycle", {
-    Title = "Select Day Cycle",
-    Options = {"Noon", "Evening", "Night", "Dawn"},
-    Default = "Noon",
+-- Daylight System Dropdown
+Tabs.Main:AddDropdown("DaylightSystem", {
+    Title = "Daylight System",
+    Description = "Select the time of day",
+    Values = {"Noon", "Evening", "Night", "Dawn"},
+    Multi = false,
+    Default = 1,
     Callback = function(selected)
-        setDayCycle(selected)
+        if selected == "Noon" then
+            game.Lighting.TimeOfDay = "12:00:00"
+        elseif selected == "Evening" then
+            game.Lighting.TimeOfDay = "18:00:00"
+        elseif selected == "Night" then
+            game.Lighting.TimeOfDay = "00:00:00"
+        elseif selected == "Dawn" then
+            game.Lighting.TimeOfDay = "06:00:00"
+        end
     end
 })
 
@@ -150,7 +144,7 @@ Tabs.Main:AddToggle("Speed Aura", {
     end
 })
 
--- Killer Tab (Example feature: Auto Hit)
+-- Killer Tab (Auto Hit)
 local autoHitActive = false
 
 local function autoHit()
@@ -175,9 +169,6 @@ Tabs.Killer:AddToggle("Auto Hit", {
     end
 })
 
--- Misc Tab (Add features as needed)
-Tabs.Misc:AddLabel("Misc Features")
-
 -- TOOLSpeed Tab
 local tools = {
     {name = "Punch", type = "attackTime"},
@@ -201,9 +192,9 @@ local function setToolProperties(name, value)
 end
 
 for _, toolInfo in pairs(tools) do
-    Tabs.TOOLSpeed:AddInput(toolInfo.name .. "Speed", {
+    Tabs.TOOLSpeed:AddInput(toolInfo.name .. " Speed", {
         Title = toolInfo.name .. " Speed",
-        Description = "Change the speed for " .. toolInfo.name,
+        Description = "Set the speed for " .. toolInfo.name,
         Default = "0.1",
         Placeholder = "Enter Speed",
         Numeric = true,
@@ -215,26 +206,10 @@ for _, toolInfo in pairs(tools) do
             end
         end
     })
+
+    setToolProperties(toolInfo.name, 0.1)
 end
 
--- Call functions
-setToolProperties("Punch", 0.1)  -- Set default speed for Punch
-autoHit()
-
--- Handle character respawn
-LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-    autoHit()
-end)
-
--- Setup SaveManager and InterfaceManager
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
-
-Fluent:Notify({
-    Title = "Fluent",
-    Content = "The script has been loaded.",
-    Duration = 8
-})
-
--- Load autoload config
 SaveManager:LoadAutoloadConfig()
