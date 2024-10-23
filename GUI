@@ -52,41 +52,6 @@ Tabs.Main:AddInput("Speed", {
     end
 })
 
--- NoClip Feature
-local noclipActive = false
-local function toggleNoClip()
-    noclipActive = not noclipActive
-    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
-    if noclipActive then
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
-        end
-
-        while noclipActive do
-            humanoidRootPart.CFrame = humanoidRootPart.CFrame
-            wait(0.1)
-        end
-    else
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = true
-            end
-        end
-    end
-end
-
-Tabs.Main:AddToggle("NoClip", {
-    Title = "Enable NoClip",
-    Default = false,
-    Callback = function(State)
-        toggleNoClip()
-    end
-})
-
 -- Daylight System Dropdown
 Tabs.Main:AddDropdown("DaylightSystem", {
     Title = "Daylight System",
