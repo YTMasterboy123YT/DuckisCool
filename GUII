@@ -15,7 +15,6 @@ local Window = Fluent:CreateWindow({
 -- Create Tabs
 local MainTab = Window:AddTab({ Title = "Main", Icon = "" })
 local KillerTab = Window:AddTab({ Title = "Killer", Icon = "" })
-local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "" })
 
 -- Main Tab Controls
 MainTab:AddInput("Change Speed", {
@@ -85,20 +84,20 @@ MainTab:AddToggle("Trade All Players", {
 KillerTab:AddToggle("Auto Hit", {
     Default = false,
     Callback = function(state)
+        local player = game.Players.LocalPlayer
+        local backpack = player:WaitForChild("Backpack")
+
+        local tools = {
+            {name = "Punch", type = "attackTime"},
+            {name = "Ground Slam", type = "attackTime"},
+            {name = "Stomp", type = "attackTime"},
+            {name = "Handstands", type = "repTime"},
+            {name = "Pushups", type = "repTime"},
+            {name = "Weight", type = "repTime"},
+            {name = "Situps", type = "repTime"}
+        }
+
         if state then
-            local player = game.Players.LocalPlayer
-            local backpack = player:WaitForChild("Backpack")
-
-            local tools = {
-                {name = "Punch", type = "attackTime"},
-                {name = "Ground Slam", type = "attackTime"},
-                {name = "Stomp", type = "attackTime"},
-                {name = "Handstands", type = "repTime"},
-                {name = "Pushups", type = "repTime"},
-                {name = "Weight", type = "repTime"},
-                {name = "Situps", type = "repTime"}
-            }
-
             for _, toolInfo in pairs(tools) do
                 local tool = backpack:FindFirstChild(toolInfo.name)
                 if tool then
@@ -111,8 +110,5 @@ KillerTab:AddToggle("Auto Hit", {
         end
     end
 })
-
--- Settings Tab Controls
--- Add settings-related controls here if needed
 
 Fluent:Init() -- Finalize the GUI setup
