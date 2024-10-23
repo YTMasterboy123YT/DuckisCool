@@ -1,84 +1,54 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
-
 local Window = Fluent:CreateWindow({
-    Title = "Your Script Title",
-    SubTitle = "by YourName",
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
+    Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
     Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
+    MinimizeKey = Enum.KeyCode.LeftControl -- Used when there's no MinimizeKeybind
 })
 
--- Create Tabs
-local MainTab = Window:AddTab({ Title = "Main", Icon = "" })
-local KillerTab = Window:AddTab({ Title = "Killer", Icon = "" })
+-- Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
 
--- Main Tab Controls
-MainTab:AddInput("Change Speed", {
-    Default = "0",
-    Numeric = true,
-    Callback = function(value)
-        local speed = tonumber(value) or 0
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speed
+local Options = Fluent.Options
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+
+-- Speed input field
+local InputSpeed = Tabs.Main:AddInput("Speed", {
+    Title = "Speed",
+    Default = "16", -- Default speed value
+    Placeholder = "Enter speed value",
+    Numeric = true, -- Only allows numbers
+    Finished = false, -- Only calls callback when you press enter
+    Callback = function(Value)
+        print("Speed changed:", Value)
+        changeSizeSpeedRemote:InvokeServer("changeSpeed", tonumber(Value))
     end
 })
 
-MainTab:AddInput("Change Size", {
-    Default = "1",
-    Numeric = true,
-    Callback = function(value)
-        local character = game.Players.LocalPlayer.Character
-        if character then
-            character.Humanoid.BodyScale.Value = tonumber(value) or 1
-        end
+InputSpeed:OnChanged(function()
+    print("Speed updated:", InputSpeed.Value)
+end)
+
+-- Size input field
+local InputSize = Tabs.Main:AddInput("Size", {
+    Title = "Size",
+    Default = "10", -- Default size value
+    Placeholder = "Enter size value",
+    Numeric = true, -- Only allows numbers
+    Finished = false, -- Only calls callback when you press enter
+    Callback = function(Value)
+        print("Size changed:", Value)
+        changeSizeSpeedRemote:InvokeServer("changeSize", tonumber(Value))
     end
 })
 
-MainTab:AddDropdown("Game Time", {
-    Options = {"Morning", "Afternoon", "Night"},
-    Callback = function(selected)
-        if selected == "Morning" then
-            game.Lighting.ClockTime = 6
-        elseif selected == "Afternoon" then
-            game.Lighting.ClockTime = 16
-        elseif selected == "Night" then
-            game.Lighting.ClockTime = 0
-        end
-    end
-})
-
--- Killer Tab Controls
-KillerTab:AddToggle("Auto Hit", {
-    Default = false,
-    Callback = function(state)
-        local player = game.Players.LocalPlayer
-        local backpack = player:WaitForChild("Backpack")
-
-        local tools = {
-            {name = "Punch", type = "attackTime"},
-            {name = "Ground Slam", type = "attackTime"},
-            {name = "Stomp", type = "attackTime"},
-            {name = "Handstands", type = "repTime"},
-            {name = "Pushups", type = "repTime"},
-            {name = "Weight", type = "repTime"},
-            {name = "Situps", type = "repTime"}
-        }
-
-        if state then
-            for _, toolInfo in pairs(tools) do
-                local tool = backpack:FindFirstChild(toolInfo.name)
-                if tool then
-                    local cooldown = tool:FindFirstChild(toolInfo.type)
-                    if cooldown then
-                        cooldown.Value = 0.1
-                    end
-                end
-            end
-        end
-    end
-})
-
-Fluent:Init() -- Finalize the GUI setup
+InputSize:OnChanged(function()
+    print("Size updated:", InputSize.Value)
+end)
