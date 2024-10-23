@@ -20,41 +20,44 @@ local Options = Fluent.Options
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
 
+-- Player setup
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local userInputService = game:GetService("UserInputService")
+
 -- NoClip setup
-local Players, RService = game:GetService("Players"), game:GetService("RunService")
-local LocalP = Players.LocalPlayer
-local Mouse = LocalP:GetMouse()
-local Rm = getrawmetatable(game)
-local NIndex = Rm.__index
-local NoClip = false
-local NoClipKey = "x" -- Change this to your desired key
+local noclipEnabled = false
 
-setreadonly(Rm, false)
+local function toggleNoClip()
+    noclipEnabled = not noclipEnabled
 
-Rm.__newindex = newcclosure(function(self, Meme, Value)
-    if tostring(self) == "HumanoidRootPart" or tostring(self) == "Torso" then 
-        if Meme == "CFrame" and self:IsDescendantOf(LocalP.Character) then 
-            return true
+    if noclipEnabled then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
         end
+        Notify("NoClip Activated", "", 3)
+    else
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+        Notify("NoClip Deactivated", "", 3)
     end
-    return NIndex(self, Meme, Value)
+end
+
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.N then
+        toggleNoClip()
+        Options.NoClip:SetValue(noclipEnabled) -- Sync GUI toggle with NoClip state
+    end
 end)
 
-setreadonly(Rm, true)
-
-RService.Stepped:Connect(function()
-    if NoClip and LocalP and LocalP.Character and LocalP.Character:FindFirstChild("Humanoid") then 
-        pcall(function()
-            LocalP.Character.Head.CanCollide = false 
-            LocalP.Character.Torso.CanCollide = false
-        end)
-    end
-end)
-
-Mouse.KeyDown:Connect(function(Key)
-    if Key == NoClipKey then 
-        NoClip = not NoClip
-        Notify("zxciaz", "NoClip: " .. tostring(NoClip), "", 3)
+game:GetService("RunService").Stepped:Connect(function()
+    if noclipEnabled then
+        character:Move(Vector3.new(0, 0, 0), false)
     end
 end)
 
@@ -93,12 +96,12 @@ InputSize:OnChanged(function()
 end)
 
 -- NoClip toggle in GUI
-local ToggleNoClip = Tabs.Main:AddToggle("NoClip", {
+Options.NoClip = Tabs.Main:AddToggle("NoClip", {
     Title = "Toggle NoClip",
     Default = false,
     Callback = function(Value)
-        NoClip = Value
-        Notify("zxciaz", "NoClip: " .. tostring(NoClip), "", 3)
+        noclipEnabled = Value
+        toggleNoClip() -- Activate or deactivate NoClip based on toggle
     end
 })
 
