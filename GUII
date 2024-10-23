@@ -1,48 +1,43 @@
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source.lua"))()
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
 local player = game.Players.LocalPlayer
 local backpack = player:WaitForChild("Backpack")
 
-local Window = OrionLib:MakeWindow({
-    Name = "Speed Hub X",
-    Icon = "rbxassetid://12345678",
-    HidePremium = false,
+local Window = Fluent:CreateWindow({
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
 })
 
 -- Main Tab
-local MainTab = Window:MakeTab({
-    Name = "Main",
-    Icon = "rbxassetid://12345678",
-    Premium = false,
-})
+local MainTab = Window:AddTab({ Title = "Main", Icon = "" })
 
 -- Speed Changer Input
 MainTab:AddInput("SpeedChanger", {
     Title = "Speed Changer",
     Default = "200",
     Placeholder = "Enter speed value",
-    Numeric = true, -- Only allows numbers
-    Finished = true, -- Calls callback when you press enter
+    Numeric = true,
+    Finished = true,
     Callback = function(Value)
         local speedValue = tonumber(Value)
         if speedValue then
-            print("Speed set to:", speedValue)
-            -- Change the player's speed using the RemoteEvent
             game.ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSpeed", speedValue)
-        else
-            print("Invalid input. Please enter a valid integer.")
         end
     end
 })
 
 -- Killer Tab
-local KillerTab = Window:MakeTab({
-    Name = "Killer",
-    Icon = "rbxassetid://12345678",
-    Premium = false,
-})
+local KillerTab = Window:AddTab({ Title = "Killer", Icon = "" })
 
 KillerTab:AddToggle("Auto Hit", {
-    Name = "Enable Auto Hit",
+    Title = "Enable Auto Hit",
     Default = false,
     Callback = function(State)
         if State then
@@ -62,11 +57,7 @@ local function autoHit()
 end
 
 -- TOOLSpeed Tab
-local TOOLSpeedTab = Window:MakeTab({
-    Name = "Hit Speed Control",
-    Icon = "rbxassetid://12345678",
-    Premium = false,
-})
+local TOOLSpeedTab = Window:AddTab({ Title = "Hit Speed Control", Icon = "" })
 
 local toolsToSet = {
     {"Punch", "attackTime", 0.1},
@@ -110,18 +101,11 @@ for _, tool in ipairs(toolsToSet) do
 end
 
 -- Settings Tab
-local SettingsTab = Window:MakeTab({
-    Name = "Settings",
-    Icon = "rbxassetid://12345678",
-    Premium = false,
-})
+local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
 
 -- Addons setup
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
-
-SaveManager:SetLibrary(OrionLib)
-InterfaceManager:SetLibrary(OrionLib)
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
 
 SaveManager:IgnoreThemeSettings()
 SaveManager:SetIgnoreIndexes({})
@@ -132,11 +116,11 @@ InterfaceManager:BuildInterfaceSection(SettingsTab)
 SaveManager:BuildConfigSection(SettingsTab)
 
 -- Notify when the script is loaded
-OrionLib:Notify({
+Fluent:Notify({
     Title = "Fluent",
     Content = "The script has been loaded.",
     Duration = 8
 })
 
 -- Show the GUI
-OrionLib:Init()
+Fluent:Init()
