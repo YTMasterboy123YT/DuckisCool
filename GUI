@@ -1,8 +1,27 @@
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source.lua"))()
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
 local player = game.Players.LocalPlayer
 local backpack = player:WaitForChild("Backpack")
 
-local Window = OrionLib:MakeWindow({Name = "Speed Hub X", Icon = "rbxassetid://12345678", HidePremium = false})
+-- SaveManager Setup
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
 
 -- Main Tab
 local MainTab = Window:MakeTab({
@@ -132,21 +151,21 @@ local MiscTab = Window:MakeTab({
 })
 
 MiscTab:AddLabel("Miscellaneous Features")
-
--- Start auto-hitting if enabled
-player.CharacterAdded:Connect(function()
-    backpack = player:WaitForChild("Backpack")
+MiscTab:AddButton("Reset Tool Speeds", function()
     for _, tool in ipairs(toolsToSet) do
         setToolAttributes(tool[1], tool[2], tool[3])
     end
 end)
 
 -- Notify when the script is loaded
-OrionLib:MakeNotification({
-    Name = "Loaded",
+Fluent:Notify({
+    Title = "Fluent",
     Content = "The script has been loaded.",
-    Duration = 5
+    Duration = 8
 })
 
+-- Load auto-config if applicable
+SaveManager:LoadAutoloadConfig()
+
 -- Show the GUI
-OrionLib:Init()
+Fluent:Init()
