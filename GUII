@@ -2,28 +2,6 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
-local player = game.Players.LocalPlayer
-local backpack = player:WaitForChild("Backpack")
-local character = player.Character or player.CharacterAdded:Wait()
-
-local toolsToSet = {
-    {"Punch", "attackTime", 0.1},
-    {"Ground Slam", "attackTime", 0.1},
-    {"Stomp", "attackTime", 0.1},
-    {"Handstands", "repTime", 0.1},
-    {"Pushups", "repTime", 0.1},
-    {"Weight", "repTime", 0.1},
-    {"Situps", "repTime", 0.1}
-}
-
-local function setToolAttributes(toolName, attributeType, value)
-    local tool = backpack:FindFirstChild(toolName)
-    if tool and tool:FindFirstChild(attributeType) then
-        tool[attributeType].Value = value
-    end
-end
-
--- GUI Setup
 local Window = Fluent:CreateWindow({
     Title = "Fluent " .. Fluent.Version,
     SubTitle = "by dawid",
@@ -34,118 +12,151 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+-- Function to set game time
+local function setGameTime(timeOfDay)
+    if timeOfDay == "Morning" then
+        game.Lighting.ClockTime = 6
+    elseif timeOfDay == "Afternoon" then
+        game.Lighting.ClockTime = 16
+    elseif timeOfDay == "Night" then
+        game.Lighting.ClockTime = 0
+    else
+        print("Invalid time of day.")
+    end
+end
+
 -- Main Tab
-local MainTab = Window:AddTab({ Title = "Main", Icon = "" })
+local Main = Window:AddTab({ Title = "Main", Icon = "" })
 
-MainTab:AddInput("Size", {
-    Title = "Set Size",
-    Default = "1",
-    Placeholder = "Enter Size",
-    Numeric = true,
-    Finished = true,
-    Callback = function(Value)
-        local sizeValue = tonumber(Value)
-        if sizeValue then
-            ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSize", sizeValue)
-        end
-    end
-})
-
-MainTab:AddInput("Speed", {
-    Title = "Set Speed",
+-- Speed Changer Input
+Main:AddInput("Change Speed", {
     Default = "16",
-    Placeholder = "Enter Speed",
     Numeric = true,
-    Finished = true,
-    Callback = function(Value)
-        local speedValue = tonumber(Value)
-        if speedValue then
-            ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSpeed", speedValue)
-        end
+    Callback = function(value)
+        player.Character.Humanoid.WalkSpeed = tonumber(value) or 16
     end
 })
 
-MainTab:AddDropdown("DaylightSystem", {
-    Title = "Daylight System",
-    Description = "Select the time of day",
-    Values = {"Noon", "Evening", "Night", "Dawn"},
-    Multi = false,
-    Default = 1,
+-- Size Changer Input
+Main:AddInput("Change Size", {
+    Default = "1",
+    Numeric = true,
+    Callback = function(value)
+        local size = tonumber(value) or 1
+        player.Character.Humanoid.Scale = Vector3.new(size, size, size)
+    end
+})
+
+-- Set Game Time Dropdown
+Main:AddDropdown("Game Time", {
+    Options = {"Morning", "Afternoon", "Night"},
     Callback = function(selected)
-        if selected == "Noon" then
-            game.Lighting.TimeOfDay = "12:00:00"
-        elseif selected == "Evening" then
-            game.Lighting.TimeOfDay = "18:00:00"
-        elseif selected == "Night" then
-            game.Lighting.TimeOfDay = "00:00:00"
-        elseif selected == "Dawn" then
-            game.Lighting.TimeOfDay = "06:00:00"
+        setGameTime(selected)
+    end
+})
+
+-- Run All Codes Button
+local function executeCodes()
+    local codes = {
+        "Speedy50", "Epicreward500", "Launch250", "Musclestorm50",
+        "Spacegems50", "Superpunch100", "Frostgems10", "Galaxycrystal50",
+        "Skyagility50", "Supermuscle100", "Millionwarriors", "frostgems10",
+        "epicreward500", "galaxycrystal50", "launch250", "spacegems50"
+    }
+    for _, code in ipairs(codes) do
+        game:GetService("ReplicatedStorage").rEvents.codeRemote:InvokeServer(code)
+        wait(0.1)
+    end
+end
+
+Main:AddButton("Run All Codes", {
+    Name = "Run All Codes",
+    Callback = function()
+        executeCodes()
+    end
+})
+
+-- Toggle for trading all players
+local tradingEnabled = false
+
+local function tradeWithAllPlayers()
+    local Players = game:GetService("Players")
+    while tradingEnabled do
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= Players.LocalPlayer then
+                game:GetService("ReplicatedStorage").rEvents.tradingEvent:FireServer("sendTradeRequest", player)
+                wait(0.1)
+            end
+        end
+        wait(5)
+    end
+end
+
+Main:AddToggle("Trade All Players", {
+    Name = "Trade All Players",
+    Default = false,
+    Callback = function(state)
+        tradingEnabled = state
+        if tradingEnabled then
+            tradeWithAllPlayers()
         end
     end
 })
 
 -- Killer Tab
-local KillerTab = Window:AddTab({ Title = "Killer", Icon = "" })
-
-KillerTab:AddToggle("Auto Hit", {
-    Title = "Enable Auto Hit",
+local Killer = Window:AddTab({ Title = "Killer", Icon = "" })
+Killer:AddToggle("Auto Hit", {
+    Name = "Enable Auto Hit",
     Default = false,
-    Callback = function(State)
-        if State then
-            autoHit()
+    Callback = function(state)
+        local tools = {
+            {name = "Punch", type = "attackTime"},
+            {name = "Ground Slam", type = "attackTime"},
+            {name = "Stomp", type = "attackTime"},
+            {name = "Handstands", type = "repTime"},
+            {name = "Pushups", type = "repTime"},
+            {name = "Weight", type = "repTime"},
+            {name = "Situps", type = "repTime"}
+        }
+        while state do
+            for _, toolInfo in pairs(tools) do
+                local tool = backpack:FindFirstChild(toolInfo.name)
+                if tool then
+                    local cooldown = tool:FindFirstChild(toolInfo.type)
+                    if cooldown then
+                        cooldown.Value = 0.1
+                        tool:Activate()
+                    end
+                end
+            end
+            wait(0.1)
         end
     end
 })
 
-local function autoHit()
-    while true do
-        local equippedTool = character:FindFirstChildOfClass("Tool")
-        if equippedTool and equippedTool.Enabled then
-            equippedTool:Activate()
-        end
-        wait(0.1)
-    end
-end
-
--- Hit Speed Control Tab
-local HitSpeedControlTab = Window:AddTab({ Title = "Hit Speed Control", Icon = "" })
-
-for _, tool in ipairs(toolsToSet) do
-    HitSpeedControlTab:AddInput(tool[1] .. " Speed", {
-        Default = tostring(tool[3]),
-        Numeric = true,
-        Callback = function(Value)
-            setToolAttributes(tool[1], tool[2], tonumber(Value) or tool[3])
-        end
-    })
-end
-
--- Initialize tool attributes at the start
-for _, tool in ipairs(toolsToSet) do
-    setToolAttributes(tool[1], tool[2], tool[3])
-end
-
 -- Settings Tab
-local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
+local Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+Settings:AddLabel("Configuration Settings")
 
--- Addons Setup
+-- SaveManager and InterfaceManager Setup
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
-
 SaveManager:IgnoreThemeSettings()
 SaveManager:SetIgnoreIndexes({})
 InterfaceManager:SetFolder("FluentScriptHub")
 SaveManager:SetFolder("FluentScriptHub/specific-game")
+InterfaceManager:BuildInterfaceSection(Settings)
+SaveManager:BuildConfigSection(Settings)
 
-InterfaceManager:BuildInterfaceSection(SettingsTab)
-SaveManager:BuildConfigSection(SettingsTab)
+Window:SelectTab(1)
 
--- Notify when the script is loaded
 Fluent:Notify({
     Title = "Fluent",
     Content = "The script has been loaded.",
     Duration = 8
 })
 
--- Show the GUI
-Fluent:Init()
+SaveManager:LoadAutoloadConfig()
