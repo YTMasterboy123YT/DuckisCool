@@ -1,4 +1,6 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
     Title = "DUCKS PRIVATE GUI" .. Fluent.Version,
@@ -10,33 +12,29 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
--- Creating a new tab
-local Tab1 = Window:AddTab("Tab 1")
-local Tab2 = Window:AddTab("Tab 2")
+-- Create tabs with icons
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
 
--- Adding a button in Tab 1
-Tab1:AddButton("Click Me", function()
-    print("Button clicked!")
+-- Add elements to the Main tab
+Tabs.Main:AddButton("Start", function()
+    print("Game Started!")
 end)
 
--- Adding a slider in Tab 1
-Tab1:AddSlider("Adjust Volume", 0, 100, 50, function(value)
+-- Add elements to the Settings tab
+Tabs.Settings:AddSlider("Volume", 0, 100, 50, function(value)
     print("Volume set to: " .. value)
 end)
 
--- Adding a toggle in Tab 2
-Tab2:AddToggle("Enable Feature", false, function(enabled)
-    if enabled then
-        print("Feature enabled!")
-    else
-        print("Feature disabled!")
-    end
-end)
+-- Integrate SaveManager and InterfaceManager
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
 
--- Adding a dropdown in Tab 2
-Tab2:AddDropdown("Select Option", {"Option 1", "Option 2", "Option 3"}, function(selected)
-    print("You selected: " .. selected)
-end)
+-- Build interface and configuration sections
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
 
--- Finalizing the GUI
+-- Finalize the GUI
 Fluent:Open()
