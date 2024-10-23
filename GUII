@@ -1,55 +1,142 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source.lua"))()
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local Window = OrionLib:MakeWindow({
+    Name = "Speed Hub X",
+    Icon = "rbxassetid://12345678",
+    HidePremium = false,
+})
+
+-- Main Tab
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://12345678",
+    Premium = false,
+})
+
+-- Speed Changer Input
+MainTab:AddInput("SpeedChanger", {
+    Title = "Speed Changer",
+    Default = "200",
+    Placeholder = "Enter speed value",
+    Numeric = true, -- Only allows numbers
+    Finished = true, -- Calls callback when you press enter
+    Callback = function(Value)
+        local speedValue = tonumber(Value)
+        if speedValue then
+            print("Speed set to:", speedValue)
+            -- Change the player's speed using the RemoteEvent
+            game.ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSpeed", speedValue)
+        else
+            print("Invalid input. Please enter a valid integer.")
+        end
+    end
+})
+
+-- Killer Tab
+local KillerTab = Window:MakeTab({
+    Name = "Killer",
+    Icon = "rbxassetid://12345678",
+    Premium = false,
+})
+
+KillerTab:AddToggle("Auto Hit", {
+    Name = "Enable Auto Hit",
+    Default = false,
+    Callback = function(State)
+        if State then
+            autoHit()
+        end
+    end
+})
+
+local function autoHit()
+    while true do
+        local equippedTool = player.Character:FindFirstChildOfClass("Tool")
+        if equippedTool and equippedTool.Enabled then
+            equippedTool:Activate()
+        end
+        wait(0.1)
+    end
+end
+
+-- TOOLSpeed Tab
+local TOOLSpeedTab = Window:MakeTab({
+    Name = "Hit Speed Control",
+    Icon = "rbxassetid://12345678",
+    Premium = false,
+})
+
+local toolsToSet = {
+    {"Punch", "attackTime", 0.1},
+    {"Ground Slam", "attackTime", 0.1},
+    {"Stomp", "attackTime", 0.1},
+    {"Handstands", "repTime", 0.1},
+    {"Pushups", "repTime", 0.1},
+    {"Weight", "repTime", 0.1},
+    {"Situps", "repTime", 0.1}
+}
+
+local function createOrGetIntValue(toolName, attributeType)
+    local tool = backpack:FindFirstChild(toolName)
+    if tool then
+        local attribute = tool:FindFirstChild(attributeType)
+        if not attribute then
+            attribute = Instance.new("IntValue")
+            attribute.Name = attributeType
+            attribute.Parent = tool
+        end
+        return attribute
+    end
+    return nil
+end
+
+local function setToolAttributes(toolName, attributeType, value)
+    local intValue = createOrGetIntValue(toolName, attributeType)
+    if intValue then
+        intValue.Value = value
+    end
+end
+
+for _, tool in ipairs(toolsToSet) do
+    TOOLSpeedTab:AddInput(tool[1] .. " Speed", {
+        Default = tostring(tool[3]),
+        Numeric = true,
+        Callback = function(Value)
+            setToolAttributes(tool[1], tool[2], tonumber(Value) or 0.1)
+        end
+    })
+end
+
+-- Settings Tab
+local SettingsTab = Window:MakeTab({
+    Name = "Settings",
+    Icon = "rbxassetid://12345678",
+    Premium = false,
+})
+
+-- Addons setup
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
-local Window = Fluent:CreateWindow({
-    Title = "Fluent " .. Fluent.Version,
-    SubTitle = "by dawid",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
+SaveManager:SetLibrary(OrionLib)
+InterfaceManager:SetLibrary(OrionLib)
 
--- Define Tabs
-local MainTab = Window:AddTab({ Title = "Main", Icon = "" }) -- Empty
-local KillerTab = Window:AddTab({ Title = "Killer", Icon = "" }) -- Empty
-local TOOLSpeedTab = Window:AddTab({ Title = "TOOLSpeed", Icon = "" }) -- Empty
-local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
-
--- Settings Tab
-SettingsTab:AddLabel("Addons:")
-SettingsTab:AddLabel("SaveManager: Allows you to have a configuration system")
-SettingsTab:AddLabel("InterfaceManager: Allows you to have an interface management system")
-
--- Hand the library over to our managers
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-
--- Ignore keys that are used by ThemeManager
 SaveManager:IgnoreThemeSettings()
-
--- You can add indexes of elements the save manager should ignore
 SaveManager:SetIgnoreIndexes({})
-
--- Set folder for managing interface and save data
 InterfaceManager:SetFolder("FluentScriptHub")
 SaveManager:SetFolder("FluentScriptHub/specific-game")
 
--- Build the interface and config sections in the Settings tab
 InterfaceManager:BuildInterfaceSection(SettingsTab)
 SaveManager:BuildConfigSection(SettingsTab)
 
 -- Notify when the script is loaded
-Fluent:Notify({
+OrionLib:Notify({
     Title = "Fluent",
     Content = "The script has been loaded.",
     Duration = 8
 })
 
--- Load auto-config if applicable
-SaveManager:LoadAutoloadConfig()
-
 -- Show the GUI
-Fluent:Init()
+OrionLib:Init()
