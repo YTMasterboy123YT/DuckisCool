@@ -67,19 +67,6 @@ MainTab:AddToggle("Run All Codes", {
     end
 })
 
-MainTab:AddToggle("Trade All Players", {
-    Default = false,
-    Callback = function(state)
-        if state then
-            for _, player in pairs(game.Players:GetPlayers()) do
-                if player ~= game.Players.LocalPlayer then
-                    game:GetService("ReplicatedStorage").rEvents.tradingEvent:FireServer("sendTradeRequest", player)
-                end
-            end
-        end
-    end
-})
-
 -- Killer Tab Controls
 KillerTab:AddToggle("Auto Hit", {
     Default = false,
