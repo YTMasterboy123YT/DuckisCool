@@ -1,64 +1,41 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source.lua"))()
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Window = OrionLib:MakeWindow({Name = "Speed Hub X", Icon = "rbxassetid://12345678", HidePremium = false})
 
-local Window = Fluent:CreateWindow({
-    Title = "Speed Hub X " .. Fluent.Version,
-    SubTitle = "By Duck",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(560, 440),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
+-- Main Tab
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://12345678",
+    Premium = false,
 })
 
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
-    Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
-    TOOLSpeed = Window:AddTab({ Title = "TOOLSpeed", Icon = "" }),
-}
-
--- Main Tab Inputs
-Tabs.Main:AddInput("Size", {
-    Title = "Set Size",
+MainTab:AddInput("Size", {
     Default = "1",
-    Placeholder = "Enter Size",
     Numeric = true,
-    Finished = true,
     Callback = function(Value)
         local sizeValue = tonumber(Value)
         if sizeValue then
-            ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSize", sizeValue)
+            game.ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSize", sizeValue)
         end
     end
 })
 
-Tabs.Main:AddInput("Speed", {
-    Title = "Set Speed",
+MainTab:AddInput("Speed", {
     Default = "16",
-    Placeholder = "Enter Speed",
     Numeric = true,
-    Finished = true,
     Callback = function(Value)
         local speedValue = tonumber(Value)
         if speedValue then
-            ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSpeed", speedValue)
+            game.ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSpeed", speedValue)
         end
     end
 })
 
--- Daylight System Dropdown
-Tabs.Main:AddDropdown("DaylightSystem", {
-    Title = "Daylight System",
-    Description = "Select the time of day",
-    Values = {"Noon", "Evening", "Night", "Dawn"},
-    Multi = false,
-    Default = 1,
+MainTab:AddDropdown("DaylightSystem", {
+    Name = "Select Daylight",
+    Options = {"Noon", "Evening", "Night", "Dawn"},
     Callback = function(selected)
         if selected == "Noon" then
             game.Lighting.TimeOfDay = "12:00:00"
@@ -72,13 +49,16 @@ Tabs.Main:AddDropdown("DaylightSystem", {
     end
 })
 
--- Killer Tab (Auto Hit)
-local autoHitActive = false
+-- Killer Tab
+local KillerTab = Window:MakeTab({
+    Name = "Killer",
+    Icon = "rbxassetid://12345678",
+    Premium = false,
+})
 
 local function autoHit()
-    while autoHitActive do
-        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local equippedTool = character:FindFirstChildOfClass("Tool")
+    while true do
+        local equippedTool = player.Character:FindFirstChildOfClass("Tool")
         if equippedTool and equippedTool.Enabled then
             equippedTool:Activate()
         end
@@ -86,11 +66,10 @@ local function autoHit()
     end
 end
 
-Tabs.Killer:AddToggle("Auto Hit", {
-    Title = "Enable Auto Hit",
+KillerTab:AddToggle("Auto Hit", {
+    Name = "Enable Auto Hit",
     Default = false,
     Callback = function(State)
-        autoHitActive = State
         if State then
             autoHit()
         end
@@ -98,57 +77,76 @@ Tabs.Killer:AddToggle("Auto Hit", {
 })
 
 -- TOOLSpeed Tab
-local tools = {
-    {name = "Punch", type = "attackTime"},
-    {name = "Ground Slam", type = "attackTime"},
-    {name = "Stomp", type = "attackTime"},
-    {name = "Handstands", type = "repTime"},
-    {name = "Pushups", type = "repTime"},
-    {name = "Weight", type = "repTime"},
-    {name = "Situps", type = "repTime"}
+local TOOLSpeedTab = Window:MakeTab({
+    Name = "TOOLSpeed",
+    Icon = "rbxassetid://12345678",
+    Premium = false,
+})
+
+local toolsToSet = {
+    {"Punch", "attackTime", 0.1},
+    {"Ground Slam", "attackTime", 0.1},
+    {"Stomp", "attackTime", 0.1},
+    {"Handstands", "repTime", 0.1},
+    {"Pushups", "repTime", 0.1},
+    {"Weight", "repTime", 0.1},
+    {"Situps", "repTime", 0.1}
 }
 
-local toolSpeeds = {}
-
-local function updateToolSpeedDisplay(toolInfo, speedValue)
-    toolSpeeds[toolInfo.name] = speedValue
+local function createOrGetIntValue(toolName, attributeType)
+    local tool = backpack:FindFirstChild(toolName)
+    if tool then
+        local attribute = tool:FindFirstChild(attributeType)
+        if not attribute then
+            attribute = Instance.new("IntValue")
+            attribute.Name = attributeType
+            attribute.Parent = tool
+        end
+        return attribute
+    end
+    return nil
 end
 
-local function setToolProperties(name, value)
-    local backpack = LocalPlayer:WaitForChild("Backpack")
-    local tool = backpack:FindFirstChild(name)
-    if tool then
-        local cooldown = tool:FindFirstChild(tools[name].type)
-        if cooldown and cooldown:IsA("NumberValue") then
-            cooldown.Value = value
-            updateToolSpeedDisplay(toolInfo, value)
-        end
+local function setToolAttributes(toolName, attributeType, value)
+    local intValue = createOrGetIntValue(toolName, attributeType)
+    if intValue then
+        intValue.Value = value
     end
 end
 
-for _, toolInfo in pairs(tools) do
-    local defaultSpeed = 0.1
-    updateToolSpeedDisplay(toolInfo, defaultSpeed)
-
-    Tabs.TOOLSpeed:AddInput(toolInfo.name .. " Speed", {
-        Title = toolInfo.name .. " Speed",
-        Description = "Set the speed for " .. toolInfo.name,
-        Default = tostring(defaultSpeed),
-        Placeholder = "Enter Speed",
+for _, tool in ipairs(toolsToSet) do
+    TOOLSpeedTab:AddInput(tool[1] .. " Speed", {
+        Default = tostring(tool[3]),
         Numeric = true,
-        Finished = true,
         Callback = function(Value)
-            local speedValue = tonumber(Value)
-            if speedValue then
-                setToolProperties(toolInfo.name, speedValue)
-                updateToolSpeedDisplay(toolInfo, speedValue)
-            end
+            setToolAttributes(tool[1], tool[2], tonumber(Value) or 0.1)
         end
     })
-
-    Tabs.TOOLSpeed:AddLabel(toolInfo.name .. " Current Speed: " .. tostring(defaultSpeed))
 end
 
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-SaveManager:LoadAutoloadConfig()
+-- Misc Tab
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://12345678",
+    Premium = false,
+})
+
+MiscTab:AddLabel("Miscellaneous Features")
+
+-- Start auto-hitting if enabled
+player.CharacterAdded:Connect(function()
+    backpack = player:WaitForChild("Backpack")
+    for _, tool in ipairs(toolsToSet) do
+        setToolAttributes(tool[1], tool[2], tool[3])
+    end
+end)
+
+-- Notify when the script is loaded
+OrionLib:MakeNotification({
+    Name = "Loaded",
+    Content = "The script has been loaded.",
+    Duration = 5
+})
+
+-- Show the GUI
+OrionLib:Init()
