@@ -108,6 +108,12 @@ local tools = {
     {name = "Situps", type = "repTime"}
 }
 
+local toolSpeeds = {}
+
+local function updateToolSpeedDisplay(toolInfo, speedValue)
+    toolSpeeds[toolInfo.name] = speedValue
+end
+
 local function setToolProperties(name, value)
     local backpack = LocalPlayer:WaitForChild("Backpack")
     local tool = backpack:FindFirstChild(name)
@@ -115,15 +121,19 @@ local function setToolProperties(name, value)
         local cooldown = tool:FindFirstChild(tools[name].type)
         if cooldown and cooldown:IsA("NumberValue") then
             cooldown.Value = value
+            updateToolSpeedDisplay(toolInfo, value)
         end
     end
 end
 
 for _, toolInfo in pairs(tools) do
+    local defaultSpeed = 0.1
+    updateToolSpeedDisplay(toolInfo, defaultSpeed)
+
     Tabs.TOOLSpeed:AddInput(toolInfo.name .. " Speed", {
         Title = toolInfo.name .. " Speed",
         Description = "Set the speed for " .. toolInfo.name,
-        Default = "0.1",
+        Default = tostring(defaultSpeed),
         Placeholder = "Enter Speed",
         Numeric = true,
         Finished = true,
@@ -131,11 +141,12 @@ for _, toolInfo in pairs(tools) do
             local speedValue = tonumber(Value)
             if speedValue then
                 setToolProperties(toolInfo.name, speedValue)
+                updateToolSpeedDisplay(toolInfo, speedValue)
             end
         end
     })
 
-    setToolProperties(toolInfo.name, 0.1)
+    Tabs.TOOLSpeed:AddLabel(toolInfo.name .. " Current Speed: " .. tostring(defaultSpeed))
 end
 
 SaveManager:SetLibrary(Fluent)
