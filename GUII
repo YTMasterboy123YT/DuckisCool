@@ -5,12 +5,11 @@ local Window = Fluent:CreateWindow({
     SubTitle = "by dawid",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
-    Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
+    Acrylic = true,
     Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl -- Used when there's no MinimizeKeybind
+    MinimizeKey = Enum.KeyCode.LeftControl
 })
 
--- Fluent provides Lucide Icons https://lucide.dev/icons/ for the tabs, icons are optional
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
@@ -21,13 +20,51 @@ local Options = Fluent.Options
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
 
+-- NoClip setup
+local Players, RService = game:GetService("Players"), game:GetService("RunService")
+local LocalP = Players.LocalPlayer
+local Mouse = LocalP:GetMouse()
+local Rm = getrawmetatable(game)
+local NIndex = Rm.__index
+local NoClip = false
+local NoClipKey = "x" -- Change this to your desired key
+
+setreadonly(Rm, false)
+
+Rm.__newindex = newcclosure(function(self, Meme, Value)
+    if tostring(self) == "HumanoidRootPart" or tostring(self) == "Torso" then 
+        if Meme == "CFrame" and self:IsDescendantOf(LocalP.Character) then 
+            return true
+        end
+    end
+    return NIndex(self, Meme, Value)
+end)
+
+setreadonly(Rm, true)
+
+RService.Stepped:Connect(function()
+    if NoClip and LocalP and LocalP.Character and LocalP.Character:FindFirstChild("Humanoid") then 
+        pcall(function()
+            LocalP.Character.Head.CanCollide = false 
+            LocalP.Character.Torso.CanCollide = false
+        end)
+    end
+end)
+
+Mouse.KeyDown:Connect(function(Key)
+    if Key == NoClipKey then 
+        NoClip = not NoClip
+        Notify("zxciaz", "NoClip: " .. tostring(NoClip), "", 3)
+    end
+end)
+
 -- Speed input field
 local InputSpeed = Tabs.Main:AddInput("Speed", {
     Title = "Speed",
     Default = "16", -- Default speed value
     Placeholder = "Enter speed value",
-    Numeric = true, -- Only allows numbers
-    Finished = false, -- Only calls callback when you press enter
+    Numeric = true,
+    Finished = false,
     Callback = function(Value)
         print("Speed changed:", Value)
         changeSizeSpeedRemote:InvokeServer("changeSpeed", tonumber(Value))
@@ -43,8 +80,8 @@ local InputSize = Tabs.Main:AddInput("Size", {
     Title = "Size",
     Default = "10", -- Default size value
     Placeholder = "Enter size value",
-    Numeric = true, -- Only allows numbers
-    Finished = false, -- Only calls callback when you press enter
+    Numeric = true,
+    Finished = false,
     Callback = function(Value)
         print("Size changed:", Value)
         changeSizeSpeedRemote:InvokeServer("changeSize", tonumber(Value))
@@ -54,3 +91,26 @@ local InputSize = Tabs.Main:AddInput("Size", {
 InputSize:OnChanged(function()
     print("Size updated:", InputSize.Value)
 end)
+
+-- NoClip toggle in GUI
+local ToggleNoClip = Tabs.Main:AddToggle("NoClip", {
+    Title = "Toggle NoClip",
+    Default = false,
+    Callback = function(Value)
+        NoClip = Value
+        Notify("zxciaz", "NoClip: " .. tostring(NoClip), "", 3)
+    end
+})
+
+-- MyToggle example
+local Toggle = Tabs.Main:AddToggle("MyToggle", {
+    Title = "Toggle",
+    Default = false
+})
+
+Toggle:OnChanged(function(Value)
+    print("Toggle changed:", Value)
+end)
+
+Options.MyToggle = Toggle -- Register toggle in Options
+Options.MyToggle:SetValue(false) -- Set initial value
