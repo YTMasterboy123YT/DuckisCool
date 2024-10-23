@@ -107,43 +107,6 @@ Tabs.Main:AddDropdown("DaylightSystem", {
     end
 })
 
--- Speed Aura Feature
-local speedAuraActive = false
-local auraParticle
-
-local function toggleSpeedAura()
-    speedAuraActive = not speedAuraActive
-    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-
-    if speedAuraActive then
-        auraParticle = Instance.new("ParticleEmitter")
-        auraParticle.Parent = character:WaitForChild("HumanoidRootPart")
-        auraParticle.Texture = "rbxassetid://12345678" -- Replace with your particle texture ID
-        auraParticle.Lifetime = NumberRange.new(1)
-        auraParticle.Rate = 100
-        auraParticle.Size = NumberSequence.new(0.5, 1)
-        auraParticle.Velocity = NumberRange.new(1, 2)
-
-        while speedAuraActive do
-            local speed = character:FindFirstChildOfClass("Humanoid").WalkSpeed
-            auraParticle.Enabled = speed > 16
-            wait(0.1)
-        end
-    else
-        if auraParticle then
-            auraParticle:Destroy()
-        end
-    end
-end
-
-Tabs.Main:AddToggle("Speed Aura", {
-    Title = "Enable Speed Aura",
-    Default = false,
-    Callback = function(State)
-        toggleSpeedAura()
-    end
-})
-
 -- Killer Tab (Auto Hit)
 local autoHitActive = false
 
