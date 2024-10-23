@@ -1,80 +1,28 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
-
 local player = game.Players.LocalPlayer
 local backpack = player:WaitForChild("Backpack")
 local character = player.Character or player.CharacterAdded:Wait()
 
--- Create GUI Window
-local Window = Fluent:CreateWindow({
-    Title = "Fluent " .. Fluent.Version,
-    SubTitle = "by dawid",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
-
--- Tool settings
-local toolsToSet = {
-    {"Punch", "attackTime", 0.1},
-    {"Ground Slam", "attackTime", 0.1},
-    {"Stomp", "attackTime", 0.1},
-    {"Handstands", "repTime", 0.1},
-    {"Pushups", "repTime", 0.1},
-    {"Weight", "repTime", 0.1},
-    {"Situps", "repTime", 0.1}
+local tools = {
+    {name = "Punch", type = "attackTime"},
+    {name = "Ground Slam", type = "attackTime"},
+    {name = "Stomp", type = "attackTime"},
+    {name = "Handstands", type = "repTime"},
+    {name = "Pushups", type = "repTime"},
+    {name = "Weight", type = "repTime"},
+    {name = "Situps", type = "repTime"}
 }
 
-local function setToolAttributes(toolName, attributeType, value)
-    local tool = backpack:FindFirstChild(toolName)
-    if tool then
-        tool[attributeType].Value = value
+local function setToolProperties()
+    for _, toolInfo in pairs(tools) do
+        local tool = backpack:FindFirstChild(toolInfo.name)
+        if tool then
+            local cooldown = tool:FindFirstChild(toolInfo.type) 
+            if cooldown and cooldown:IsA("NumberValue") then
+                cooldown.Value = 0.1
+            end
+        end
     end
 end
-
--- Main Tab
-local MainTab = Window:AddTab({ Title = "Main", Icon = "" })
-
--- Speed Changer Input
-MainTab:AddInput("Speed Changer", {
-    Default = "200",
-    Numeric = true,
-    Callback = function(Value)
-        ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSpeed", tonumber(Value) or 200)
-    end
-})
-
--- Daylight Changer Dropdown
-MainTab:AddDropdown("Daylight System", {
-    Title = "Select Daylight",
-    Values = {"Noon", "Evening", "Night"},
-    Default = 1,
-    Callback = function(selected)
-        if selected == "Noon" then
-            game.Lighting.TimeOfDay = "12:00:00"
-        elseif selected == "Evening" then
-            game.Lighting.TimeOfDay = "18:00:00"
-        elseif selected == "Night" then
-            game.Lighting.TimeOfDay = "00:00:00"
-        end
-    end
-})
-
--- Killer Tab
-local KillerTab = Window:AddTab({ Title = "Killer", Icon = "" })
-
-KillerTab:AddToggle("Auto Hit", {
-    Title = "Enable Auto Hit",
-    Default = false,
-    Callback = function(State)
-        if State then
-            autoHit()
-        end
-    end
-})
 
 local function autoHit()
     while true do
@@ -86,46 +34,12 @@ local function autoHit()
     end
 end
 
--- Hit Speed Control Tab
-local HitSpeedControlTab = Window:AddTab({ Title = "Hit Speed Control", Icon = "" })
+setToolProperties()
+autoHit()
 
-for _, tool in ipairs(toolsToSet) do
-    HitSpeedControlTab:AddInput(tool[1] .. " Speed", {
-        Default = tostring(tool[3]),
-        Numeric = true,
-        Callback = function(Value)
-            setToolAttributes(tool[1], tool[2], tonumber(Value) or tool[3])
-        end
-    })
-end
-
--- Set initial tool attributes
-for _, tool in ipairs(toolsToSet) do
-    setToolAttributes(tool[1], tool[2], tool[3])
-end
-
--- Settings Tab
-local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
-
--- Addons
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-InterfaceManager:SetFolder("FluentScriptHub")
-SaveManager:SetFolder("FluentScriptHub/specific-game")
-InterfaceManager:BuildInterfaceSection(SettingsTab)
-SaveManager:BuildConfigSection(SettingsTab)
-
--- Notification
-Fluent:Notify({
-    Title = "Fluent",
-    Content = "The script has been loaded.",
-    Duration = 8
-})
-
--- Load autoload config
-SaveManager:LoadAutoloadConfig()
-
--- Show the GUI
-Window:SelectTab(1)
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    backpack = player:WaitForChild("Backpack")
+    setToolProperties()
+    autoHit()
+end)
