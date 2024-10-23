@@ -189,36 +189,36 @@ local tools = {
     {name = "Situps", type = "repTime"}
 }
 
-local function setToolProperties(value)
+local function setToolProperties(name, value)
     local backpack = LocalPlayer:WaitForChild("Backpack")
-    for _, toolInfo in pairs(tools) do
-        local tool = backpack:FindFirstChild(toolInfo.name)
-        if tool then
-            local cooldown = tool:FindFirstChild(toolInfo.type) 
-            if cooldown and cooldown:IsA("NumberValue") then
-                cooldown.Value = value
-            end
+    local tool = backpack:FindFirstChild(name)
+    if tool then
+        local cooldown = tool:FindFirstChild(tools[name].type)
+        if cooldown and cooldown:IsA("NumberValue") then
+            cooldown.Value = value
         end
     end
 end
 
-local ToolSpeedInput = Tabs.TOOLSpeed:AddInput("ToolSpeed", {
-    Title = "Set Tool Speed",
-    Description = "Change the attack/rep speed of the tools.",
-    Default = "0.1",
-    Placeholder = "Enter Tool Speed",
-    Numeric = true,
-    Finished = true,
-    Callback = function(Value)
-        local speedValue = tonumber(Value)
-        if speedValue then
-            setToolProperties(speedValue)
+for _, toolInfo in pairs(tools) do
+    Tabs.TOOLSpeed:AddInput(toolInfo.name .. "Speed", {
+        Title = toolInfo.name .. " Speed",
+        Description = "Change the speed for " .. toolInfo.name,
+        Default = "0.1",
+        Placeholder = "Enter Speed",
+        Numeric = true,
+        Finished = true,
+        Callback = function(Value)
+            local speedValue = tonumber(Value)
+            if speedValue then
+                setToolProperties(toolInfo.name, speedValue)
+            end
         end
-    end
-})
+    })
+end
 
 -- Call functions
-setToolProperties(0.1)  -- Set default speed
+setToolProperties("Punch", 0.1)  -- Set default speed for Punch
 autoHit()
 
 -- Handle character respawn
