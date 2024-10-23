@@ -15,13 +15,13 @@ local Window = Fluent:CreateWindow({
 local player = game.Players.LocalPlayer
 local backpack = player:WaitForChild("Backpack")
 
--- Main Tab
-local MainTab = Window:MakeTab({
-    Name = "Main",
-    Icon = "rbxassetid://12345678",
-    Premium = false,
-})
+-- Define Tabs
+local MainTab = Window:AddTab({ Title = "Main", Icon = "" }) -- Speed, size, and daylight settings
+local KillerTab = Window:AddTab({ Title = "Killer", Icon = "" }) -- Auto-hit toggle
+local TOOLSpeedTab = Window:AddTab({ Title = "TOOLSpeed", Icon = "" }) -- Tool speed adjustments
+local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" }) -- Configuration management
 
+-- Main Tab
 MainTab:AddInput("Size", {
     Default = "1",
     Numeric = true,
@@ -61,12 +61,6 @@ MainTab:AddDropdown("DaylightSystem", {
 })
 
 -- Killer Tab
-local KillerTab = Window:MakeTab({
-    Name = "Killer",
-    Icon = "rbxassetid://12345678",
-    Premium = false,
-})
-
 local function autoHit()
     while true do
         local equippedTool = player.Character:FindFirstChildOfClass("Tool")
@@ -88,12 +82,6 @@ KillerTab:AddToggle("Auto Hit", {
 })
 
 -- TOOLSpeed Tab
-local TOOLSpeedTab = Window:MakeTab({
-    Name = "TOOLSpeed",
-    Icon = "rbxassetid://12345678",
-    Premium = false,
-})
-
 local toolsToSet = {
     {"Punch", "attackTime", 0.1},
     {"Ground Slam", "attackTime", 0.1},
@@ -136,29 +124,16 @@ for _, tool in ipairs(toolsToSet) do
 end
 
 -- Settings Tab
-local SettingsTab = Window:MakeTab({
-    Name = "Settings",
-    Icon = "rbxassetid://12345678",
-    Premium = false,
-})
-
--- Addons setup
 SettingsTab:AddLabel("Addons:")
 SettingsTab:AddLabel("SaveManager: Allows you to have a configuration system")
 SettingsTab:AddLabel("InterfaceManager: Allows you to have an interface management system")
 
--- Hand the library over to our managers
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
-
--- Ignore keys that are used by ThemeManager.
 SaveManager:IgnoreThemeSettings()
-
--- Set folder for managing interface and save data
+SaveManager:SetIgnoreIndexes({})
 InterfaceManager:SetFolder("FluentScriptHub")
 SaveManager:SetFolder("FluentScriptHub/specific-game")
-
--- Build the interface and config sections in the Settings tab
 InterfaceManager:BuildInterfaceSection(SettingsTab)
 SaveManager:BuildConfigSection(SettingsTab)
 
