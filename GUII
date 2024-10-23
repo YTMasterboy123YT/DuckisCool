@@ -33,6 +33,41 @@ MainTab:AddInput("SpeedChanger", {
     end
 })
 
+-- Size Input
+MainTab:AddInput("Size", {
+    Title = "Set Size",
+    Default = "1",
+    Placeholder = "Enter Size",
+    Numeric = true,
+    Finished = true,
+    Callback = function(Value)
+        local sizeValue = tonumber(Value)
+        if sizeValue then
+            game.ReplicatedStorage.rEvents.changeSpeedSizeRemote:InvokeServer("changeSize", sizeValue)
+        end
+    end
+})
+
+-- Daylight System Dropdown
+MainTab:AddDropdown("DaylightSystem", {
+    Title = "Daylight System",
+    Description = "Select the time of day",
+    Values = {"Noon", "Evening", "Night", "Dawn"},
+    Multi = false,
+    Default = 1,
+    Callback = function(selected)
+        if selected == "Noon" then
+            game.Lighting.TimeOfDay = "12:00:00"
+        elseif selected == "Evening" then
+            game.Lighting.TimeOfDay = "18:00:00"
+        elseif selected == "Night" then
+            game.Lighting.TimeOfDay = "00:00:00"
+        elseif selected == "Dawn" then
+            game.Lighting.TimeOfDay = "06:00:00"
+        end
+    end
+})
+
 -- Killer Tab
 local KillerTab = Window:AddTab({ Title = "Killer", Icon = "" })
 
@@ -40,14 +75,17 @@ KillerTab:AddToggle("Auto Hit", {
     Title = "Enable Auto Hit",
     Default = false,
     Callback = function(State)
+        autoHitActive = State
         if State then
             autoHit()
         end
     end
 })
 
+local autoHitActive = false
+
 local function autoHit()
-    while true do
+    while autoHitActive do
         local equippedTool = player.Character:FindFirstChildOfClass("Tool")
         if equippedTool and equippedTool.Enabled then
             equippedTool:Activate()
