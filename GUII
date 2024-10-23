@@ -22,7 +22,8 @@ MainTab:AddInput("Change Speed", {
     Default = "0",
     Numeric = true,
     Callback = function(value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(value) or 0
+        local speed = tonumber(value) or 0
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speed
     end
 })
 
@@ -32,7 +33,7 @@ MainTab:AddInput("Change Size", {
     Callback = function(value)
         local character = game.Players.LocalPlayer.Character
         if character then
-            character.Humanoid.Scale.Value = tonumber(value) or 1
+            character.Humanoid.BodyScale.Value = tonumber(value) or 1
         end
     end
 })
