@@ -50,17 +50,22 @@ MainTab:AddDropdown("Game Time", {
     end
 })
 
-MainTab:AddButton("Run All Codes", function()
-    local codes = {
-        "Speedy50", "Epicreward500", "Launch250", "Musclestorm50",
-        "Spacegems50", "Superpunch100", "Frostgems10", "Galaxycrystal50",
-        "Skyagility50", "Supermuscle100", "Millionwarriors", "frostgems10",
-        "epicreward500", "galaxycrystal50", "launch250", "spacegems50"
-    }
-    for _, code in ipairs(codes) do
-        game:GetService("ReplicatedStorage").rEvents.codeRemote:InvokeServer(code)
+MainTab:AddToggle("Run All Codes", {
+    Default = false,
+    Callback = function(state)
+        if state then
+            local codes = {
+                "Speedy50", "Epicreward500", "Launch250", "Musclestorm50",
+                "Spacegems50", "Superpunch100", "Frostgems10", "Galaxycrystal50",
+                "Skyagility50", "Supermuscle100", "Millionwarriors", "frostgems10",
+                "epicreward500", "galaxycrystal50", "launch250", "spacegems50"
+            }
+            for _, code in ipairs(codes) do
+                game:GetService("ReplicatedStorage").rEvents.codeRemote:InvokeServer(code)
+            end
+        end
     end
-end)
+})
 
 MainTab:AddToggle("Trade All Players", {
     Default = false,
