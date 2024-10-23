@@ -3,8 +3,8 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "DUCKS PRIVATE GUI" .. Fluent.Version,
-    SubTitle = "by Masterboy123",
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
@@ -18,13 +18,15 @@ local Tabs = {
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
+local Options = Fluent.Options
+
 -- Add elements to the Main tab
-Tabs.Main:AddButton("Start", function()
+Tabs.Main:AddButton("Start Game", function()
     print("Game Started!")
 end)
 
 -- Add elements to the Settings tab
-Tabs.Settings:AddSlider("Volume", 0, 100, 50, function(value)
+Tabs.Settings:AddSlider("Adjust Volume", 0, 100, 50, function(value)
     print("Volume set to: " .. value)
 end)
 
