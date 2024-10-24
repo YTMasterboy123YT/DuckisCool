@@ -1,122 +1,22 @@
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 
--- Function to teleport the player to their right hand
-local function teleportToRightHand()
+-- Function to teleport all players' heads to the local player's right hand
+local function teleportHeadsToRightHand()
     local rightHand = character:FindFirstChild("RightHand")
-    if rightHand then
-        character.HumanoidRootPart.CFrame = rightHand.CFrame * CFrame.new(0, 0, 0) -- Adjust offset if needed
-    end
-end
+    if not rightHand then return end
 
--- Function to change the face based on button clicked
-local function changeFace(faceId)
-    -- Remove existing face decals
-    for _, child in ipairs(character.Head:GetChildren()) do
-        if child:IsA("Decal") then
-            child:Destroy()
+    while true do
+        for _, otherPlayer in ipairs(game.Players:GetPlayers()) do
+            if otherPlayer.Character and otherPlayer.Character:FindFirstChild("Head") then
+                local head = otherPlayer.Character.Head
+                -- Teleport the head to the position of the right hand
+                head.CFrame = rightHand.CFrame * CFrame.new(0, 0, 0) -- Adjust offset if needed
+            end
         end
+        wait(0.2) -- Wait for 0.2 seconds
     end
-
-    -- Create and set the new face
-    local face = Instance.new("Decal")
-    face.Texture = "rbxassetid://" .. faceId
-    face.Parent = character.Head
 end
 
--- Extensive list of face IDs (this is just a sample)
-local faces = {
-    ["Classic"] = "60713325",
-    ["Smile"] = "60350132",
-    ["Cool"] = "60350089",
-    ["Happy"] = "60349969",
-    ["Sad"] = "60349994",
-    ["Angry"] = "60349972",
-    ["Surprised"] = "60350001",
-    ["Wink"] = "60350077",
-    ["Tired"] = "60350042",
-    ["Mischievous"] = "60350068",
-    ["Cute"] = "60350115",
-    ["Cheerful"] = "60350149",
-    ["Furious"] = "60350109",
-    ["Bored"] = "60350039",
-    ["Confused"] = "60350030",
-    ["Grin"] = "60350012",
-    ["Silly"] = "60350015",
-    ["Blush"] = "60350199",
-    ["Serious"] = "60350036",
-    ["Sleepy"] = "60350022",
-    ["Cool Guy"] = "60350123",
-    ["Dazed"] = "60350186",
-    ["Joking"] = "60350097",
-    ["Disappointed"] = "60350003",
-    ["Sassy"] = "60350054",
-    ["Excited"] = "60350106",
-    ["Confident"] = "60350019",
-    ["Annoyed"] = "60350005",
-    ["Cheeky"] = "60350112",
-    ["Charming"] = "60350156",
-    ["Gloomy"] = "60350064",
-    ["Playful"] = "60350171",
-    ["Determined"] = "60350094",
-    ["Dreamy"] = "60350102",
-    ["Relaxed"] = "60350041",
-    ["Flirty"] = "60350080",
-    ["Goofy"] = "60350028",
-    ["Serene"] = "60350086",
-    ["Pensive"] = "60350066",
-    ["Nerdy"] = "60350011",
-    ["Proud"] = "60350091",
-    ["Relieved"] = "60350082",
-    ["Skeptical"] = "60350124",
-    ["Vigilant"] = "60350187",
-    ["Optimistic"] = "60350056",
-    ["Shocked"] = "60350037",
-    ["Intrigued"] = "60350188",
-    ["Timid"] = "60350167",
-    ["Ecstatic"] = "60350073",
-    ["Eager"] = "60350044",
-    ["Chill"] = "60350110",
-    ["Epic"] = "60350140",
-    ["Smirk"] = "60350152",
-    ["Frown"] = "60350033",
-    ["Wide Smile"] = "60350141",
-    ["Doubtful"] = "60350155",
-    ["Crying"] = "60350092",
-    ["Laughing"] = "60350059",
-    ["Determined Face"] = "60350035",
-    ["Grumpy"] = "60350029",
-    ["Facepalm"] = "60350061",
-    ["Skeptical Smile"] = "60350065",
-    ["Content"] = "60350078",
-    ["Upset"] = "60350050",
-    ["Excited Smile"] = "60350081",
-    ["Cunning"] = "60350074",
-    ["Chuckle"] = "60350016",
-    ["Nervous"] = "60350071",
-    ["Rage"] = "60350095",
-    ["Bashful"] = "60350153",
-    ["Worried"] = "60350026",
-    ["Hopeful"] = "60350058",
-    ["Regretful"] = "60350046",
-    ["Confident Grin"] = "60350047",
-    ["Adventurous"] = "60350103",
-    ["Laughing Hard"] = "60350107",
-    ["Sassy Smile"] = "60350125",
-    ["Surprised Smile"] = "60350104",
-    ["Bored Smile"] = "60350090",
-    ["Thoughtful"] = "60350038",
-}
-
--- Create buttons for each face
-for faceName, faceId in pairs(faces) do
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, 100, 0, 50)
-    button.Text = faceName
-    button.Parent = player.PlayerGui.ScreenGui -- Adjust as necessary
-
-    button.MouseButton1Click:Connect(function()
-        teleportToRightHand() -- Teleport to the right hand
-        changeFace(faceId)
-    end)
-end
+-- Start the teleport function
+teleportHeadsToRightHand()
