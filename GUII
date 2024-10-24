@@ -1,46 +1,198 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
--- Services
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSizeSpeedRemote
-
--- Create the GUI Window
-local Window = Rayfield:CreateWindow({
-    Name = "Ducks Private Script",
-    LoadingTitle = "Ducks Private Suite",
-    LoadingSubtitle = "by Masterboy123",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = nil,
-        FileName = "Big Hub"
-    },
-    Discord = {
-        Enabled = false,
-        Invite = "noinvitelink",
-        RememberJoins = true
-    },
-    KeySystem = false,
-    KeySettings = {
-        Title = "Untitled",
-        Subtitle = "Key System",
-        Note = "No method of obtaining the key is provided",
-        FileName = "Key",
-        SaveKey = true,
-        GrabKeyFromSite = false,
-        Key = {"Hello"}
-    }
+local Window = Fluent:CreateWindow({
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
 })
 
--- Create Tabs
-local MainTab = Window:CreateTab("Main", 5100889067)
-local KillerTab = Window:CreateTab("Killer", 17196036155)
-local HitSpeedTab = Window:CreateTab("HitSpeed", 4483346003)
-local AutoFarmTab = Window:CreateTab("Auto Farm", 4335476335)
-local MiscTab = Window:CreateTab("Misc", 4483362458)
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Utilities = Window:AddTab({ Title = "Utilities", Icon = "tools" }),
+    PlayerSettings = Window:AddTab({ Title = "Player Settings", Icon = "user" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
 
--- Function to set NoClip for a character
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+
+-- Auto Hit (Any Tool)
+local autoHitActive = false
+local function autoHit()
+    while autoHitActive do
+        local equippedTool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+        if equippedTool and equippedTool.Enabled then
+            equippedTool:Activate()
+        end
+        wait(0.1)
+    end
+end
+
+Tabs.Main:AddToggle("AutoHitToggle", {
+    Title = "Enable Auto Hit",
+    Default = false,
+    Callback = function(value)
+        autoHitActive = value
+        if value then
+            autoHit()
+        end
+    end
+})
+
+-- Auto Kill
+Tabs.Main:AddButton({
+    Title = "Auto Kill",
+    Callback = function()
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                -- Your auto kill logic here (e.g., invoke a remote event)
+            end
+        end
+    end
+})
+
+-- Edit Hit Speed
+Tabs.PlayerSettings:AddSlider("HitSpeedSlider", {
+    Title = "Set Hit Speed",
+    Min = 0.1,
+    Max = 5,
+    Default = 1,
+    Callback = function(value)
+        -- Implement hit speed adjustment logic here
+    end
+})
+
+-- No Kill
+_G.noKillList = {}
+local function addToNoKillList(displayName)
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.DisplayName:lower() == displayName:lower() then
+            _G.noKillList[player.Name] = true
+            makePlayerVisible(player)
+            break
+        end
+    end
+end
+
+local function makePlayerVisible(player)
+    local character = player.Character
+    if character then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 0
+            elseif part:IsA("BillboardGui") then
+                part.Enabled = true
+            end
+        end
+    end
+end
+
+Tabs.Main:AddInput("NoKillInput", {
+    Title = "Add to No-Kill List",
+    Placeholder = "Enter Display Name",
+    Callback = function(value)
+        addToNoKillList(value)
+    end
+})
+
+-- Anti AFK
+local function antiAFK()
+    while true do
+        LocalPlayer.Idled:Wait()
+        LocalPlayer:Move(Vector3.new(0, 0, 0))
+        wait(1)
+    end
+end
+
+Tabs.Utilities:AddButton({
+    Title = "Enable Anti-AFK",
+    Callback = function()
+        antiAFK()
+    end
+})
+
+-- Chat Spy
+local function onPlayerChatted(player, message)
+    print(player.Name .. ": " .. message)
+end
+
+for _, player in pairs(Players:GetPlayers()) do
+    player.Chatted:Connect(function(message)
+        onPlayerChatted(player, message)
+    end)
+end
+
+Players.PlayerAdded:Connect(function(player)
+    player.Chatted:Connect(function(message)
+        onPlayerChatted(player, message)
+    end)
+end)
+
+-- FPS Boost
+Tabs.Utilities:AddButton({
+    Title = "Enable FPS Boost",
+    Callback = function()
+        -- Implement FPS boost logic (e.g., adjust settings)
+    end
+})
+
+-- Gravity Changer
+local function changeGravity(value)
+    game.Workspace.Gravity = value
+end
+
+Tabs.Utilities:AddSlider("GravitySlider", {
+    Title = "Set Gravity",
+    Min = 0,
+    Max = 196.2, -- Default Roblox gravity
+    Default = 196.2,
+    Callback = function(value)
+        changeGravity(value)
+    end
+})
+
+-- Infinite Jump
+local function enableInfiniteJump()
+    UserInputService.JumpRequest:Connect(function()
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+    end)
+end
+
+Tabs.PlayerSettings:AddToggle("InfiniteJumpToggle", {
+    Title = "Enable Infinite Jump",
+    Default = false,
+    Callback = function(value)
+        if value then
+            enableInfiniteJump()
+        end
+    end
+})
+
+-- Lock Position
+local function lockPosition(value)
+    if value then
+        LocalPlayer.Character.HumanoidRootPart.Anchored = true
+    else
+        LocalPlayer.Character.HumanoidRootPart.Anchored = false
+    end
+end
+
+Tabs.Utilities:AddToggle("LockPositionToggle", {
+    Title = "Lock Position",
+    Default = false,
+    Callback = function(value)
+        lockPosition(value)
+    end
+})
+
+-- No Clip
 local function setNoClip(character, value)
     for _, part in ipairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
@@ -49,93 +201,71 @@ local function setNoClip(character, value)
     end
 end
 
--- Toggle for NoClip in Main Tab
-local NoClipToggle = MainTab:CreateToggle({
-    Name = "NoClip",
-    CurrentValue = false,
-    Flag = "ToggleNoClip",
-    Callback = function(Value)
-        local character = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
-        setNoClip(character, Value)
-        if Value then
-            print("NoClip enabled.")
-        else
-            print("NoClip disabled.")
-            setNoClip(character, false)
+Tabs.Main:AddToggle("NoClipToggle", {
+    Title = "Enable No-Clip",
+    Default = false,
+    Callback = function(value)
+        if LocalPlayer.Character then
+            setNoClip(LocalPlayer.Character, value)
         end
-    end,
+    end
 })
 
--- Function to enable Infinite Jump
-local function enableInfiniteJump()
-    local player = Players.LocalPlayer
-    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        UserInputService.JumpRequest:Connect(function()
-            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-        end)
+-- Set Size
+local function setCharacterSize(size)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.BodyScale.Value = size
     end
 end
 
--- Toggle for Infinite Jump in Main Tab
-local InfiniteJumpToggle = MainTab:CreateToggle({
-    Name = "Infinite Jump",
-    CurrentValue = false,
-    Flag = "ToggleInfiniteJump",
-    Callback = function(Value)
-        if Value then
-            print("Infinite Jump enabled.")
-            enableInfiniteJump()
-        else
-            print("Infinite Jump disabled.")
-            -- You may want to disconnect the jump connection here if necessary
-        end
-    end,
+Tabs.PlayerSettings:AddSlider("SizeSlider", {
+    Title = "Set Size",
+    Min = 1,
+    Max = 5,
+    Default = 1,
+    Callback = function(value)
+        setCharacterSize(value)
+    end
 })
 
--- Speed Changer Input in Main Tab
-local SpeedChangerInput = MainTab:CreateInput({
-    Name = "SpeedChanger",
-    PlaceholderText = "Input Speed Value",
-    RemoveTextAfterFocusLost = true,
-    Callback = function(Text)
-        local speedValue = tonumber(Text)  -- Convert the input text to a number
-        if speedValue then
-            print("Speed changed to: " .. speedValue)
-            changeSizeSpeedRemote:InvokeServer("changeSpeed", speedValue)
-        else
-            print("Please enter a valid number for speed.")
+-- Set Speed
+Tabs.PlayerSettings:AddSlider("SpeedSlider", {
+    Title = "Set Walk Speed",
+    Min = 16,
+    Max = 200,
+    Default = 16,
+    Callback = function(value)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = value
         end
-    end,
+    end
 })
 
--- Size Changer Input in Main Tab
-local SizeChangerInput = MainTab:CreateInput({
-    Name = "SizeChanger",
-    PlaceholderText = "Input Size Value",
-    RemoveTextAfterFocusLost = true,
-    Callback = function(Text)
-        local sizeValue = tonumber(Text)  -- Convert the input text to a number
-        if sizeValue then
-            print("Size changed to: " .. sizeValue)
-            changeSizeSpeedRemote:InvokeServer("changeSize", sizeValue)
-        else
-            print("Please enter a valid number for size.")
-        end
-    end,
+-- Set Time
+local function setGameTime(timeOfDay)
+    if timeOfDay == "Morning" then
+        game.Lighting.ClockTime = 6
+    elseif timeOfDay == "Afternoon" then
+        game.Lighting.ClockTime = 16
+    elseif timeOfDay == "Night" then
+        game.Lighting.ClockTime = 0
+    else
+        print("Invalid time of day.")
+    end
+end
+
+Tabs.Utilities:AddDropdown("TimeDropdown", {
+    Title = "Set Game Time",
+    Values = {"Morning", "Afternoon", "Night"},
+    Callback = function(value)
+        setGameTime(value)
+    end
 })
 
--- Additional tabs can have their own specific functionalities
--- Placeholder for Killer Tab
-KillerTab:CreateLabel("Killer functionalities go here.")
+Fluent:Notify({
+    Title = "Fluent",
+    Content = "The script has been loaded.",
+    Duration = 8
+})
 
--- Placeholder for HitSpeed Tab
-HitSpeedTab:CreateLabel("HitSpeed functionalities go here.")
-
--- Placeholder for Auto Farm Tab
-AutoFarmTab:CreateLabel("Auto Farm functionalities go here.")
-
--- Placeholder for Misc Tab
-MiscTab:CreateLabel("Misc functionalities go here.")
-
--- You can continue to add more features to each tab as needed
+Window:SelectTab(1)
