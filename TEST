@@ -1,17 +1,32 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local backpack = LocalPlayer:WaitForChild("Backpack")
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 _G.noKillList = {}
+local isAutoHitEnabled = false
+local isInfiniteJumpEnabled = false
 
-local function addToNoKillList(displayNames)
-    for _, displayName in pairs(displayNames) do
-        for _, player in pairs(Players:GetPlayers()) do
-            if player.DisplayName:lower() == displayName:lower() then
-                _G.noKillList[player.Name] = true
-                makePlayerVisible(player)
-                break
-            end
+local function addToNoKillList(displayName)
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.DisplayName:lower() == displayName:lower() then
+            _G.noKillList[player.Name] = true
+            makePlayerVisible(player)
+            break
         end
     end
 end
@@ -32,7 +47,7 @@ end
 LocalPlayer.Chatted:Connect(function(message)
     if message:sub(1, 7):lower() == ";nokill" then
         local displayName = message:sub(9):trim()
-        addToNoKillList({displayName})
+        addToNoKillList(displayName)
     end
 end)
 
@@ -44,43 +59,143 @@ Players.PlayerAdded:Connect(function(player)
     end)
 end)
 
--- Create the GUI Window
-local Window = Fluent:CreateWindow({
-    Title = "Fluent " .. Fluent.Version,
-    SubTitle = "by dawid",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
+-- Main GUI Tabs
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
+    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" })
+}
+
+-- Main Tab
+local MainTab = Tabs.Main
+
+MainTab:AddInput("SpeedInput", {
+    Title = "Change Speed",
+    Placeholder = "Enter speed value",
+    Numeric = true,
+    Callback = function(value)
+        local speedValue = tonumber(value)
+        if speedValue then
+            LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
+        end
+    end
 })
 
--- Prepare the player names for the dropdown
-local playerNames = {}
-for _, player in pairs(Players:GetPlayers()) do
-    table.insert(playerNames, player.DisplayName)
-end
-
--- Dropdown for the No Kill List
-local Dropdown = Window:AddDropdown("NoKillListDropdown", {
-    Title = "Select Players to Add to No Kill List",
-    Values = playerNames,
-    Multi = true,  -- Enable multi-selection
-    Callback = function(selectedNames)
-        addToNoKillList(selectedNames)
-    end,
+MainTab:AddInput("SizeInput", {
+    Title = "Change Size",
+    Placeholder = "Enter size value",
+    Numeric = true,
+    Callback = function(value)
+        local sizeValue = tonumber(value)
+        if sizeValue then
+            character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
+        end
+    end
 })
 
--- Refresh the dropdown values whenever a player joins
-Players.PlayerAdded:Connect(function(player)
-    table.insert(playerNames, player.DisplayName)
-    Dropdown:UpdateValues(playerNames)
+MainTab:AddInput("JumpPowerInput", {
+    Title = "Change Jump Power",
+    Placeholder = "Enter jump power value",
+    Numeric = true,
+    Callback = function(value)
+        for _, player in ipairs(Players:GetPlayers()) do
+            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.JumpPower = tonumber(value)
+            end
+        end
+    end
+})
+
+-- Infinite Jump Toggle
+local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
+    Title = "Enable Infinite Jump",
+    Default = false,
+})
+
+infiniteJumpToggle:OnChanged(function()
+    isInfiniteJumpEnabled = infiniteJumpToggle.Value
+    if isInfiniteJumpEnabled then
+        -- Infinite jump logic here if needed
+    end
 end)
+
+-- Killer Tab
+local KillerTab = Tabs.Killer
+
+-- Auto Hit Toggle
+local autoHitToggle = KillerTab:AddToggle("AutoHitToggle", {
+    Title = "Enable Auto Hit",
+    Default = false,
+})
+
+autoHitToggle:OnChanged(function()
+    isAutoHitEnabled = autoHitToggle.Value
+    if isAutoHitEnabled then
+        -- Auto hit logic here if needed
+    end
+end)
+
+-- Input for No Kill List
+KillerTab:AddInput("NoKillInput", {
+    Title = "Add to No Kill List",
+    Placeholder = "Enter player's display name",
+    Callback = function(displayName)
+        addToNoKillList(displayName)
+    end
+})
+
+-- Misc Tab
+local MiscTab = Tabs.Misc
+
+-- Game Time Dropdown
+MiscTab:AddDropdown("GameTimeDropdown", {
+    Title = "Set Game Time",
+    Values = {"Morning", "Afternoon", "Night"},
+    Default = 1,
+    Callback = function(value)
+        if value == "Morning" then
+            game.Lighting.ClockTime = 6
+        elseif value == "Afternoon" then
+            game.Lighting.ClockTime = 16
+        elseif value == "Night" then
+            game.Lighting.ClockTime = 0
+        end
+    end
+})
+
+-- Anti AFK Toggle
+local antiAFKToggle = MiscTab:AddToggle("AntiAFKToggle", {
+    Title = "Enable Anti-AFK",
+    Default = false,
+})
+
+antiAFKToggle:OnChanged(function()
+    local player = Players.LocalPlayer
+    while antiAFKToggle.Value do
+        player.Idled:Wait()
+        player:Move(Vector3.new(0, 0, 0))
+        wait(1)
+    end
+end)
+
+-- SaveManager and InterfaceManager Setup
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+InterfaceManager:BuildInterfaceSection(MiscTab)
+SaveManager:BuildConfigSection(MiscTab)
 
 Window:SelectTab(1)
 
 Fluent:Notify({
-    Title = "Admin Panel",
-    Content = "The admin panel has been loaded.",
-    Duration = 5
+    Title = "Fluent",
+    Content = "The script has been loaded.",
+    Duration = 8
 })
+
+SaveManager:LoadAutoloadConfig()
