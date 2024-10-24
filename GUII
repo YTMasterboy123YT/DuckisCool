@@ -12,59 +12,40 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
-local UserInputService = game:GetService("UserInputService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+local character = player.Character or player.CharacterAdded:Wait()
+
+local tools = {
+    {name = "Punch", type = "attackTime"},
+    {name = "Ground Slam", type = "attackTime"},
+    {name = "Stomp", type = "attackTime"},
+    {name = "Handstands", type = "repTime"},
+    {name = "Pushups", type = "repTime"},
+    {name = "Weight", type = "repTime"},
+    {name = "Situps", type = "repTime"}
+}
 
 -- Functions
-local function setGameTime(timeOfDay)
-    if timeOfDay == "Morning" then
-        game.Lighting.ClockTime = 6
-    elseif timeOfDay == "Afternoon" then
-        game.Lighting.ClockTime = 16
-    elseif timeOfDay == "Night" then
-        game.Lighting.ClockTime = 0
-    else
-        print("Invalid time of day.")
-    end
-end
-
-local function changeJumpPower(jumpPowerValue)
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid.JumpPower = jumpPowerValue
+local function setToolProperties()
+    for _, toolInfo in pairs(tools) do
+        local tool = backpack:FindFirstChild(toolInfo.name)
+        if tool then
+            local cooldown = tool:FindFirstChild(toolInfo.type)
+            if cooldown and cooldown:IsA("NumberValue") then
+                cooldown.Value = 0.1
+            end
         end
     end
 end
 
-local function enableInfiniteJump()
-    local player = game.Players.LocalPlayer
-    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-    
-    if humanoid then
-        UserInputService.JumpRequest:Connect(function()
-            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-        end)
-    end
-end
-
-local function setNoClip(enabled)
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    for _, part in pairs(character:GetChildren()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = not enabled
+local function autoHit()
+    while autoHitToggle.Value do
+        local equippedTool = character:FindFirstChildOfClass("Tool")
+        if equippedTool and equippedTool.Enabled then
+            equippedTool:Activate()
         end
-    end
-end
-
-local function antiAFK()
-    local player = game.Players.LocalPlayer
-    while true do
-        player.Idled:Wait()
-        player:Move(Vector3.new(0, 0, 0))
-        wait(1)
+        wait(0.1)
     end
 end
 
@@ -88,7 +69,6 @@ MainTab:AddInput("SpeedInput", {
         local speedValue = tonumber(value)
         if speedValue then
             game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
-            changeSizeSpeedRemote:InvokeServer("changeSpeed", speedValue)
         end
     end
 })
@@ -104,7 +84,6 @@ MainTab:AddInput("SizeInput", {
             local character = game.Players.LocalPlayer.Character
             if character then
                 character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
-                changeSizeSpeedRemote:InvokeServer("changeSize", sizeValue)
             end
         end
     end
@@ -116,48 +95,17 @@ MainTab:AddInput("JumpPowerInput", {
     Placeholder = "Enter jump power value",
     Numeric = true,
     Callback = function(value)
-        changeJumpPower(tonumber(value))
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.JumpPower = tonumber(value)
+            end
+        end
     end
 })
-
--- Infinite Jump Toggle
-local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
-    Title = "Enable Infinite Jump",
-    Default = false,
-})
-
-infiniteJumpToggle:OnChanged(function()
-    if infiniteJumpToggle.Value then
-        enableInfiniteJump()
-    end
-end)
-
--- NoClip Toggle
-local noClipToggle = MainTab:AddToggle("NoClipToggle", {
-    Title = "Enable NoClip",
-    Default = false,
-})
-
-noClipToggle:OnChanged(function()
-    setNoClip(noClipToggle.Value)
-end)
 
 -- Killer Tab
 local KillerTab = Tabs.Killer
-
--- Auto Hit Functionality
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-
-local function autoHit()
-    while autoHitToggle.Value do
-        local punchTool = character:FindFirstChild("Punch")
-        if punchTool and punchTool.Enabled then
-            punchTool:Activate()
-        end
-        wait(0.1)
-    end
-end
 
 -- Auto Hit Toggle
 local autoHitToggle = KillerTab:AddToggle("AutoHitToggle", {
@@ -171,8 +119,13 @@ autoHitToggle:OnChanged(function()
     end
 end)
 
+-- Set Tool Properties
+setToolProperties()
+
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
+    backpack = player:WaitForChild("Backpack")
+    setToolProperties()
     if autoHitToggle.Value then
         autoHit()
     end
@@ -199,7 +152,13 @@ MiscTab:AddDropdown("GameTimeDropdown", {
     Values = {"Morning", "Afternoon", "Night"},
     Default = 1,
     Callback = function(value)
-        setGameTime(value)
+        if value == "Morning" then
+            game.Lighting.ClockTime = 6
+        elseif value == "Afternoon" then
+            game.Lighting.ClockTime = 16
+        elseif value == "Night" then
+            game.Lighting.ClockTime = 0
+        end
     end
 })
 
@@ -210,8 +169,11 @@ local antiAFKToggle = MiscTab:AddToggle("AntiAFKToggle", {
 })
 
 antiAFKToggle:OnChanged(function()
-    if antiAFKToggle.Value then
-        antiAFK()
+    local player = game.Players.LocalPlayer
+    while antiAFKToggle.Value do
+        player.Idled:Wait()
+        player:Move(Vector3.new(0, 0, 0))
+        wait(1)
     end
 end)
 
