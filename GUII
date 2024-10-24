@@ -28,6 +28,9 @@ local tools = {
 
 local isAutoHitEnabled = false
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+
 local function setToolProperties()
     for _, toolInfo in pairs(tools) do
         local tool = backpack:FindFirstChild(toolInfo.name)
@@ -84,6 +87,8 @@ MainTab:AddInput("SizeInput", {
         if sizeValue then
             local character = game.Players.LocalPlayer.Character
             if character then
+                -- Update the HumanoidRootPart size
+                changeSizeRemote:InvokeServer("changeSize", sizeValue)
                 character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
             end
         end
