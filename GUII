@@ -16,56 +16,55 @@ local player = game.Players.LocalPlayer
 local backpack = player:WaitForChild("Backpack")
 local character = player.Character or player.CharacterAdded:Wait()
 
-local tools = {
-    {name = "Punch", type = "attackTime"},
-    {name = "Ground Slam", type = "attackTime"},
-    {name = "Stomp", type = "attackTime"},
-    {name = "Handstands", type = "repTime"},
-    {name = "Pushups", type = "repTime"},
-    {name = "Weight", type = "repTime"},
-    {name = "Situps", type = "repTime"}
-}
+-- Auto Hit, Teleport, Invisibility
+_G.autoHitActive = false
+_G.teleportPlayersActive = false
+_G.invisibilityActive = false
 
-local isAutoHitEnabled = false
-local isInfiniteJumpEnabled = false
+local function autoHit()
+    while _G.autoHitActive do
+        player.muscleEvent:FireServer("punch", "leftHand")
+        player.muscleEvent:FireServer("punch", "rightHand")
+        wait(0.1)
+    end
+end
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-
-local function setToolProperties()
-    for _, toolInfo in pairs(tools) do
-        local tool = backpack:FindFirstChild(toolInfo.name)
-        if tool then
-            local cooldown = tool:FindFirstChild(toolInfo.type) 
-            if cooldown and cooldown:IsA("NumberValue") then
-                cooldown.Value = 0.1
+local function teleportPlayers()
+    while _G.teleportPlayersActive do
+        wait(0.1)
+        for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+            if otherPlayer ~= player then
+                local targetCharacter = otherPlayer.Character
+                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                    targetCharacter:SetPrimaryPartCFrame(character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
+                end
             end
         end
     end
 end
 
-local function autoHit()
-    while isAutoHitEnabled do
-        local equippedTool = character:FindFirstChildOfClass("Tool")
-        if equippedTool and equippedTool.Enabled then
-            equippedTool:Activate()
+local function makePlayersInvisible()
+    while _G.invisibilityActive do
+        for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+            if otherPlayer ~= player then
+                local targetCharacter = otherPlayer.Character
+                if targetCharacter then
+                    for _, part in pairs(targetCharacter:GetChildren()) do
+                        if part:IsA("BasePart") then
+                            part.Transparency = 1
+                        elseif part:IsA("Accessory") then
+                            part.Handle.Transparency = 1
+                        end
+                    end
+                    for _, descendant in pairs(targetCharacter:GetDescendants()) do
+                        if descendant:IsA("BillboardGui") then
+                            descendant.Enabled = false
+                        end
+                    end
+                end
+            end
         end
         wait(0.1)
-    end
-end
-
--- Enable Infinite Jump
-local function enableInfiniteJump()
-    local UserInputService = game:GetService("UserInputService")
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            UserInputService.JumpRequest:Connect(function()
-                if isInfiniteJumpEnabled then
-                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-            end)
-        end
     end
 end
 
@@ -74,7 +73,8 @@ local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
-    Misc = Window:AddTab({ Title = "Misc", Icon = "" })
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
+    CombinedActions = Window:AddTab({ Title = "Combined Actions", Icon = "" })
 }
 
 -- Main Tab
@@ -88,7 +88,7 @@ MainTab:AddInput("SpeedInput", {
     Callback = function(value)
         local speedValue = tonumber(value)
         if speedValue then
-            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
+            character.Humanoid.WalkSpeed = speedValue
         end
     end
 })
@@ -101,7 +101,6 @@ MainTab:AddInput("SizeInput", {
     Callback = function(value)
         local sizeValue = tonumber(value)
         if sizeValue then
-            changeSizeRemote:InvokeServer("changeSize", sizeValue)
             character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
         end
     end
@@ -113,8 +112,8 @@ MainTab:AddInput("JumpPowerInput", {
     Placeholder = "Enter jump power value",
     Numeric = true,
     Callback = function(value)
-        for _, player in ipairs(game.Players:GetPlayers()) do
-            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        for _, p in ipairs(game.Players:GetPlayers()) do
+            local humanoid = p.Character and p.Character:FindFirstChildOfClass("Humanoid")
             if humanoid then
                 humanoid.JumpPower = tonumber(value)
             end
@@ -129,35 +128,50 @@ local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
 })
 
 infiniteJumpToggle:OnChanged(function()
-    isInfiniteJumpEnabled = infiniteJumpToggle.Value
-    if isInfiniteJumpEnabled then
-        enableInfiniteJump()  -- Enable infinite jump when the toggle is on
+    if infiniteJumpToggle.Value then
+        local UserInputService = game:GetService("UserInputService")
+        UserInputService.JumpRequest:Connect(function()
+            character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+        end)
     end
+end)
+
+-- NoClip Toggle
+local noClipToggle = MainTab:AddToggle("NoClipToggle", {
+    Title = "Enable NoClip",
+    Default = false,
+})
+
+noClipToggle:OnChanged(function()
+    local function setNoClip(enabled)
+        for _, part in pairs(character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = not enabled
+            end
+        end
+    end
+    setNoClip(noClipToggle.Value)
 end)
 
 -- Killer Tab
 local KillerTab = Tabs.Killer
 
--- Auto Hit Toggle
-local autoHitToggle = KillerTab:AddToggle("AutoHitToggle", {
-    Title = "Enable Auto Hit",
+-- Combined Actions Toggle
+local combinedActionToggle = Tabs.CombinedActions:AddToggle("CombinedActionToggle", {
+    Title = "Enable Combined Actions",
     Default = false,
 })
 
-autoHitToggle:OnChanged(function()
-    isAutoHitEnabled = autoHitToggle.Value
-    if isAutoHitEnabled then
-        autoHit()  -- Start auto-hitting when the toggle is enabled
+combinedActionToggle:OnChanged(function()
+    _G.autoHitActive = combinedActionToggle.Value
+    _G.teleportPlayersActive = combinedActionToggle.Value
+    _G.invisibilityActive = combinedActionToggle.Value
+    
+    if combinedActionToggle.Value then
+        spawn(autoHit)
+        spawn(teleportPlayers)
+        spawn(makePlayersInvisible)
     end
-end)
-
--- Set Tool Properties
-setToolProperties()
-
-player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    backpack = player:WaitForChild("Backpack")
-    setToolProperties()
 end)
 
 -- Misc Tab
@@ -194,7 +208,7 @@ antiAFKToggle:OnChanged(function()
     end
 end)
 
--- SaveManager and InterfaceManager Setup
+-- Add any additional setup for SaveManager and InterfaceManager here
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
 SaveManager:IgnoreThemeSettings()
