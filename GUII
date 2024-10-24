@@ -1,21 +1,25 @@
--- LocalScript
+local Players = game:GetService("Players")
 
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local rightHand = character:WaitForChild("RightHand")
+local function teleportAndHideArms()
+    local player = Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
 
-while true do
-    wait(1) -- Adjust the wait time as needed
-    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-        if otherPlayer ~= player then
-            local otherCharacter = otherPlayer.Character
-            if otherCharacter then
-                local otherHead = otherCharacter:FindFirstChild("Head")
-                if otherHead then
-                    -- Teleport the head to the right hand position
-                    otherHead.Position = rightHand.Position + Vector3.new(0, 0, 0) -- Adjust offset as needed
-                end
+    -- Teleport players
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Character and p ~= player then
+            local targetPosition = character.PrimaryPart.Position + (character.PrimaryPart.CFrame.LookVector * 5) -- Teleport 5 studs in front
+            p.Character:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+            
+            -- Hide arms
+            local leftArm = p.Character:FindFirstChild("Left Arm")
+            local rightArm = p.Character:FindFirstChild("Right Arm")
+            if leftArm and rightArm then
+                leftArm.Transparency = 1
+                rightArm.Transparency = 1
             end
         end
     end
 end
+
+-- Call the function
+teleportAndHideArms()
