@@ -1,113 +1,57 @@
+-- Load Fluent Library
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Create Screen GUI
+local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
+-- Create Main Window
 local Window = Fluent:CreateWindow({
-    Title = "Fluent " .. Fluent.Version,
-    SubTitle = "by dawid",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark"
-})
-
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
-    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
-    Misc = Window:AddTab({ Title = "Misc", Icon = "" })
+    Title = "Fluent GUI",
+    SubTitle = "by YourName",
+    Size = UDim2.fromOffset(600, 500),
 })
 
 -- Main Tab
-Tabs.Main:AddInput("SpeedInput", {
+local MainTab = Window:AddTab({ Title = "Main", Icon = "home" })
+MainTab:AddButton({
     Title = "Set Speed",
-    Default = "16",
-    Placeholder = "Enter Speed",
-    Callback = function(value)
-        local speedValue = tonumber(value)
-        if speedValue then
-            local ReplicatedStorage = game:GetService("ReplicatedStorage")
-            local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-            changeSizeSpeedSpeedRemote:InvokeServer("changeSpeed", speedValue)
-        end
+    Callback = function()
+        local changeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+        changeSpeedRemote:InvokeServer("changeSpeed", 200)
     end
 })
 
-Tabs.Main:AddInput("SizeInput", {
+MainTab:AddButton({
     Title = "Set Size",
-    Default = "1",
-    Placeholder = "Enter Size",
-    Callback = function(value)
-        local sizeValue = tonumber(value)
-        if sizeValue then
-            local ReplicatedStorage = game:GetService("ReplicatedStorage")
-            local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-            changeSizeRemote:InvokeServer("changeSize", sizeValue)
-        end
+    Callback = function()
+        local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+        changeSizeRemote:InvokeServer("changeSize", 2)
     end
 })
 
-Tabs.Main:AddInput("JumpInput", {
-    Title = "Set Jump Power",
-    Default = "50",
-    Placeholder = "Enter Jump Power",
-    Callback = function(value)
-        local jumpValue = tonumber(value)
-        if jumpValue then
-            local Players = game:GetService("Players")
-            for _, player in ipairs(Players:GetPlayers()) do
-                local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid.JumpPower = jumpValue
-                end
+-- Misc Tab
+local MiscTab = Window:AddTab({ Title = "Misc", Icon = "settings" })
+MiscTab:AddToggle({
+    Title = "Anti AFK",
+    Callback = function(state)
+        if state then
+            while true do
+                LocalPlayer.Idled:Wait()
+                LocalPlayer:Move(Vector3.new(0, 0, 0)) -- Prevent AFK
+                wait(1)
             end
         end
-    end
-})
-
-Tabs.Main:AddToggle("InfiniteJump", {
-    Title = "Enable Infinite Jump",
-    Default = false,
-    Callback = function(value)
-        local UserInputService = game:GetService("UserInputService")
-        if value then
-            UserInputService.JumpRequest:Connect(function()
-                local player = game.Players.LocalPlayer
-                local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-            end)
-        end
-    end
-})
-
-Tabs.Main:AddToggle("NoClip", {
-    Title = "Enable NoClip",
-    Default = false,
-    Callback = function(value)
-        local player = game.Players.LocalPlayer
-        local character = player.Character or player.CharacterAdded:Wait()
-
-        local function setNoClip(enabled)
-            for _, part in pairs(character:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = not enabled
-                end
-            end
-        end
-
-        setNoClip(value)
-        player.CharacterAdded:Connect(function(newCharacter)
-            character = newCharacter
-            setNoClip(value)
-        end)
     end
 })
 
 -- Killer Tab
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local KillerTab = Window:AddTab({ Title = "Killer", Icon = "skull" })
+local AutoHitToggle = KillerTab:AddToggle("Auto Hit", {
+    Default = false,
+})
 
 _G.autoHitActive = false
 
@@ -119,50 +63,19 @@ local function autoHit()
     end
 end
 
-Tabs.Killer:AddToggle("Activate Auto Hit", {
-    Title = "Enable Auto Hit",
-    Default = false,
-    Callback = function(value)
-        _G.autoHitActive = value
-        if value then
-            spawn(autoHit)
-        end
+AutoHitToggle:OnChanged(function(state)
+    _G.autoHitActive = state
+    if state then
+        spawn(autoHit)
     end
-})
+end)
 
--- Misc Tab
-Tabs.Misc:AddDropdown("GameTime", {
-    Title = "Select Game Time",
-    Values = {"Morning", "Afternoon", "Night"},
-    Default = 1,
-    Callback = function(value)
-        setGameTime(value)  -- Assuming setGameTime function is defined
-    end
-})
-
-Tabs.Misc:AddButton({
-    Title = "Anti AFK",
-    Callback = function()
-        antiAFK()  -- Assuming antiAFK function is defined
-    end
-})
-
--- Final setup
+-- Finalize GUI
 Window:SelectTab(1)
 
+-- Notify that the GUI has loaded
 Fluent:Notify({
-    Title = "Fluent",
-    Content = "The script has been loaded.",
-    Duration = 8
+    Title = "Fluent GUI",
+    Content = "GUI Loaded Successfully!",
+    Duration = 5
 })
-
--- SaveManager setup (if needed)
-SaveManager:SetLibrary(Fluent)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-InterfaceManager:SetFolder("FluentScriptHub")
-SaveManager:SetFolder("FluentScriptHub/specific-game")
-InterfaceManager:BuildInterfaceSection(Tabs.AutoFarm)
-SaveManager:BuildConfigSection(Tabs.AutoFarm)
-
-SaveManager:LoadAutoloadConfig()
