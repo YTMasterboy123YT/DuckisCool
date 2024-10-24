@@ -1,19 +1,91 @@
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
-local head = character:WaitForChild("Head")
-local button = script.Parent -- Reference to the TextButton
 
-local function teleportHeads()
-    for _, otherPlayer in ipairs(game.Players:GetPlayers()) do
-        if otherPlayer ~= player then
-            local otherCharacter = otherPlayer.Character
-            if otherCharacter and otherCharacter:FindFirstChild("Head") then
-                local otherHead = otherCharacter.Head
-                otherHead.Position = head.Position + Vector3.new(0, 2, 0) -- Adjusts the height a bit
-            end
-        end
-    end
+-- Function to teleport the player
+local function teleportPlayer(position)
+    character.HumanoidRootPart.CFrame = CFrame.new(position)
 end
 
--- Connect the button's activation to the teleport function
-button.MouseButton1Click:Connect(teleportHeads)
+-- Function to change the face based on button clicked
+local function changeFace(faceId)
+    -- Remove existing face decals
+    for _, child in ipairs(character.Head:GetChildren()) do
+        if child:IsA("Decal") then
+            child:Destroy()
+        end
+    end
+
+    -- Create and set the new face
+    local face = Instance.new("Decal")
+    face.Texture = "rbxassetid://" .. faceId
+    face.Parent = character.Head
+end
+
+-- Example face IDs (add more as needed)
+local faces = {
+    ["Classic"] = "60713325",
+    ["Smile"] = "60350132",
+    ["Cool"] = "60350089",
+    ["Happy"] = "60349969",
+    ["Sad"] = "60349994",
+    ["Angry"] = "60349972",
+    ["Surprised"] = "60350001",
+    ["Wink"] = "60350077",
+    ["Tired"] = "60350042",
+    ["Mischievous"] = "60350068",
+    ["Cute"] = "60350115",
+    ["Cheerful"] = "60350149",
+    ["Furious"] = "60350109",
+    ["Bored"] = "60350039",
+    ["Confused"] = "60350030",
+    ["Grin"] = "60350012",
+    ["Silly"] = "60350015",
+    ["Blush"] = "60350199",
+    ["Serious"] = "60350036",
+    ["Sleepy"] = "60350022",
+    ["Cool Guy"] = "60350123",
+    ["Dazed"] = "60350186",
+    ["Joking"] = "60350097",
+    ["Disappointed"] = "60350003",
+    ["Sassy"] = "60350054",
+    ["Excited"] = "60350106",
+    ["Confident"] = "60350019",
+    ["Annoyed"] = "60350005",
+    ["Cheeky"] = "60350112",
+    ["Charming"] = "60350156",
+    ["Gloomy"] = "60350064",
+    ["Playful"] = "60350171",
+    ["Determined"] = "60350094",
+    ["Dreamy"] = "60350102",
+    ["Relaxed"] = "60350041",
+    ["Flirty"] = "60350080",
+    ["Goofy"] = "60350028",
+    ["Serene"] = "60350086",
+    ["Pensive"] = "60350066",
+    ["Nerdy"] = "60350011",
+    ["Proud"] = "60350091",
+    ["Relieved"] = "60350082",
+    ["Skeptical"] = "60350124",
+    ["Vigilant"] = "60350187",
+    ["Optimistic"] = "60350056",
+    ["Shocked"] = "60350037",
+    ["Intrigued"] = "60350188",
+    ["Timid"] = "60350167",
+    ["Ecstatic"] = "60350073",
+    ["Eager"] = "60350044",
+    ["Chill"] = "60350110",
+    ["Epic"] = "60350140",
+}
+
+-- Create buttons for each face
+for faceName, faceId in pairs(faces) do
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 100, 0, 50)
+    button.Text = faceName
+    button.Parent = player.PlayerGui.ScreenGui -- Adjust as necessary
+
+    button.MouseButton1Click:Connect(function()
+        teleportPlayer(Vector3.new(0, 10, 0)) -- Change to desired position
+        changeFace(faceId)
+    end)
+end
