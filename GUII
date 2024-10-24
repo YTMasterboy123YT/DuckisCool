@@ -18,151 +18,155 @@ local Tabs = {
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" })
 }
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local Options = Fluent.Options
 
 -- Main Tab
 do
     -- Infinite Jump Toggle
-    local infiniteJumpToggle = Tabs.Main:AddToggle("InfiniteJump", { Title = "Infinite Jump", Default = false })
+    local infiniteJumpToggle = Tabs.Main:AddToggle("InfiniteJumpToggle", { Title = "Infinite Jump", Default = false })
     infiniteJumpToggle:OnChanged(function()
         if infiniteJumpToggle.Value then
-            UserInputService.JumpRequest:Connect(function()
-                LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end)
+            local Players = game:GetService("Players")
+            local UserInputService = game:GetService("UserInputService")
+            local function enableInfiniteJump()
+                for _, player in ipairs(Players:GetPlayers()) do
+                    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        UserInputService.JumpRequest:Connect(function()
+                            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                        end)
+                    end
+                end
+            end
+            enableInfiniteJump()
         end
     end)
 
-    -- Set Size IntValue Input
-    local sizeInput = Tabs.Main:AddInput("SetSize", {
+    -- Set Size Input
+    Tabs.Main:AddInput("SetSizeInput", {
         Title = "Set Size",
-        Description = "Enter the size value",
         Default = "2",
-        Placeholder = "Size",
+        Placeholder = "Enter size",
         Numeric = true,
         Finished = true,
         Callback = function(Value)
-            LocalPlayer.Character.Humanoid.Size = tonumber(Value)
+            local sizeValue = tonumber(Value)
+            if sizeValue then
+                local ReplicatedStorage = game:GetService("ReplicatedStorage")
+                local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+                changeSizeSpeedRemote:InvokeServer("changeSize", sizeValue)
+            end
         end
     })
 
-    -- Set Speed IntValue Input
-    local speedInput = Tabs.Main:AddInput("SetSpeed", {
+    -- Set Speed Input
+    Tabs.Main:AddInput("SetSpeedInput", {
         Title = "Set Speed",
-        Description = "Enter the speed value",
-        Default = "16",
-        Placeholder = "Speed",
+        Default = "200",
+        Placeholder = "Enter speed",
         Numeric = true,
         Finished = true,
         Callback = function(Value)
-            LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(Value)
+            local speedValue = tonumber(Value)
+            if speedValue then
+                local ReplicatedStorage = game:GetService("ReplicatedStorage")
+                local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+                changeSizeSpeedRemote:InvokeServer("changeSpeed", speedValue)
+            end
         end
     })
+
+    -- NoClip Toggle
+    local noClipToggle = Tabs.Main:AddToggle("NoClipToggle", { Title = "NoClip", Default = false })
+    noClipToggle:OnChanged(function()
+        local function setNoClip(character, value)
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = not value
+                end
+            end
+        end
+
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player.Character then
+                setNoClip(player.Character, noClipToggle.Value)
+            end
+        end
+    end)
 
     -- Change Game Time Dropdown
-    local gameTimeDropdown = Tabs.Main:AddDropdown("ChangeGameTime", {
+    local timeDropdown = Tabs.Main:AddDropdown("ChangeGameTimeDropdown", {
         Title = "Change Game Time",
         Values = {"Morning", "Afternoon", "Night"},
-        Multi = false,
-        Default = 1,
+        Default = 1
     })
-    gameTimeDropdown:OnChanged(function(Value)
-        if Value == "Morning" then
+    timeDropdown:OnChanged(function(Value)
+        local timeOfDay = Value
+        if timeOfDay == "Morning" then
             game.Lighting.ClockTime = 6
-        elseif Value == "Afternoon" then
+        elseif timeOfDay == "Afternoon" then
             game.Lighting.ClockTime = 16
-        elseif Value == "Night" then
+        elseif timeOfDay == "Night" then
             game.Lighting.ClockTime = 0
         end
     end)
 
-    -- Anti AFK
-    local antiAFK = Tabs.Main:AddToggle("AntiAFK", { Title = "Anti AFK", Default = false })
-    antiAFK:OnChanged(function()
-        if antiAFK.Value then
-            while antiAFK.Value do
-                LocalPlayer.Idled:Wait()
-                LocalPlayer:Move(Vector3.new(0, 0, 0))
+    -- Anti AFK Button
+    Tabs.Main:AddButton({
+        Title = "Anti AFK",
+        Description = "Enable anti AFK",
+        Callback = function()
+            local player = game.Players.LocalPlayer
+            while true do
+                player.Idled:Wait()
+                player:Move(Vector3.new(0, 0, 0))
                 wait(1)
             end
         end
-    end)
+    })
 
-    -- Player Chat Logging
-    Players.PlayerAdded:Connect(function(player)
-        player.Chatted:Connect(function(message)
-            print(player.Name .. ": " .. message)
-        end)
-    end)
+    -- Player Chat Logger Button
+    Tabs.Main:AddButton({
+        Title = "Player Chat Logger",
+        Description = "Log player chat messages",
+        Callback = function()
+            local Players = game:GetService("Players")
+
+            local function onPlayerChatted(player, message)
+                print(player.Name .. ": " .. message)
+            end
+
+            for _, player in pairs(Players:GetPlayers()) do
+                player.Chatted:Connect(function(message)
+                    onPlayerChatted(player, message)
+                end)
+            end
+
+            Players.PlayerAdded:Connect(function(player)
+                player.Chatted:Connect(function(message)
+                    onPlayerChatted(player, message)
+                end)
+            end)
+        end
+    })
 end
 
 -- Killer Tab
 do
-    -- Auto Hit
-    local autoHitToggle = Tabs.Killer:AddToggle("AutoHit", { Title = "Auto Hit", Default = false })
-    autoHitToggle:OnChanged(function()
-        while autoHitToggle.Value do
-            LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-            LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-            wait(0.1)
-        end
-    end)
-
-    -- Teleport Players
-    local teleportPlayersToggle = Tabs.Killer:AddToggle("TeleportPlayers", { Title = "Teleport Players", Default = false })
-    teleportPlayersToggle:OnChanged(function()
-        while teleportPlayersToggle.Value do
-            wait(0.1)
-            for _, otherPlayer in pairs(Players:GetPlayers()) do
-                if otherPlayer ~= LocalPlayer then
-                    local targetCharacter = otherPlayer.Character
-                    if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                        targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
-                    end
-                end
-            end
-        end
-    end)
-
-    -- Invisibility
-    local invisibilityToggle = Tabs.Killer:AddToggle("Invisibility", { Title = "Invisibility", Default = false })
-    invisibilityToggle:OnChanged(function()
-        while invisibilityToggle.Value do
-            for _, otherPlayer in pairs(Players:GetPlayers()) do
-                if otherPlayer ~= LocalPlayer then
-                    local targetCharacter = otherPlayer.Character
-                    if targetCharacter then
-                        for _, part in pairs(targetCharacter:GetChildren()) do
-                            if part:IsA("BasePart") then
-                                part.Transparency = 1
-                            elseif part:IsA("Accessory") then
-                                part.Handle.Transparency = 1
-                            end
-                        end
-                    end
-                end
-            end
-            wait(0.1)
-        end
-    end)
+    -- Add Killer-related features here
+    -- Example: Add toggle for auto hit or other killer features
 end
 
--- Auto Farm Tab
-do
-    -- Add your auto farm features here
-end
-
--- Hand the library over to our managers
+-- SaveManager and InterfaceManager setup
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
-
--- Build the interface and save manager
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
 InterfaceManager:SetFolder("FluentScriptHub")
 SaveManager:SetFolder("FluentScriptHub/specific-game")
-InterfaceManager:BuildInterfaceSection(Tabs.Main)
-SaveManager:BuildConfigSection(Tabs.Main)
+InterfaceManager:BuildInterfaceSection(Tabs.Killer)
+SaveManager:BuildConfigSection(Tabs.Killer)
 
--- Select the first tab
 Window:SelectTab(1)
 
 Fluent:Notify({
@@ -171,5 +175,4 @@ Fluent:Notify({
     Duration = 8
 })
 
--- Load any autoload config
 SaveManager:LoadAutoloadConfig()
