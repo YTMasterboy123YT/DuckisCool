@@ -27,6 +27,7 @@ local tools = {
 }
 
 local isAutoHitEnabled = false
+local isInfiniteJumpEnabled = false
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
@@ -50,6 +51,21 @@ local function autoHit()
             equippedTool:Activate()
         end
         wait(0.1)
+    end
+end
+
+-- Enable Infinite Jump
+local function enableInfiniteJump()
+    local UserInputService = game:GetService("UserInputService")
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            UserInputService.JumpRequest:Connect(function()
+                if isInfiniteJumpEnabled then
+                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+        end
     end
 end
 
@@ -85,12 +101,8 @@ MainTab:AddInput("SizeInput", {
     Callback = function(value)
         local sizeValue = tonumber(value)
         if sizeValue then
-            local character = game.Players.LocalPlayer.Character
-            if character then
-                -- Update the HumanoidRootPart size
-                changeSizeRemote:InvokeServer("changeSize", sizeValue)
-                character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
-            end
+            changeSizeRemote:InvokeServer("changeSize", sizeValue)
+            character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
         end
     end
 })
@@ -109,6 +121,19 @@ MainTab:AddInput("JumpPowerInput", {
         end
     end
 })
+
+-- Infinite Jump Toggle
+local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
+    Title = "Enable Infinite Jump",
+    Default = false,
+})
+
+infiniteJumpToggle:OnChanged(function()
+    isInfiniteJumpEnabled = infiniteJumpToggle.Value
+    if isInfiniteJumpEnabled then
+        enableInfiniteJump()  -- Enable infinite jump when the toggle is on
+    end
+end)
 
 -- Killer Tab
 local KillerTab = Tabs.Killer
