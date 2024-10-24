@@ -17,21 +17,9 @@ local Window = Fluent:CreateWindow({
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
-    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" })
+    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "" })
 })
-
--- Hand the library over to our managers
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-
--- Save Manager Configuration
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-InterfaceManager:SetFolder("FluentScriptHub")
-SaveManager:SetFolder("FluentScriptHub/specific-game")
-
--- Build Interface Sections
-SaveManager:BuildConfigSection(Tabs.Main)
 
 -- Main Tab Features
 local Options = Fluent.Options
@@ -198,18 +186,13 @@ Tabs.AutoFarm:AddParagraph({
     Content = "Features coming soon!"
 })
 
+-- Settings Tab Features
+local settingsInfo = Tabs.Settings:AddParagraph({
+    Title = "Settings",
+    Content = "Configure your preferences here."
+})
+
 -- Final Configuration and Notification
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-InterfaceManager:SetFolder("FluentScriptHub")
-SaveManager:SetFolder("FluentScriptHub/specific-game")
-
--- Build Interface Sections for the remaining tabs
-SaveManager:BuildConfigSection(Tabs.Main)
-
 Window:SelectTab(1)
 
 Fluent:Notify({
