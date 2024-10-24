@@ -33,8 +33,7 @@ SaveManager:SetFolder("FluentScriptHub/specific-game")
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 SaveManager:BuildConfigSection(Tabs.Settings)
 
-Window:SelectTab(1)
-
+-- Notify user that the script has been loaded
 Fluent:Notify({
     Title = "Fluent",
     Content = "The script has been loaded.",
@@ -210,7 +209,5 @@ local settingInfo = Tabs.Settings:AddParagraph({
     Content = "Configure your preferences here."
 })
 
--- Save settings and configurations
--- (Already included in earlier setup)
-
+-- Select the first tab
 Window:SelectTab(1)
