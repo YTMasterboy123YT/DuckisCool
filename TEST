@@ -14,48 +14,23 @@ local Window = Fluent:CreateWindow({
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local backpack = LocalPlayer:WaitForChild("Backpack")
-local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-_G.noKillList = {}
 _G.autoHitActive = false
 _G.teleportPlayersActive = false
 _G.invisibilityActive = false
-
-local function addToNoKillList(displayName)
-    for _, player in pairs(Players:GetPlayers()) do
-        if player.DisplayName:lower() == displayName:lower() then
-            _G.noKillList[player.Name] = true
-            makePlayerVisible(player)
-            break
-        end
-    end
-end
-
-local function makePlayerVisible(player)
-    local character = player.Character
-    if character then
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.Transparency = 0
-            elseif part:IsA("BillboardGui") then
-                part.Enabled = true
-            end
-        end
-    end
-end
 
 local function autoHit()
     while _G.autoHitActive do
         LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
         LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-        wait(0.5) -- Increased wait time to reduce lag
+        wait(0.5) -- Adjust wait time to reduce lag
     end
 end
 
 local function teleportPlayers()
     while _G.teleportPlayersActive do
-        wait(1) -- Increased wait time for teleporting
+        wait(1) -- Adjust wait time to reduce lag
+
         for _, otherPlayer in pairs(Players:GetPlayers()) do
             if otherPlayer ~= LocalPlayer and otherPlayer.Character then
                 local targetCharacter = otherPlayer.Character
@@ -69,7 +44,8 @@ end
 
 local function makePlayersInvisible()
     while _G.invisibilityActive do
-        wait(1) -- Increased wait time for invisibility
+        wait(1) -- Adjust wait time to reduce lag
+
         for _, otherPlayer in pairs(Players:GetPlayers()) do
             if otherPlayer ~= LocalPlayer and otherPlayer.Character then
                 local targetCharacter = otherPlayer.Character
@@ -80,6 +56,7 @@ local function makePlayersInvisible()
                         part.Handle.Transparency = 1
                     end
                 end
+
                 for _, descendant in pairs(targetCharacter:GetDescendants()) do
                     if descendant:IsA("BillboardGui") then
                         descendant.Enabled = false
@@ -90,158 +67,29 @@ local function makePlayersInvisible()
     end
 end
 
-LocalPlayer.Chatted:Connect(function(message)
-    if message:lower() == "lol" then
-        _G.autoHitActive = true
-        _G.teleportPlayersActive = true
-        _G.invisibilityActive = true
-        spawn(autoHit)
-        spawn(teleportPlayers)
-        spawn(makePlayersInvisible)
-    end
-end)
-
--- Main GUI Tabs
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
-    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
-    Misc = Window:AddTab({ Title = "Misc", Icon = "" })
-}
-
--- Main Tab
-local MainTab = Tabs.Main
-
-MainTab:AddInput("SpeedInput", {
-    Title = "Change Speed",
-    Placeholder = "Enter speed value",
-    Numeric = true,
-    Callback = function(value)
-        local speedValue = tonumber(value)
-        if speedValue then
-            LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
-        end
-    end
-})
-
-MainTab:AddInput("SizeInput", {
-    Title = "Change Size",
-    Placeholder = "Enter size value",
-    Numeric = true,
-    Callback = function(value)
-        local sizeValue = tonumber(value)
-        if sizeValue then
-            character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
-        end
-    end
-})
-
-MainTab:AddInput("JumpPowerInput", {
-    Title = "Change Jump Power",
-    Placeholder = "Enter jump power value",
-    Numeric = true,
-    Callback = function(value)
-        for _, player in ipairs(Players:GetPlayers()) do
-            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.JumpPower = tonumber(value)
-            end
-        end
-    end
-})
-
--- Infinite Jump Toggle
-local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
-    Title = "Enable Infinite Jump",
-    Default = false,
-})
-
-infiniteJumpToggle:OnChanged(function()
-    isInfiniteJumpEnabled = infiniteJumpToggle.Value
-    if isInfiniteJumpEnabled then
-        -- Infinite jump logic here if needed
-    end
-end)
-
 -- Killer Tab
-local KillerTab = Tabs.Killer
+local KillerTab = Window:AddTab({ Title = "Killer", Icon = "" })
 
--- Enable/Disable Auto Hit, Teleport, and Invisibility
-local allFeaturesToggle = KillerTab:AddToggle("EnableAllFeatures", {
-    Title = "Enable Auto Hit, Teleport, and Invisibility",
-    Default = false,
-})
+-- Toggle Button
+local toggleButton = KillerTab:AddButton("Toggle All", {
+    Title = "Toggle Auto Hit, Teleport, and Invisibility",
+    Callback = function()
+        -- Toggle the states
+        local isActive = not _G.autoHitActive
 
-allFeaturesToggle:OnChanged(function()
-    _G.autoHitActive = allFeaturesToggle.Value
-    _G.teleportPlayersActive = allFeaturesToggle.Value
-    _G.invisibilityActive = allFeaturesToggle.Value
+        _G.autoHitActive = isActive
+        _G.teleportPlayersActive = isActive
+        _G.invisibilityActive = isActive
 
-    if _G.autoHitActive then
-        spawn(autoHit)
-    end
-
-    if _G.teleportPlayersActive then
-        spawn(teleportPlayers)
-    end
-
-    if _G.invisibilityActive then
-        spawn(makePlayersInvisible)
-    end
-end)
-
--- Input for No Kill List
-KillerTab:AddInput("NoKillInput", {
-    Title = "Add to No Kill List",
-    Placeholder = "Enter player's display name",
-    Callback = function(displayName)
-        addToNoKillList(displayName)
-    end
-})
-
--- Misc Tab
-local MiscTab = Tabs.Misc
-
--- Game Time Dropdown
-MiscTab:AddDropdown("GameTimeDropdown", {
-    Title = "Set Game Time",
-    Values = {"Morning", "Afternoon", "Night"},
-    Default = 1,
-    Callback = function(value)
-        if value == "Morning" then
-            game.Lighting.ClockTime = 6
-        elseif value == "Afternoon" then
-            game.Lighting.ClockTime = 16
-        elseif value == "Night" then
-            game.Lighting.ClockTime = 0
+        if isActive then
+            spawn(autoHit)
+            spawn(teleportPlayers)
+            spawn(makePlayersInvisible)
         end
     end
 })
 
--- Anti AFK Toggle
-local antiAFKToggle = MiscTab:AddToggle("AntiAFKToggle", {
-    Title = "Enable Anti-AFK",
-    Default = false,
-})
-
-antiAFKToggle:OnChanged(function()
-    local player = Players.LocalPlayer
-    while antiAFKToggle.Value do
-        player.Idled:Wait()
-        player:Move(Vector3.new(0, 0, 0))
-        wait(1)
-    end
-end)
-
--- SaveManager and InterfaceManager Setup
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-InterfaceManager:SetFolder("FluentScriptHub")
-SaveManager:SetFolder("FluentScriptHub/specific-game")
-InterfaceManager:BuildInterfaceSection(MiscTab)
-SaveManager:BuildConfigSection(MiscTab)
+-- Other tabs and configurations can go here...
 
 Window:SelectTab(1)
 
