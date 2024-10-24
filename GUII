@@ -68,63 +68,13 @@ local function antiAFK()
     end
 end
 
--- Killer Functionality
-local player = game.Players.LocalPlayer
-local backpack = player:WaitForChild("Backpack")
-local character = player.Character or player.CharacterAdded:Wait()
-
-local tools = {
-    {name = "Punch", type = "attackTime"},
-    {name = "Ground Slam", type = "attackTime"},
-    {name = "Stomp", type = "attackTime"},
-    {name = "Handstands", type = "repTime"},
-    {name = "Pushups", type = "repTime"},
-    {name = "Weight", type = "repTime"},
-    {name = "Situps", type = "repTime"}
-}
-
-local function setToolProperties()
-    for _, toolInfo in pairs(tools) do
-        local tool = backpack:FindFirstChild(toolInfo.name)
-        if tool then
-            local cooldown = tool:FindFirstChild(toolInfo.type) 
-            if cooldown and cooldown:IsA("NumberValue") then
-                cooldown.Value = 0.1
-            end
-        end
-    end
-end
-
-local function autoHit()
-    while true do
-        local equippedTool = character:FindFirstChildOfClass("Tool")
-        if equippedTool and equippedTool.Enabled then
-            equippedTool:Activate()
-        end
-        wait(0.1)
-    end
-end
-
-local killerActive = false
-
-local function toggleKiller()
-    killerActive = not killerActive
-    if killerActive then
-        setToolProperties()
-        autoHit()
-    else
-        -- Additional code to stop auto-hitting if necessary
-        print("Killer disabled.")
-    end
-end
-
 -- Tabs
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
     Misc = Window:AddTab({ Title = "Misc", Icon = "" })
-})
+}
 
 -- Main Tab
 local MainTab = Tabs.Main
@@ -137,6 +87,7 @@ MainTab:AddInput("SpeedInput", {
     Callback = function(value)
         local speedValue = tonumber(value)
         if speedValue then
+            -- Change speed locally and invoke server function
             game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
             changeSizeSpeedRemote:InvokeServer("changeSpeed", speedValue)
         end
@@ -154,7 +105,7 @@ MainTab:AddInput("SizeInput", {
             local character = game.Players.LocalPlayer.Character
             if character then
                 character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
-                changeSizeSpeedRemote:InvokeServer("changeSize", sizeValue)
+                changeSizeSpeedRemote:InvokeServer("changeSize", sizeValue)  -- Invoke remote event
             end
         end
     end
@@ -194,13 +145,10 @@ end)
 
 -- Killer Tab
 local KillerTab = Tabs.Killer
-
-KillerTab:AddToggle("KillerToggle", {
-    Title = "Enable Auto Hit",
-    Default = false,
+KillerTab:AddParagraph({
+    Title = "Coming Soon",
+    Content = "Stay tuned for updates!"
 })
-
-KillerTab:GetElement("KillerToggle"):OnChanged(toggleKiller)
 
 -- Auto Farm
 local AutoFarmTab = Tabs.AutoFarm
