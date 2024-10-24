@@ -1,8 +1,9 @@
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local head = character:WaitForChild("Head")
+local button = script.Parent -- Reference to the TextButton
 
-while true do
+local function teleportHeads()
     for _, otherPlayer in ipairs(game.Players:GetPlayers()) do
         if otherPlayer ~= player then
             local otherCharacter = otherPlayer.Character
@@ -12,5 +13,7 @@ while true do
             end
         end
     end
-    wait(1) -- Adjust the wait time as needed
 end
+
+-- Connect the button's activation to the teleport function
+button.MouseButton1Click:Connect(teleportHeads)
