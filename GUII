@@ -164,6 +164,16 @@ antiAFKToggle:OnChanged(function()
     end
 end)
 
+-- SaveManager and InterfaceManager Setup
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+InterfaceManager:BuildInterfaceSection(MiscTab)
+SaveManager:BuildConfigSection(MiscTab)
+
 Window:SelectTab(1)
 
 Fluent:Notify({
