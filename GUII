@@ -12,6 +12,10 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+
 -- Functions
 local function setGameTime(timeOfDay)
     if timeOfDay == "Morning" then
@@ -35,13 +39,13 @@ local function changeJumpPower(jumpPowerValue)
 end
 
 local function enableInfiniteJump()
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            UserInputService.JumpRequest:Connect(function()
-                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end)
-        end
+    local player = game.Players.LocalPlayer
+    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    
+    if humanoid then
+        UserInputService.JumpRequest:Connect(function()
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end)
     end
 end
 
@@ -81,7 +85,12 @@ MainTab:AddInput("SpeedInput", {
     Placeholder = "Enter speed value",
     Numeric = true,
     Callback = function(value)
-        changeSizeSpeedRemote:InvokeServer("changeSpeed", tonumber(value))
+        local speedValue = tonumber(value)
+        if speedValue then
+            -- Change speed locally and invoke server function
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
+            changeSizeSpeedRemote:InvokeServer("changeSpeed", speedValue)
+        end
     end
 })
 
@@ -91,7 +100,14 @@ MainTab:AddInput("SizeInput", {
     Placeholder = "Enter size value",
     Numeric = true,
     Callback = function(value)
-        changeSizeRemote:InvokeServer("changeSize", tonumber(value))
+        local sizeValue = tonumber(value)
+        if sizeValue then
+            local character = game.Players.LocalPlayer.Character
+            if character then
+                character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
+                changeSizeSpeedRemote:InvokeServer("changeSize", sizeValue)  -- Invoke remote event
+            end
+        end
     end
 })
 
