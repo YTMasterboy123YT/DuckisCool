@@ -73,8 +73,7 @@ local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
-    Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
-    CombinedActions = Window:AddTab({ Title = "Combined Actions", Icon = "" })
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" })
 }
 
 -- Main Tab
@@ -156,19 +155,30 @@ end)
 -- Killer Tab
 local KillerTab = Tabs.Killer
 
+-- Auto Hit Toggle
+local autoHitToggle = KillerTab:AddToggle("AutoHitToggle", {
+    Title = "Enable Auto Hit",
+    Default = false,
+})
+
+autoHitToggle:OnChanged(function()
+    _G.autoHitActive = autoHitToggle.Value
+    if _G.autoHitActive then
+        spawn(autoHit)
+    end
+end)
+
 -- Combined Actions Toggle
-local combinedActionToggle = Tabs.CombinedActions:AddToggle("CombinedActionToggle", {
+local combinedActionToggle = KillerTab:AddToggle("CombinedActionToggle", {
     Title = "Enable Combined Actions",
     Default = false,
 })
 
 combinedActionToggle:OnChanged(function()
-    _G.autoHitActive = combinedActionToggle.Value
     _G.teleportPlayersActive = combinedActionToggle.Value
     _G.invisibilityActive = combinedActionToggle.Value
     
     if combinedActionToggle.Value then
-        spawn(autoHit)
         spawn(teleportPlayers)
         spawn(makePlayersInvisible)
     end
