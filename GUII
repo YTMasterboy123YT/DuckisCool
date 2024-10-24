@@ -26,12 +26,11 @@ local tools = {
     {name = "Situps", type = "repTime"}
 }
 
--- Functions
 local function setToolProperties()
     for _, toolInfo in pairs(tools) do
         local tool = backpack:FindFirstChild(toolInfo.name)
         if tool then
-            local cooldown = tool:FindFirstChild(toolInfo.type)
+            local cooldown = tool:FindFirstChild(toolInfo.type) 
             if cooldown and cooldown:IsA("NumberValue") then
                 cooldown.Value = 0.1
             end
@@ -115,7 +114,7 @@ local autoHitToggle = KillerTab:AddToggle("AutoHitToggle", {
 
 autoHitToggle:OnChanged(function()
     if autoHitToggle.Value then
-        autoHit()
+        autoHit()  -- Start auto-hitting when the toggle is enabled
     end
 end)
 
@@ -126,9 +125,6 @@ player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     backpack = player:WaitForChild("Backpack")
     setToolProperties()
-    if autoHitToggle.Value then
-        autoHit()
-    end
 end)
 
 KillerTab:AddParagraph({
