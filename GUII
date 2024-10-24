@@ -1,81 +1,181 @@
--- Load Fluent Library
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
--- Create Screen GUI
-local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
--- Create Main Window
 local Window = Fluent:CreateWindow({
-    Title = "Fluent GUI",
-    SubTitle = "by YourName",
-    Size = UDim2.fromOffset(600, 500),
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark"
+})
+
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
+    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" })
 })
 
 -- Main Tab
-local MainTab = Window:AddTab({ Title = "Main", Icon = "home" })
-MainTab:AddButton({
+Tabs.Main:AddInput("SpeedInput", {
     Title = "Set Speed",
-    Callback = function()
-        local changeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-        changeSpeedRemote:InvokeServer("changeSpeed", 200)
+    Default = "16",
+    Placeholder = "Enter Speed",
+    Callback = function(value)
+        local speedValue = tonumber(value)
+        if speedValue then
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+            changeSizeSpeedSpeedRemote:InvokeServer("changeSpeed", speedValue)
+        end
     end
 })
 
-MainTab:AddButton({
+Tabs.Main:AddInput("SizeInput", {
     Title = "Set Size",
-    Callback = function()
-        local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-        changeSizeRemote:InvokeServer("changeSize", 2)
+    Default = "1",
+    Placeholder = "Enter Size",
+    Callback = function(value)
+        local sizeValue = tonumber(value)
+        if sizeValue then
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+            changeSizeRemote:InvokeServer("changeSize", sizeValue)
+        end
     end
 })
 
--- Misc Tab
-local MiscTab = Window:AddTab({ Title = "Misc", Icon = "settings" })
-MiscTab:AddToggle({
-    Title = "Anti AFK",
-    Callback = function(state)
-        if state then
-            while true do
-                LocalPlayer.Idled:Wait()
-                LocalPlayer:Move(Vector3.new(0, 0, 0)) -- Prevent AFK
-                wait(1)
+Tabs.Main:AddInput("JumpInput", {
+    Title = "Set Jump Power",
+    Default = "50",
+    Placeholder = "Enter Jump Power",
+    Callback = function(value)
+        local jumpValue = tonumber(value)
+        if jumpValue then
+            local Players = game:GetService("Players")
+            for _, player in ipairs(Players:GetPlayers()) do
+                local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.JumpPower = jumpValue
+                end
             end
         end
     end
 })
 
--- Killer Tab
-local KillerTab = Window:AddTab({ Title = "Killer", Icon = "skull" })
-local AutoHitToggle = KillerTab:AddToggle("Auto Hit", {
+Tabs.Main:AddToggle("InfiniteJump", {
+    Title = "Enable Infinite Jump",
     Default = false,
+    Callback = function(value)
+        local UserInputService = game:GetService("UserInputService")
+        if value then
+            UserInputService.JumpRequest:Connect(function()
+                local player = game.Players.LocalPlayer
+                local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+        end
+    end
 })
 
-_G.autoHitActive = false
+Tabs.Main:AddToggle("NoClip", {
+    Title = "Enable NoClip",
+    Default = false,
+    Callback = function(value)
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+
+        local function setNoClip(enabled)
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = not enabled
+                end
+            end
+        end
+
+        setNoClip(value)
+        player.CharacterAdded:Connect(function(newCharacter)
+            character = newCharacter
+            setNoClip(value)
+        end)
+    end
+})
+
+-- Killer Tab
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+_G.autoPunchActive = false
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local function autoHit()
-    while _G.autoHitActive do
-        LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-        LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+    while _G.autoPunchActive do
+        local punchTool = character:FindFirstChild("Punch")
+        if punchTool and punchTool.Enabled then
+            punchTool:Activate()
+        end
         wait(0.1)
     end
 end
 
-AutoHitToggle:OnChanged(function(state)
-    _G.autoHitActive = state
-    if state then
+Tabs.Killer:AddToggle("Auto Punch", {
+    Title = "Enable Auto Punch",
+    Default = false,
+    Callback = function(value)
+        _G.autoPunchActive = value
+        if value then
+            spawn(autoHit)
+        end
+    end
+})
+
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    if _G.autoPunchActive then
         spawn(autoHit)
     end
 end)
 
--- Finalize GUI
+-- Auto Farm Tab (Currently empty)
+-- Add any auto farming functions here if needed.
+
+-- Misc Tab
+Tabs.Misc:AddDropdown("GameTime", {
+    Title = "Select Game Time",
+    Values = {"Morning", "Afternoon", "Night"},
+    Default = 1,
+    Callback = function(value)
+        setGameTime(value)  -- Assuming setGameTime function is defined
+    end
+})
+
+Tabs.Misc:AddButton({
+    Title = "Anti AFK",
+    Callback = function()
+        antiAFK()  -- Assuming antiAFK function is defined
+    end
+})
+
+-- Final setup
 Window:SelectTab(1)
 
--- Notify that the GUI has loaded
 Fluent:Notify({
-    Title = "Fluent GUI",
-    Content = "GUI Loaded Successfully!",
-    Duration = 5
+    Title = "Fluent",
+    Content = "The script has been loaded.",
+    Duration = 8
 })
+
+-- SaveManager setup (if needed)
+SaveManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+InterfaceManager:BuildInterfaceSection(Tabs.AutoFarm)
+SaveManager:BuildConfigSection(Tabs.AutoFarm)
+
+SaveManager:LoadAutoloadConfig()
