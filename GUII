@@ -14,24 +14,49 @@ local Window = Fluent:CreateWindow({
 
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    PlayerActions = Window:AddTab({ Title = "Player Actions", Icon = "" }),
-    GameSettings = Window:AddTab({ Title = "Game Settings", Icon = "" }),
+    Killer = Window:AddTab({ Title = "Killer", Icon = "skull" }),
+    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "farm" })
 }
 
--- Notify when the GUI is loaded
-Fluent:Notify({
-    Title = "Fluent",
-    Content = "The script has been loaded.",
-    Duration = 5
+-- Main Tab Scripts
+Tabs.Main:AddButton({
+    Title = "Auto Hit",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+
+        local function autoHit()
+            while true do
+                local punchTool = character:FindFirstChild("Punch")
+                if punchTool and punchTool.Enabled then
+                    punchTool:Activate()
+                end
+                wait(0.1)
+            end
+        end
+
+        autoHit()
+        player.CharacterAdded:Connect(function(newCharacter)
+            character = newCharacter
+            autoHit()
+        end)
+    end
 })
 
--- 1. Adjust Tool Cooldowns
-Tabs.PlayerActions:AddButton({
-    Title = "Adjust Tool Cooldowns",
+Tabs.Main:AddButton({
+    Title = "Set Tool Attributes",
     Callback = function()
         local player = game.Players.LocalPlayer
         local backpack = player:WaitForChild("Backpack")
-        local tools = {
+
+        local function setToolAttributes(toolName, attributeType, value)
+            local tool = backpack:FindFirstChild(toolName)
+            if tool then
+                tool[attributeType].Value = value
+            end
+        end
+
+        local toolsToSet = {
             {"Punch", "attackTime", 0.1},
             {"Ground Slam", "attackTime", 0.1},
             {"Stomp", "attackTime", 0.1},
@@ -40,37 +65,191 @@ Tabs.PlayerActions:AddButton({
             {"Weight", "repTime", 0.1},
             {"Situps", "repTime", 0.1}
         }
-        for _, tool in ipairs(tools) do
-            local toolObj = backpack:FindFirstChild(tool[1])
-            if toolObj and toolObj:FindFirstChild(tool[2]) then
-                toolObj[tool[2]].Value = tool[3]
+
+        for _, tool in ipairs(toolsToSet) do
+            setToolAttributes(tool[1], tool[2], tool[3])
+        end
+    end
+})
+
+Tabs.Main:AddButton({
+    Title = "Change Jump Power",
+    Callback = function()
+        local Players = game:GetService("Players")
+
+        local function changeJumpPower(jumpPowerValue)
+            for _, player in ipairs(Players:GetPlayers()) do
+                local character = player.Character
+                if character then
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid.JumpPower = jumpPowerValue
+                    end
+                end
+            end
+        end
+
+        changeJumpPower(100)
+    end
+})
+
+Tabs.Main:AddButton({
+    Title = "Size Script",
+    Callback = function()
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+
+        changeSizeSpeedRemote:InvokeServer("changeSize", 2)
+    end
+})
+
+Tabs.Main:AddButton({
+    Title = "Speed Script",
+    Callback = function()
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+
+        changeSizeSpeedRemote:InvokeServer("changeSpeed", 200)
+    end
+})
+
+Tabs.Main:AddButton({
+    Title = "Noclip",
+    Callback = function()
+        local Players = game:GetService("Players")
+
+        local function setNoClip(character, value)
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = not value
+                end
+            end
+        end
+
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                setNoClip(character, true)
             end
         end
     end
 })
 
--- 2. Enable Auto Hit, Teleport, and Invisibility
-Tabs.PlayerActions:AddButton({
-    Title = "Enable Auto Hit, Teleport, Invisibility",
+Tabs.Main:AddButton({
+    Title = "Change Game Time",
+    Callback = function()
+        local function setGameTime(timeOfDay)
+            if timeOfDay == "Morning" then
+                game.Lighting.ClockTime = 6
+            elseif timeOfDay == "Afternoon" then
+                game.Lighting.ClockTime = 16
+            elseif timeOfDay == "Night" then
+                game.Lighting.ClockTime = 0
+            else
+                print("Invalid time of day.")
+            end
+        end
+
+        setGameTime("Morning")
+    end
+})
+
+Tabs.Main:AddButton({
+    Title = "Anti-AFK",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+
+        local function antiAFK()
+            while true do
+                player.Idled:Wait()
+                player:Move(Vector3.new(0, 0, 0))
+                wait(1)
+            end
+        end
+
+        antiAFK()
+    end
+})
+
+Tabs.Main:AddButton({
+    Title = "Player Chat Logger",
+    Callback = function()
+        local Players = game:GetService("Players")
+
+        local function onPlayerChatted(player, message)
+            print(player.Name .. ": " .. message)
+        end
+
+        for _, player in pairs(Players:GetPlayers()) do
+            player.Chatted:Connect(function(message)
+                onPlayerChatted(player, message)
+            end)
+        end
+
+        Players.PlayerAdded:Connect(function(player)
+            player.Chatted:Connect(function(message)
+                onPlayerChatted(player, message)
+            end)
+        end)
+    end
+})
+
+Tabs.Main:AddButton({
+    Title = "Graphics Quality Script",
+    Callback = function()
+        local UserSettings = UserSettings():GetService("UserGameSettings")
+
+        UserSettings.GraphicsQuality = 1
+        UserSettings:SetThirdPartyGraphicsQuality(1)
+
+        local function setQuality()
+            UserSettings.GraphicsQuality = 1
+        end
+
+        setQuality()
+
+        UserSettings.Changed:Connect(function(property)
+            if property == "GraphicsQuality" then
+                setQuality()
+            end
+        end)
+    end
+})
+
+Tabs.Main:AddButton({
+    Title = "Infinite Jump",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local UserInputService = game:GetService("UserInputService")
+
+        local function enableInfiniteJump()
+            for _, player in ipairs(Players:GetPlayers()) do
+                local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    UserInputService.JumpRequest:Connect(function()
+                        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                    end)
+                end
+            end
+        end
+
+        enableInfiniteJump()
+    end
+})
+
+-- Killer Tab Scripts
+Tabs.Killer:AddButton({
+    Title = "Teleport Players",
     Callback = function()
         local Players = game:GetService("Players")
         local LocalPlayer = Players.LocalPlayer
 
-        _G.autoHitActive = true
-        _G.teleportPlayersActive = true
-        _G.invisibilityActive = true
-
-        local function autoHit()
-            while _G.autoHitActive do
-                LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-                LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-                wait(0.1)
-            end
-        end
+        _G.teleportPlayersActive = false
 
         local function teleportPlayers()
             while _G.teleportPlayersActive do
                 wait(0.1)
+
                 for _, otherPlayer in pairs(Players:GetPlayers()) do
                     if otherPlayer ~= LocalPlayer then
                         local targetCharacter = otherPlayer.Character
@@ -81,6 +260,23 @@ Tabs.PlayerActions:AddButton({
                 end
             end
         end
+
+        LocalPlayer.Chatted:Connect(function(message)
+            if message:lower() == "lol" then
+                _G.teleportPlayersActive = true
+                spawn(teleportPlayers)
+            end
+        end)
+    end
+})
+
+Tabs.Killer:AddButton({
+    Title = "Make Players Invisible",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+
+        _G.invisibilityActive = false
 
         local function makePlayersInvisible()
             while _G.invisibilityActive do
@@ -95,6 +291,7 @@ Tabs.PlayerActions:AddButton({
                                     part.Handle.Transparency = 1
                                 end
                             end
+
                             for _, descendant in pairs(targetCharacter:GetDescendants()) do
                                 if descendant:IsA("BillboardGui") then
                                     descendant.Enabled = false
@@ -109,131 +306,39 @@ Tabs.PlayerActions:AddButton({
 
         LocalPlayer.Chatted:Connect(function(message)
             if message:lower() == "lol" then
-                spawn(autoHit)
-                spawn(teleportPlayers)
+                _G.invisibilityActive = true
                 spawn(makePlayersInvisible)
             end
         end)
     end
 })
 
--- 3. Set Low Graphics Quality
-Tabs.GameSettings:AddButton({
-    Title = "Set Low Graphics Quality",
+Tabs.Killer:AddButton({
+    Title = "No Kill List",
     Callback = function()
-        local UserSettings = UserSettings():GetService("UserGameSettings")
-        UserSettings.GraphicsQuality = 1
+        -- Implement No Kill List Logic Here
     end
 })
 
--- 4. Enable Infinite Jump
-Tabs.PlayerActions:AddButton({
-    Title = "Enable Infinite Jump",
-    Callback = function()
-        local Players = game:GetService("Players")
-        local UserInputService = game:GetService("UserInputService")
-        for _, player in ipairs(Players:GetPlayers()) do
-            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                UserInputService.JumpRequest:Connect(function()
-                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                end)
-            end
-        end
-    end
-})
+-- Auto Farm Tab Scripts
+-- (No scripts assigned yet)
 
--- 5. Change Jump Power
-Tabs.GameSettings:AddButton({
-    Title = "Change Jump Power",
-    Callback = function()
-        for _, player in ipairs(game.Players:GetPlayers()) do
-            local character = player.Character
-            if character then
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid.JumpPower = 100 -- Set your desired jump power here
-                end
-            end
-        end
-    end
-})
-
--- 6. Enable No-Clip
-Tabs.PlayerActions:AddButton({
-    Title = "Enable No-Clip",
-    Callback = function()
-        local function setNoClip(character, value)
-            for _, part in ipairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = not value
-                end
-            end
-        end
-        for _, player in ipairs(game.Players:GetPlayers()) do
-            local character = player.Character
-            if character then
-                setNoClip(character, true)
-            end
-        end
-    end
-})
-
--- 7. Change Size
-Tabs.GameSettings:AddButton({
-    Title = "Change Size",
-    Callback = function()
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local changeSizeSpeedRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("changeSpeedSizeRemote")
-        changeSizeSpeedSpeedRemote:InvokeServer("changeSize", 2) -- Change size to 2
-    end
-})
-
--- 8. Change Speed
-Tabs.GameSettings:AddButton({
-    Title = "Change Speed",
-    Callback = function()
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local changeSizeSpeedRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("changeSpeedSizeRemote")
-        changeSizeSpeedRemote:InvokeServer("changeSpeed", 200) -- Change speed to 200
-    end
-})
-
--- 9. Set Game Time to Morning
-Tabs.GameSettings:AddButton({
-    Title = "Set Game Time to Morning",
-    Callback = function()
-        game.Lighting.ClockTime = 6
-    end
-})
-
--- 10. Set Game Time to Afternoon
-Tabs.GameSettings:AddButton({
-    Title = "Set Game Time to Afternoon",
-    Callback = function()
-        game.Lighting.ClockTime = 16
-    end
-})
-
--- 11. Set Game Time to Night
-Tabs.GameSettings:AddButton({
-    Title = "Set Game Time to Night",
-    Callback = function()
-        game.Lighting.ClockTime = 0
-    end
-})
-
--- Hand the library over to our managers
+-- Save and Interface Manager Setup
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
-
--- Set folders for saving configs
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
 InterfaceManager:SetFolder("FluentScriptHub")
 SaveManager:SetFolder("FluentScriptHub/specific-game")
-
--- Build interface and config sections
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 SaveManager:BuildConfigSection(Tabs.Settings)
 
--- Load any auto-loading config
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "Fluent",
+    Content = "The script has been loaded.",
+    Duration = 8
+})
+
 SaveManager:LoadAutoloadConfig()
