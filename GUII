@@ -3,11 +3,9 @@ local character = player.Character or player.CharacterAdded:Wait()
 
 -- Function to teleport the local player's head to their right hand
 local function teleportHeadToRightHand()
-    local rightHand = character:FindFirstChild("RightHand")
-    local head = character:FindFirstChild("Head")
+    local rightHand = character:WaitForChild("RightHand")
+    local head = character:WaitForChild("Head")
     
-    if not rightHand or not head then return end
-
     while true do
         -- Teleport the head to the position of the right hand
         head.CFrame = rightHand.CFrame * CFrame.new(0, 0, 0) -- Adjust offset if needed
