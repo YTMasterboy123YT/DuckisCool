@@ -1,16 +1,23 @@
-local Players = game:GetService("Players")
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local noClip = true -- NoClip is enabled by default
 
-local function setNoClip(character, value)
-    for _, part in ipairs(character:GetDescendants()) do
+-- Function to set NoClip
+local function setNoClip(enabled)
+    for _, part in pairs(character:GetChildren()) do
         if part:IsA("BasePart") then
-            part.CanCollide = not value
+            part.CanCollide = not enabled
         end
     end
 end
 
-for _, player in ipairs(Players:GetPlayers()) do
-    local character = player.Character
-    if character then
-        setNoClip(character, true)
+-- Set NoClip on character spawn
+setNoClip(noClip)
+
+-- Maintain NoClip while moving
+humanoid.Running:Connect(function(speed)
+    if noClip then
+        character.HumanoidRootPart.Velocity = Vector3.new(0, speed, 0)
     end
-end
+end)
