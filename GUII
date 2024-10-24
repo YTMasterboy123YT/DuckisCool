@@ -1,8 +1,10 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Services
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSizeSpeedRemote
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- Create the GUI Window
 local Window = Rayfield:CreateWindow({
