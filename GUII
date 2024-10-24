@@ -87,7 +87,6 @@ MainTab:AddInput("SpeedInput", {
     Callback = function(value)
         local speedValue = tonumber(value)
         if speedValue then
-            -- Change speed locally and invoke server function
             game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
             changeSizeSpeedRemote:InvokeServer("changeSpeed", speedValue)
         end
@@ -105,7 +104,7 @@ MainTab:AddInput("SizeInput", {
             local character = game.Players.LocalPlayer.Character
             if character then
                 character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
-                changeSizeSpeedRemote:InvokeServer("changeSize", sizeValue)  -- Invoke remote event
+                changeSizeSpeedRemote:InvokeServer("changeSize", sizeValue)
             end
         end
     end
@@ -145,12 +144,46 @@ end)
 
 -- Killer Tab
 local KillerTab = Tabs.Killer
-KillerTab:AddParagraph({
-    Title = "Coming Soon",
-    Content = "Stay tuned for updates!"
+
+-- Auto Hit Functionality
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+local function autoHit()
+    while autoHitToggle.Value do
+        local punchTool = character:FindFirstChild("Punch")
+        if punchTool and punchTool.Enabled then
+            punchTool:Activate()
+        end
+        wait(0.1)
+    end
+end
+
+-- Auto Hit Toggle
+local autoHitToggle = KillerTab:AddToggle("AutoHitToggle", {
+    Title = "Enable Auto Hit",
+    Default = false,
 })
 
--- Auto Farm
+autoHitToggle:OnChanged(function()
+    if autoHitToggle.Value then
+        autoHit()
+    end
+end)
+
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    if autoHitToggle.Value then
+        autoHit()
+    end
+end)
+
+KillerTab:AddParagraph({
+    Title = "Auto Hit",
+    Content = "Enable the toggle to automatically hit enemies."
+})
+
+-- Auto Farm Tab
 local AutoFarmTab = Tabs.AutoFarm
 AutoFarmTab:AddParagraph({
     Title = "Coming Soon",
@@ -182,7 +215,7 @@ antiAFKToggle:OnChanged(function()
     end
 end)
 
--- Add any additional setup for SaveManager and InterfaceManager here
+-- SaveManager and InterfaceManager setup
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
 SaveManager:IgnoreThemeSettings()
