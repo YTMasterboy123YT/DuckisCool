@@ -105,7 +105,24 @@ Tabs.Main:AddToggle("NoClip", {
     end
 })
 
--- Killer Tab
+-- Misc Tab
+Tabs.Misc:AddDropdown("GameTime", {
+    Title = "Select Game Time",
+    Values = {"Morning", "Afternoon", "Night"},
+    Default = 1,
+    Callback = function(value)
+        setGameTime(value)  -- Assuming setGameTime function is defined
+    end
+})
+
+Tabs.Misc:AddButton({
+    Title = "Anti AFK",
+    Callback = function()
+        antiAFK()  -- Assuming antiAFK function is defined
+    end
+})
+
+-- Killer Tab - Toggle for auto hit
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
@@ -127,26 +144,6 @@ Tabs.Killer:AddToggle("Activate Auto Hit", {
         if value then
             spawn(autoHit)
         end
-    end
-})
-
--- Auto Farm Tab (Blank)
--- This section is intentionally left empty for future use
-
--- Misc Tab
-Tabs.Misc:AddDropdown("GameTime", {
-    Title = "Select Game Time",
-    Values = {"Morning", "Afternoon", "Night"},
-    Default = 1,
-    Callback = function(value)
-        -- Define setGameTime function elsewhere
-    end
-})
-
-Tabs.Misc:AddButton({
-    Title = "Anti AFK",
-    Callback = function()
-        -- Define antiAFK function elsewhere
     end
 })
 
