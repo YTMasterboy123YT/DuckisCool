@@ -10,29 +10,44 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl,
 })
 
+local Players = game:GetService("Players")
+
 -- Create a new tab for the dropdown
-local DropdownTab = Window:AddTab({
-    Title = "Options",
-    Icon = "", -- You can add an icon here if you want
+local PlayerTab = Window:AddTab({
+    Title = "Players",
+    Icon = "", -- Optional: add an icon if desired
 })
 
--- Multi-dropdown for selecting multiple values
-local MultiDropdown = DropdownTab:AddDropdown("MultiDropdown", {
-    Title = "Select Options",
-    Description = "You can select multiple values.",
-    Values = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen"},
-    Multi = true,
-    Default = {"seven", "twelve"},
+-- Function to get player names
+local function getPlayerNames()
+    local playerNames = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        table.insert(playerNames, player.Name)
+    end
+    return playerNames
+end
+
+-- Create the dropdown for player names
+local PlayerDropdown = PlayerTab:AddDropdown("PlayerDropdown", {
+    Title = "Select Player",
+    Description = "Choose a player from the list.",
+    Values = getPlayerNames(),
+    Multi = false, -- Set to true if you want multiple selections
 })
+
+-- Refresh button to update player names
+PlayerTab:AddButton("Refresh Players", function()
+    PlayerDropdown:Refresh(getPlayerNames())
+end)
 
 -- Notify that the dropdown is ready
 Fluent:Notify({
-    Title = "Dropdown Loaded",
-    Content = "The multi-select dropdown is ready.",
+    Title = "Players Loaded",
+    Content = "The player dropdown is ready.",
     Duration = 5
 })
 
 -- Handle selection changes
-MultiDropdown:OnChanged(function(selectedValues)
-    print("Selected Values: ", table.concat(selectedValues, ", "))
+PlayerDropdown:OnChanged(function(selectedValue)
+    print("Selected Player: ", selectedValue)
 end)
