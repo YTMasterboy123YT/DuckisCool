@@ -1,41 +1,38 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "Player Selector",
-    SubTitle = "Select a Player",
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
     TabWidth = 160,
-    Size = UDim2.fromOffset(300, 200),
+    Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
     Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl,
 })
 
-local playerNames = {}
-
--- Dropdown for player names
-local playerDropdown = Window:AddDropdown("PlayerDropdown", {
-    Title = "Select a Player",
-    Values = playerNames,
-    Default = 1,
+-- Create a new tab for the dropdown
+local DropdownTab = Window:AddTab({
+    Title = "Options",
+    Icon = "", -- You can add an icon here if you want
 })
 
-local function updatePlayerNames()
-    playerNames = {}
-    for _, player in pairs(game.Players:GetPlayers()) do
-        table.insert(playerNames, player.Name)
-    end
-    playerDropdown:UpdateValues(playerNames)
-end
+-- Multi-dropdown for selecting multiple values
+local MultiDropdown = DropdownTab:AddDropdown("MultiDropdown", {
+    Title = "Select Options",
+    Description = "You can select multiple values.",
+    Values = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen"},
+    Multi = true,
+    Default = {"seven", "twelve"},
+})
 
--- Refresh button to update the player list
-Window:AddButton("Refresh Player List", function()
-    updatePlayerNames()
-end)
-
--- Initial population of player names
-updatePlayerNames()
-
+-- Notify that the dropdown is ready
 Fluent:Notify({
-    Title = "Player Selector",
-    Content = "The player dropdown has been loaded.",
+    Title = "Dropdown Loaded",
+    Content = "The multi-select dropdown is ready.",
     Duration = 5
 })
+
+-- Handle selection changes
+MultiDropdown:OnChanged(function(selectedValues)
+    print("Selected Values: ", table.concat(selectedValues, ", "))
+end)
