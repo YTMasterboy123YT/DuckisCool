@@ -12,26 +12,169 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
+-- Functions
+local function setGameTime(timeOfDay)
+    if timeOfDay == "Morning" then
+        game.Lighting.ClockTime = 6
+    elseif timeOfDay == "Afternoon" then
+        game.Lighting.ClockTime = 16
+    elseif timeOfDay == "Night" then
+        game.Lighting.ClockTime = 0
+    else
+        print("Invalid time of day.")
+    end
+end
+
+local function changeJumpPower(jumpPowerValue)
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.JumpPower = jumpPowerValue
+        end
+    end
+end
+
+local function enableInfiniteJump()
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            UserInputService.JumpRequest:Connect(function()
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end)
+        end
+    end
+end
+
+local function setNoClip(enabled)
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    for _, part in pairs(character:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = not enabled
+        end
+    end
+end
+
+local function antiAFK()
+    local player = game.Players.LocalPlayer
+    while true do
+        player.Idled:Wait()
+        player:Move(Vector3.new(0, 0, 0))
+        wait(1)
+    end
+end
+
+-- Tabs
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" })
+}
+
+-- Main Tab
+local MainTab = Tabs.Main
+
+-- Speed Input
+MainTab:AddInput("SpeedInput", {
+    Title = "Change Speed",
+    Placeholder = "Enter speed value",
+    Numeric = true,
+    Callback = function(value)
+        changeSizeSpeedRemote:InvokeServer("changeSpeed", tonumber(value))
+    end
 })
 
--- Hand the library over to our managers
+-- Size Input
+MainTab:AddInput("SizeInput", {
+    Title = "Change Size",
+    Placeholder = "Enter size value",
+    Numeric = true,
+    Callback = function(value)
+        changeSizeRemote:InvokeServer("changeSize", tonumber(value))
+    end
+})
+
+-- Jump Input
+MainTab:AddInput("JumpPowerInput", {
+    Title = "Change Jump Power",
+    Placeholder = "Enter jump power value",
+    Numeric = true,
+    Callback = function(value)
+        changeJumpPower(tonumber(value))
+    end
+})
+
+-- Infinite Jump Toggle
+local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
+    Title = "Enable Infinite Jump",
+    Default = false,
+})
+
+infiniteJumpToggle:OnChanged(function()
+    if infiniteJumpToggle.Value then
+        enableInfiniteJump()
+    end
+end)
+
+-- NoClip Toggle
+local noClipToggle = MainTab:AddToggle("NoClipToggle", {
+    Title = "Enable NoClip",
+    Default = false,
+})
+
+noClipToggle:OnChanged(function()
+    setNoClip(noClipToggle.Value)
+end)
+
+-- Killer Tab
+local KillerTab = Tabs.Killer
+KillerTab:AddParagraph({
+    Title = "Coming Soon",
+    Content = "Stay tuned for updates!"
+})
+
+-- Auto Farm
+local AutoFarmTab = Tabs.AutoFarm
+AutoFarmTab:AddParagraph({
+    Title = "Coming Soon",
+    Content = "Stay tuned for updates!"
+})
+
+-- Misc Tab
+local MiscTab = Tabs.Misc
+
+-- Game Time Dropdown
+MiscTab:AddDropdown("GameTimeDropdown", {
+    Title = "Set Game Time",
+    Values = {"Morning", "Afternoon", "Night"},
+    Default = 1,
+    Callback = function(value)
+        setGameTime(value)
+    end
+})
+
+-- Anti AFK Toggle
+local antiAFKToggle = MiscTab:AddToggle("AntiAFKToggle", {
+    Title = "Enable Anti-AFK",
+    Default = false,
+})
+
+antiAFKToggle:OnChanged(function()
+    if antiAFKToggle.Value then
+        antiAFK()
+    end
+end)
+
+-- Add any additional setup for SaveManager and InterfaceManager here
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
-
--- Save Manager Configuration
 SaveManager:IgnoreThemeSettings()
 SaveManager:SetIgnoreIndexes({})
 InterfaceManager:SetFolder("FluentScriptHub")
 SaveManager:SetFolder("FluentScriptHub/specific-game")
-
--- Build Interface Sections
-InterfaceManager:BuildInterfaceSection(Tabs.Settings)
-SaveManager:BuildConfigSection(Tabs.Settings)
+InterfaceManager:BuildInterfaceSection(MiscTab)
+SaveManager:BuildConfigSection(MiscTab)
 
 Window:SelectTab(1)
 
@@ -41,167 +184,4 @@ Fluent:Notify({
     Duration = 8
 })
 
--- Main Tab Features
-local Options = Fluent.Options
-
--- Infinite Jump Toggle
-local infiniteJumpToggle = Tabs.Main:AddToggle("InfiniteJump", { Title = "Enable Infinite Jump", Default = false })
-infiniteJumpToggle:OnChanged(function()
-    local Players = game:GetService("Players")
-    local UserInputService = game:GetService("UserInputService")
-    local LocalPlayer = Players.LocalPlayer
-
-    if infiniteJumpToggle.Value then
-        UserInputService.JumpRequest:Connect(function()
-            LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-        end)
-    end
-end)
-
--- Anti AFK
-local antiAFKButton = Tabs.Main:AddButton({
-    Title = "Anti AFK",
-    Description = "Prevents you from being marked as AFK",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        while true do
-            player.Idled:Wait()
-            player:Move(Vector3.new(0, 0, 0))
-            wait(1)
-        end
-    end
-})
-
--- Player Chat Log
-local playerChatToggle = Tabs.Main:AddToggle("PlayerChat", { Title = "Enable Player Chat Log", Default = false })
-playerChatToggle:OnChanged(function()
-    local Players = game:GetService("Players")
-
-    local function onPlayerChatted(player, message)
-        print(player.Name .. ": " .. message)
-    end
-
-    if playerChatToggle.Value then
-        for _, player in pairs(Players:GetPlayers()) do
-            player.Chatted:Connect(function(message)
-                onPlayerChatted(player, message)
-            end)
-        end
-
-        Players.PlayerAdded:Connect(function(player)
-            player.Chatted:Connect(function(message)
-                onPlayerChatted(player, message)
-            end)
-        end)
-    end
-end)
-
--- Size Input
-Tabs.Main:AddInput("SizeInput", {
-    Title = "Set Size",
-    Default = "2",
-    Placeholder = "Enter size value",
-    Numeric = true,
-    Finished = true,
-    Callback = function(value)
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-        changeSizeSpeedRemote:InvokeServer("changeSize", tonumber(value))
-    end
-})
-
--- Speed Input
-Tabs.Main:AddInput("SpeedInput", {
-    Title = "Set Speed",
-    Default = "200",
-    Placeholder = "Enter speed value",
-    Numeric = true,
-    Finished = true,
-    Callback = function(value)
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-        changeSizeSpeedRemote:InvokeServer("changeSpeed", tonumber(value))
-    end
-})
-
--- Killer Tab Features
-local toggleAutoHit = Tabs.Killer:AddToggle("AutoHit", { Title = "Enable Auto Hit", Default = false })
-toggleAutoHit:OnChanged(function()
-    local player = game.Players.LocalPlayer
-    local backpack = player:WaitForChild("Backpack")
-    local character = player.Character or player.CharacterAdded:Wait()
-
-    if toggleAutoHit.Value then
-        local function autoHit()
-            while toggleAutoHit.Value do
-                local equippedTool = character:FindFirstChildOfClass("Tool")
-                if equippedTool and equippedTool.Enabled then
-                    equippedTool:Activate()
-                end
-                wait(0.1)
-            end
-        end
-        autoHit()
-    end
-end)
-
--- Teleport Players Toggle
-local toggleTeleportPlayers = Tabs.Killer:AddToggle("TeleportPlayers", { Title = "Enable Teleport Players", Default = false })
-toggleTeleportPlayers:OnChanged(function()
-    local Players = game:GetService("Players")
-    local LocalPlayer = Players.LocalPlayer
-
-    if toggleTeleportPlayers.Value then
-        while true do
-            wait(0.1)
-            for _, otherPlayer in pairs(Players:GetPlayers()) do
-                if otherPlayer ~= LocalPlayer then
-                    local targetCharacter = otherPlayer.Character
-                    if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                        targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
-                    end
-                end
-            end
-        end
-    end
-end)
-
--- Invisibility Toggle
-local toggleInvisibility = Tabs.Killer:AddToggle("Invisibility", { Title = "Enable Invisibility", Default = false })
-toggleInvisibility:OnChanged(function()
-    local Players = game:GetService("Players")
-    local LocalPlayer = Players.LocalPlayer
-
-    if toggleInvisibility.Value then
-        while true do
-            for _, otherPlayer in pairs(Players:GetPlayers()) do
-                if otherPlayer ~= LocalPlayer then
-                    local targetCharacter = otherPlayer.Character
-                    if targetCharacter then
-                        for _, part in pairs(targetCharacter:GetChildren()) do
-                            if part:IsA("BasePart") then
-                                part.Transparency = 1
-                            elseif part:IsA("Accessory") then
-                                part.Handle.Transparency = 1
-                            end
-                        end
-                        for _, descendant in pairs(targetCharacter:GetDescendants()) do
-                            if descendant:IsA("BillboardGui") then
-                                descendant.Enabled = false
-                            end
-                        end
-                    end
-                end
-            end
-            wait(0.1)
-        end
-    end
-end)
-
--- Auto Farm Tab
--- (Add your Auto Farm features here)
-
--- Settings Tab
--- (Settings configuration is already set up)
-
-Window:SelectTab(1)
+SaveManager:LoadAutoloadConfig()
