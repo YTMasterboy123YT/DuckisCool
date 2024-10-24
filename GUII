@@ -12,58 +12,40 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
-local player = game.Players.LocalPlayer
-local backpack = player:WaitForChild("Backpack")
-local character = player.Character or player.CharacterAdded:Wait()
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local backpack = LocalPlayer:WaitForChild("Backpack")
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
--- Auto Hit, Teleport, Invisibility
-_G.autoHitActive = false
-_G.teleportPlayersActive = false
-_G.invisibilityActive = false
+-- Tool properties setup
+local tools = {
+    {name = "Punch", type = "attackTime"},
+    {name = "Ground Slam", type = "attackTime"},
+    {name = "Stomp", type = "attackTime"},
+    {name = "Handstands", type = "repTime"},
+    {name = "Pushups", type = "repTime"},
+    {name = "Weight", type = "repTime"},
+    {name = "Situps", type = "repTime"}
+}
+
+local isAutoHitEnabled = false
+
+local function setToolProperties()
+    for _, toolInfo in pairs(tools) do
+        local tool = backpack:FindFirstChild(toolInfo.name)
+        if tool then
+            local cooldown = tool:FindFirstChild(toolInfo.type) 
+            if cooldown and cooldown:IsA("NumberValue") then
+                cooldown.Value = 0.1
+            end
+        end
+    end
+end
 
 local function autoHit()
-    while _G.autoHitActive do
-        player.muscleEvent:FireServer("punch", "leftHand")
-        player.muscleEvent:FireServer("punch", "rightHand")
-        wait(0.1)
-    end
-end
-
-local function teleportPlayers()
-    while _G.teleportPlayersActive do
-        wait(0.1)
-        for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-            if otherPlayer ~= player then
-                local targetCharacter = otherPlayer.Character
-                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                    targetCharacter:SetPrimaryPartCFrame(character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
-                end
-            end
-        end
-    end
-end
-
-local function makePlayersInvisible()
-    while _G.invisibilityActive do
-        for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-            if otherPlayer ~= player then
-                local targetCharacter = otherPlayer.Character
-                if targetCharacter then
-                    for _, part in pairs(targetCharacter:GetChildren()) do
-                        if part:IsA("BasePart") then
-                            part.Transparency = 1
-                        elseif part:IsA("Accessory") then
-                            part.Handle.Transparency = 1
-                        end
-                    end
-                    for _, descendant in pairs(targetCharacter:GetDescendants()) do
-                        if descendant:IsA("BillboardGui") then
-                            descendant.Enabled = false
-                        end
-                    end
-                end
-            end
-        end
+    while isAutoHitEnabled do
+        LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+        LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
         wait(0.1)
     end
 end
@@ -87,7 +69,7 @@ MainTab:AddInput("SpeedInput", {
     Callback = function(value)
         local speedValue = tonumber(value)
         if speedValue then
-            character.Humanoid.WalkSpeed = speedValue
+            LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
         end
     end
 })
@@ -100,7 +82,10 @@ MainTab:AddInput("SizeInput", {
     Callback = function(value)
         local sizeValue = tonumber(value)
         if sizeValue then
-            character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
+            LocalPlayer.Character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+            changeSizeRemote:InvokeServer("changeSize", sizeValue)
         end
     end
 })
@@ -111,10 +96,11 @@ MainTab:AddInput("JumpPowerInput", {
     Placeholder = "Enter jump power value",
     Numeric = true,
     Callback = function(value)
-        for _, p in ipairs(game.Players:GetPlayers()) do
-            local humanoid = p.Character and p.Character:FindFirstChildOfClass("Humanoid")
+        local jumpPowerValue = tonumber(value)
+        for _, player in ipairs(Players:GetPlayers()) do
+            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
             if humanoid then
-                humanoid.JumpPower = tonumber(value)
+                humanoid.JumpPower = jumpPowerValue
             end
         end
     end
@@ -128,28 +114,10 @@ local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
 
 infiniteJumpToggle:OnChanged(function()
     if infiniteJumpToggle.Value then
-        local UserInputService = game:GetService("UserInputService")
         UserInputService.JumpRequest:Connect(function()
-            character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+            LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
         end)
     end
-end)
-
--- NoClip Toggle
-local noClipToggle = MainTab:AddToggle("NoClipToggle", {
-    Title = "Enable NoClip",
-    Default = false,
-})
-
-noClipToggle:OnChanged(function()
-    local function setNoClip(enabled)
-        for _, part in pairs(character:GetChildren()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = not enabled
-            end
-        end
-    end
-    setNoClip(noClipToggle.Value)
 end)
 
 -- Killer Tab
@@ -162,23 +130,53 @@ local autoHitToggle = KillerTab:AddToggle("AutoHitToggle", {
 })
 
 autoHitToggle:OnChanged(function()
-    _G.autoHitActive = autoHitToggle.Value
-    if _G.autoHitActive then
+    isAutoHitEnabled = autoHitToggle.Value
+    if isAutoHitEnabled then
         spawn(autoHit)
     end
 end)
 
--- Combined Actions Toggle
-local combinedActionToggle = KillerTab:AddToggle("CombinedActionToggle", {
-    Title = "Enable Combined Actions",
+-- Player Names Dropdown
+local playerNames = {}
+local playerDropdown = KillerTab:AddDropdown("PlayerNamesDropdown", {
+    Title = "Select Player",
+    Values = playerNames,
+    Default = 1,
+    Callback = function(selectedPlayer)
+        print("Selected player: " .. selectedPlayer)
+    end
+})
+
+-- Function to refresh player names
+local function refreshPlayerNames()
+    playerNames = {}
+    for _, player in pairs(Players:GetPlayers()) do
+        table.insert(playerNames, player.Name)
+    end
+    playerDropdown:Refresh(playerNames)
+end
+
+-- Initial population of player names
+refreshPlayerNames()
+
+-- Refresh Button
+KillerTab:AddButton("Refresh Players", function()
+    refreshPlayerNames()
+end)
+
+-- Combined Kill Toggle
+local combinedKillToggle = KillerTab:AddToggle("CombinedKillToggle", {
+    Title = "Enable Combined Kill Actions",
     Default = false,
 })
 
-combinedActionToggle:OnChanged(function()
-    _G.teleportPlayersActive = combinedActionToggle.Value
-    _G.invisibilityActive = combinedActionToggle.Value
-    
-    if combinedActionToggle.Value then
+combinedKillToggle:OnChanged(function()
+    _G.autoHitActive = combinedKillToggle.Value
+    _G.teleportPlayersActive = combinedKillToggle.Value
+    _G.invisibilityActive = combinedKillToggle.Value
+
+    if combinedKillToggle.Value then
+        spawn(autoHit)
         spawn(teleportPlayers)
         spawn(makePlayersInvisible)
     end
@@ -210,7 +208,7 @@ local antiAFKToggle = MiscTab:AddToggle("AntiAFKToggle", {
 })
 
 antiAFKToggle:OnChanged(function()
-    local player = game.Players.LocalPlayer
+    local player = Players.LocalPlayer
     while antiAFKToggle.Value do
         player.Idled:Wait()
         player:Move(Vector3.new(0, 0, 0))
