@@ -1,0 +1,41 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Player Selector",
+    SubTitle = "Select a Player",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(300, 200),
+    Acrylic = true,
+    Theme = "Dark",
+})
+
+local playerNames = {}
+
+-- Dropdown for player names
+local playerDropdown = Window:AddDropdown("PlayerDropdown", {
+    Title = "Select a Player",
+    Values = playerNames,
+    Default = 1,
+})
+
+local function updatePlayerNames()
+    playerNames = {}
+    for _, player in pairs(game.Players:GetPlayers()) do
+        table.insert(playerNames, player.Name)
+    end
+    playerDropdown:UpdateValues(playerNames)
+end
+
+-- Refresh button to update the player list
+Window:AddButton("Refresh Player List", function()
+    updatePlayerNames()
+end)
+
+-- Initial population of player names
+updatePlayerNames()
+
+Fluent:Notify({
+    Title = "Player Selector",
+    Content = "The player dropdown has been loaded.",
+    Duration = 5
+})
