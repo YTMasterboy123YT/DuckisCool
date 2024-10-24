@@ -1,119 +1,122 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSizeSpeedRemote
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local Window = Fluent:CreateWindow({
-    Title = "Fluent " .. Fluent.Version,
-    SubTitle = "by dawid",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
+-- Create the GUI Window
+local Window = Rayfield:CreateWindow({
+    Name = "Ducks Private Script",
+    LoadingTitle = "Ducks Private Suite",
+    LoadingSubtitle = "by Masterboy123",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil,
+        FileName = "Big Hub"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "noinvitelink",
+        RememberJoins = true
+    },
+    KeySystem = false,
+    KeySettings = {
+        Title = "Untitled",
+        Subtitle = "Key System",
+        Note = "No method of obtaining the key is provided",
+        FileName = "Key",
+        SaveKey = true,
+        GrabKeyFromSite = false,
+        Key = {"Hello"}
+    }
 })
 
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-}
+-- Create the Main tab
+local MainTab = Window:CreateTab("Main", 5100889067)
 
-local Options = Fluent.Options
-
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-
--- Player setup
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local userInputService = game:GetService("UserInputService")
-
--- NoClip setup
-local noclipEnabled = false
-
-local function toggleNoClip()
-    noclipEnabled = not noclipEnabled
-
-    if noclipEnabled then
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
+-- Function to set NoClip for a character
+local function setNoClip(character, value)
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = not value
         end
-        Notify("NoClip Activated", "", 3)
-    else
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = true
-            end
-        end
-        Notify("NoClip Deactivated", "", 3)
     end
 end
 
-userInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode == Enum.KeyCode.N then
-        toggleNoClip()
-        Options.NoClip:SetValue(noclipEnabled) -- Sync GUI toggle with NoClip state
-    end
-end)
-
-game:GetService("RunService").Stepped:Connect(function()
-    if noclipEnabled then
-        character:Move(Vector3.new(0, 0, 0), false)
-    end
-end)
-
--- Speed input field
-local InputSpeed = Tabs.Main:AddInput("Speed", {
-    Title = "Speed",
-    Default = "16", -- Default speed value
-    Placeholder = "Enter speed value",
-    Numeric = true,
-    Finished = false,
+-- Toggle for NoClip
+local NoClipToggle = MainTab:CreateToggle({
+    Name = "NoClip",
+    CurrentValue = false,
+    Flag = "ToggleNoClip",
     Callback = function(Value)
-        print("Speed changed:", Value)
-        changeSizeSpeedRemote:InvokeServer("changeSpeed", tonumber(Value))
-    end
+        local character = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+        setNoClip(character, Value)
+        if Value then
+            print("NoClip enabled.")
+        else
+            print("NoClip disabled.")
+            setNoClip(character, false)
+        end
+    end,
 })
 
-InputSpeed:OnChanged(function()
-    print("Speed updated:", InputSpeed.Value)
-end)
+-- Function to enable Infinite Jump
+local function enableInfiniteJump()
+    local player = Players.LocalPlayer
+    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        UserInputService.JumpRequest:Connect(function()
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end)
+    end
+end
 
--- Size input field
-local InputSize = Tabs.Main:AddInput("Size", {
-    Title = "Size",
-    Default = "10", -- Default size value
-    Placeholder = "Enter size value",
-    Numeric = true,
-    Finished = false,
+-- Toggle for Infinite Jump
+local InfiniteJumpToggle = MainTab:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Flag = "ToggleInfiniteJump",
     Callback = function(Value)
-        print("Size changed:", Value)
-        changeSizeSpeedRemote:InvokeServer("changeSize", tonumber(Value))
-    end
+        if Value then
+            print("Infinite Jump enabled.")
+            enableInfiniteJump()
+        else
+            print("Infinite Jump disabled.")
+            -- You may want to disconnect the jump connection here if necessary
+        end
+    end,
 })
 
-InputSize:OnChanged(function()
-    print("Size updated:", InputSize.Value)
-end)
-
--- NoClip toggle in GUI
-Options.NoClip = Tabs.Main:AddToggle("NoClip", {
-    Title = "Toggle NoClip",
-    Default = false,
-    Callback = function(Value)
-        noclipEnabled = Value
-        toggleNoClip() -- Activate or deactivate NoClip based on toggle
-    end
+-- Speed Changer Input
+local SpeedChangerInput = MainTab:CreateInput({
+    Name = "SpeedChanger",
+    PlaceholderText = "Input Speed Value",
+    RemoveTextAfterFocusLost = true,
+    Callback = function(Text)
+        local speedValue = tonumber(Text)  -- Convert the input text to a number
+        if speedValue then
+            print("Speed changed to: " .. speedValue)
+            changeSizeSpeedRemote:InvokeServer("changeSpeed", speedValue)
+        else
+            print("Please enter a valid number for speed.")
+        end
+    end,
 })
 
--- MyToggle example
-local Toggle = Tabs.Main:AddToggle("MyToggle", {
-    Title = "Toggle",
-    Default = false
+-- Size Changer Input
+local SizeChangerInput = MainTab:CreateInput({
+    Name = "SizeChanger",
+    PlaceholderText = "Input Size Value",
+    RemoveTextAfterFocusLost = true,
+    Callback = function(Text)
+        local sizeValue = tonumber(Text)  -- Convert the input text to a number
+        if sizeValue then
+            print("Size changed to: " .. sizeValue)
+            changeSizeSpeedRemote:InvokeServer("changeSize", sizeValue)
+        else
+            print("Please enter a valid number for size.")
+        end
+    end,
 })
 
-Toggle:OnChanged(function(Value)
-    print("Toggle changed:", Value)
-end)
-
-Options.MyToggle = Toggle -- Register toggle in Options
-Options.MyToggle:SetValue(false) -- Set initial value
+-- You can continue to add more features to the MainTab here as needed
