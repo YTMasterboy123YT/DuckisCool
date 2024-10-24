@@ -27,8 +27,6 @@ local tools = {
 }
 
 local isAutoHitEnabled = false
-local isNoClipEnabled = false
-local isInfiniteJumpEnabled = false
 
 local function setToolProperties()
     for _, toolInfo in pairs(tools) do
@@ -49,26 +47,6 @@ local function autoHit()
             equippedTool:Activate()
         end
         wait(0.1)
-    end
-end
-
-local function setNoClip(enabled)
-    local character = player.Character or player.CharacterAdded:Wait()
-    for _, part in pairs(character:GetChildren()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = not enabled
-        end
-    end
-end
-
-local function enableInfiniteJump()
-    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        UserInputService.JumpRequest:Connect(function()
-            if isInfiniteJumpEnabled then
-                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end)
     end
 end
 
@@ -126,28 +104,6 @@ MainTab:AddInput("JumpPowerInput", {
         end
     end
 })
-
--- Infinite Jump Toggle
-local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
-    Title = "Enable Infinite Jump",
-    Default = false,
-})
-
-infiniteJumpToggle:OnChanged(function()
-    isInfiniteJumpEnabled = infiniteJumpToggle.Value
-    enableInfiniteJump()
-end)
-
--- NoClip Toggle
-local noClipToggle = MainTab:AddToggle("NoClipToggle", {
-    Title = "Enable NoClip",
-    Default = false,
-})
-
-noClipToggle:OnChanged(function()
-    isNoClipEnabled = noClipToggle.Value
-    setNoClip(isNoClipEnabled)
-end)
 
 -- Killer Tab
 local KillerTab = Tabs.Killer
@@ -207,16 +163,6 @@ antiAFKToggle:OnChanged(function()
         wait(1)
     end
 end)
-
--- Add any additional setup for SaveManager and InterfaceManager here
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-InterfaceManager:SetFolder("FluentScriptHub")
-SaveManager:SetFolder("FluentScriptHub/specific-game")
-InterfaceManager:BuildInterfaceSection(MiscTab)
-SaveManager:BuildConfigSection(MiscTab)
 
 Window:SelectTab(1)
 
