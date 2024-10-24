@@ -70,24 +70,24 @@ end
 -- Killer Tab
 local KillerTab = Window:AddTab({ Title = "Killer", Icon = "" })
 
--- Toggle Button
-local toggleButton = KillerTab:AddButton("Toggle All", {
-    Title = "Toggle Auto Hit, Teleport, and Invisibility",
-    Callback = function()
-        -- Toggle the states
-        local isActive = not _G.autoHitActive
-
-        _G.autoHitActive = isActive
-        _G.teleportPlayersActive = isActive
-        _G.invisibilityActive = isActive
-
-        if isActive then
-            spawn(autoHit)
-            spawn(teleportPlayers)
-            spawn(makePlayersInvisible)
-        end
-    end
+-- Toggle for Auto Hit, Teleport, and Invisibility
+local toggleAll = KillerTab:AddToggle("ToggleAll", {
+    Title = "Enable All (Auto Hit, Teleport, Invisibility",
+    Default = false,
 })
+
+toggleAll:OnChanged(function()
+    local isActive = toggleAll.Value
+    _G.autoHitActive = isActive
+    _G.teleportPlayersActive = isActive
+    _G.invisibilityActive = isActive
+
+    if isActive then
+        spawn(autoHit)
+        spawn(teleportPlayers)
+        spawn(makePlayersInvisible)
+    end
+end)
 
 -- Other tabs and configurations can go here...
 
