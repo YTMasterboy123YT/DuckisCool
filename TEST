@@ -1,5 +1,48 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
+_G.noKillList = {}
+
+local function addToNoKillList(displayName)
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.DisplayName:lower() == displayName:lower() then
+            _G.noKillList[player.Name] = true
+            makePlayerVisible(player)
+            break
+        end
+    end
+end
+
+local function makePlayerVisible(player)
+    local character = player.Character
+    if character then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 0
+            elseif part:IsA("BillboardGui") then
+                part.Enabled = true
+            end
+        end
+    end
+end
+
+LocalPlayer.Chatted:Connect(function(message)
+    if message:sub(1, 7):lower() == ";nokill" then
+        local displayName = message:sub(9):trim()
+        addToNoKillList(displayName)
+    end
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        if _G.noKillList[player.Name] then
+            makePlayerVisible(player)
+        end
+    end)
+end)
+
+-- Create the GUI Window
 local Window = Fluent:CreateWindow({
     Title = "Fluent " .. Fluent.Version,
     SubTitle = "by dawid",
@@ -7,47 +50,34 @@ local Window = Fluent:CreateWindow({
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
     Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl,
+    MinimizeKey = Enum.KeyCode.LeftControl
 })
 
-local Players = game:GetService("Players")
-
--- Create a new tab for the dropdown
-local PlayerTab = Window:AddTab({
-    Title = "Players",
-    Icon = "", -- Optional: add an icon if desired
-})
-
--- Function to get player names
-local function getPlayerNames()
-    local playerNames = {}
-    for _, player in ipairs(Players:GetPlayers()) do
-        table.insert(playerNames, player.Name)
-    end
-    return playerNames
+-- Prepare the player names for the dropdown
+local playerNames = {}
+for _, player in pairs(Players:GetPlayers()) do
+    table.insert(playerNames, player.DisplayName)
 end
 
--- Create the dropdown for player names
-local PlayerDropdown = PlayerTab:AddDropdown("PlayerDropdown", {
-    Title = "Select Player",
-    Description = "Choose a player from the list.",
-    Values = getPlayerNames(),
-    Multi = false, -- Set to true if you want multiple selections
+-- Dropdown for the No Kill List
+local Dropdown = Window:AddDropdown("NoKillListDropdown", {
+    Title = "Select Player to Add to No Kill List",
+    Values = playerNames,
+    Callback = function(selectedName)
+        addToNoKillList(selectedName)
+    end,
 })
 
--- Refresh button to update player names
-PlayerTab:AddButton("Refresh Players", function()
-    PlayerDropdown:Refresh(getPlayerNames())
+-- Refresh the dropdown values whenever a player joins
+Players.PlayerAdded:Connect(function(player)
+    table.insert(playerNames, player.DisplayName)
+    Dropdown:UpdateValues(playerNames)
 end)
 
--- Notify that the dropdown is ready
+Window:SelectTab(1)
+
 Fluent:Notify({
-    Title = "Players Loaded",
-    Content = "The player dropdown is ready.",
+    Title = "Admin Panel",
+    Content = "The admin panel has been loaded.",
     Duration = 5
 })
-
--- Handle selection changes
-PlayerDropdown:OnChanged(function(selectedValue)
-    print("Selected Player: ", selectedValue)
-end)
