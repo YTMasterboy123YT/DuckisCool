@@ -26,6 +26,8 @@ local tools = {
     {name = "Situps", type = "repTime"}
 }
 
+local isAutoHitEnabled = false
+
 local function setToolProperties()
     for _, toolInfo in pairs(tools) do
         local tool = backpack:FindFirstChild(toolInfo.name)
@@ -39,7 +41,7 @@ local function setToolProperties()
 end
 
 local function autoHit()
-    while autoHitToggle.Value do
+    while isAutoHitEnabled do
         local equippedTool = character:FindFirstChildOfClass("Tool")
         if equippedTool and equippedTool.Enabled then
             equippedTool:Activate()
@@ -113,7 +115,8 @@ local autoHitToggle = KillerTab:AddToggle("AutoHitToggle", {
 })
 
 autoHitToggle:OnChanged(function()
-    if autoHitToggle.Value then
+    isAutoHitEnabled = autoHitToggle.Value
+    if isAutoHitEnabled then
         autoHit()  -- Start auto-hitting when the toggle is enabled
     end
 end)
@@ -126,18 +129,6 @@ player.CharacterAdded:Connect(function(newCharacter)
     backpack = player:WaitForChild("Backpack")
     setToolProperties()
 end)
-
-KillerTab:AddParagraph({
-    Title = "Auto Hit",
-    Content = "Enable the toggle to automatically hit enemies."
-})
-
--- Auto Farm Tab
-local AutoFarmTab = Tabs.AutoFarm
-AutoFarmTab:AddParagraph({
-    Title = "Coming Soon",
-    Content = "Stay tuned for updates!"
-})
 
 -- Misc Tab
 local MiscTab = Tabs.Misc
@@ -172,16 +163,6 @@ antiAFKToggle:OnChanged(function()
         wait(1)
     end
 end)
-
--- SaveManager and InterfaceManager setup
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-InterfaceManager:SetFolder("FluentScriptHub")
-SaveManager:SetFolder("FluentScriptHub/specific-game")
-InterfaceManager:BuildInterfaceSection(MiscTab)
-SaveManager:BuildConfigSection(MiscTab)
 
 Window:SelectTab(1)
 
