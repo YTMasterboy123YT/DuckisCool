@@ -4,12 +4,14 @@ local LocalPlayer = Players.LocalPlayer
 
 _G.noKillList = {}
 
-local function addToNoKillList(displayName)
-    for _, player in pairs(Players:GetPlayers()) do
-        if player.DisplayName:lower() == displayName:lower() then
-            _G.noKillList[player.Name] = true
-            makePlayerVisible(player)
-            break
+local function addToNoKillList(displayNames)
+    for _, displayName in pairs(displayNames) do
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.DisplayName:lower() == displayName:lower() then
+                _G.noKillList[player.Name] = true
+                makePlayerVisible(player)
+                break
+            end
         end
     end
 end
@@ -30,7 +32,7 @@ end
 LocalPlayer.Chatted:Connect(function(message)
     if message:sub(1, 7):lower() == ";nokill" then
         local displayName = message:sub(9):trim()
-        addToNoKillList(displayName)
+        addToNoKillList({displayName})
     end
 end)
 
@@ -61,10 +63,11 @@ end
 
 -- Dropdown for the No Kill List
 local Dropdown = Window:AddDropdown("NoKillListDropdown", {
-    Title = "Select Player to Add to No Kill List",
+    Title = "Select Players to Add to No Kill List",
     Values = playerNames,
-    Callback = function(selectedName)
-        addToNoKillList(selectedName)
+    Multi = true,  -- Enable multi-selection
+    Callback = function(selectedNames)
+        addToNoKillList(selectedNames)
     end,
 })
 
