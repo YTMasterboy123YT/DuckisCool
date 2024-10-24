@@ -1,22 +1,19 @@
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 
--- Function to teleport all players' heads to the local player's right hand
-local function teleportHeadsToRightHand()
+-- Function to teleport the local player's head to their right hand
+local function teleportHeadToRightHand()
     local rightHand = character:FindFirstChild("RightHand")
-    if not rightHand then return end
+    local head = character:FindFirstChild("Head")
+    
+    if not rightHand or not head then return end
 
     while true do
-        for _, otherPlayer in ipairs(game.Players:GetPlayers()) do
-            if otherPlayer.Character and otherPlayer.Character:FindFirstChild("Head") then
-                local head = otherPlayer.Character.Head
-                -- Teleport the head to the position of the right hand
-                head.CFrame = rightHand.CFrame * CFrame.new(0, 0, 0) -- Adjust offset if needed
-            end
-        end
+        -- Teleport the head to the position of the right hand
+        head.CFrame = rightHand.CFrame * CFrame.new(0, 0, 0) -- Adjust offset if needed
         wait(0.2) -- Wait for 0.2 seconds
     end
 end
 
 -- Start the teleport function
-teleportHeadsToRightHand()
+teleportHeadToRightHand()
