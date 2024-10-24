@@ -9,263 +9,231 @@ local Window = Fluent:CreateWindow({
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
     Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
 })
 
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Utilities = Window:AddTab({ Title = "Utilities", Icon = "tools" }),
-    PlayerSettings = Window:AddTab({ Title = "Player Settings", Icon = "user" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+    PlayerActions = Window:AddTab({ Title = "Player Actions", Icon = "" }),
+    GameSettings = Window:AddTab({ Title = "Game Settings", Icon = "" }),
 }
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
-
--- Auto Hit (Any Tool)
-local autoHitActive = false
-local function autoHit()
-    while autoHitActive do
-        local equippedTool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
-        if equippedTool and equippedTool.Enabled then
-            equippedTool:Activate()
-        end
-        wait(0.1)
-    end
-end
-
-Tabs.Main:AddToggle("AutoHitToggle", {
-    Title = "Enable Auto Hit",
-    Default = false,
-    Callback = function(value)
-        autoHitActive = value
-        if value then
-            autoHit()
-        end
-    end
-})
-
--- Auto Kill
-Tabs.Main:AddButton({
-    Title = "Auto Kill",
-    Callback = function()
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then
-                -- Your auto kill logic here (e.g., invoke a remote event)
-            end
-        end
-    end
-})
-
--- Edit Hit Speed
-Tabs.PlayerSettings:AddSlider("HitSpeedSlider", {
-    Title = "Set Hit Speed",
-    Min = 0.1,
-    Max = 5,
-    Default = 1,
-    Callback = function(value)
-        -- Implement hit speed adjustment logic here
-    end
-})
-
--- No Kill
-_G.noKillList = {}
-local function addToNoKillList(displayName)
-    for _, player in pairs(Players:GetPlayers()) do
-        if player.DisplayName:lower() == displayName:lower() then
-            _G.noKillList[player.Name] = true
-            makePlayerVisible(player)
-            break
-        end
-    end
-end
-
-local function makePlayerVisible(player)
-    local character = player.Character
-    if character then
-        for _, part in pairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.Transparency = 0
-            elseif part:IsA("BillboardGui") then
-                part.Enabled = true
-            end
-        end
-    end
-end
-
-Tabs.Main:AddInput("NoKillInput", {
-    Title = "Add to No-Kill List",
-    Placeholder = "Enter Display Name",
-    Callback = function(value)
-        addToNoKillList(value)
-    end
-})
-
--- Anti AFK
-local function antiAFK()
-    while true do
-        LocalPlayer.Idled:Wait()
-        LocalPlayer:Move(Vector3.new(0, 0, 0))
-        wait(1)
-    end
-end
-
-Tabs.Utilities:AddButton({
-    Title = "Enable Anti-AFK",
-    Callback = function()
-        antiAFK()
-    end
-})
-
--- Chat Spy
-local function onPlayerChatted(player, message)
-    print(player.Name .. ": " .. message)
-end
-
-for _, player in pairs(Players:GetPlayers()) do
-    player.Chatted:Connect(function(message)
-        onPlayerChatted(player, message)
-    end)
-end
-
-Players.PlayerAdded:Connect(function(player)
-    player.Chatted:Connect(function(message)
-        onPlayerChatted(player, message)
-    end)
-end)
-
--- FPS Boost
-Tabs.Utilities:AddButton({
-    Title = "Enable FPS Boost",
-    Callback = function()
-        -- Implement FPS boost logic (e.g., adjust settings)
-    end
-})
-
--- Gravity Changer
-local function changeGravity(value)
-    game.Workspace.Gravity = value
-end
-
-Tabs.Utilities:AddSlider("GravitySlider", {
-    Title = "Set Gravity",
-    Min = 0,
-    Max = 196.2, -- Default Roblox gravity
-    Default = 196.2,
-    Callback = function(value)
-        changeGravity(value)
-    end
-})
-
--- Infinite Jump
-local function enableInfiniteJump()
-    UserInputService.JumpRequest:Connect(function()
-        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-    end)
-end
-
-Tabs.PlayerSettings:AddToggle("InfiniteJumpToggle", {
-    Title = "Enable Infinite Jump",
-    Default = false,
-    Callback = function(value)
-        if value then
-            enableInfiniteJump()
-        end
-    end
-})
-
--- Lock Position
-local function lockPosition(value)
-    if value then
-        LocalPlayer.Character.HumanoidRootPart.Anchored = true
-    else
-        LocalPlayer.Character.HumanoidRootPart.Anchored = false
-    end
-end
-
-Tabs.Utilities:AddToggle("LockPositionToggle", {
-    Title = "Lock Position",
-    Default = false,
-    Callback = function(value)
-        lockPosition(value)
-    end
-})
-
--- No Clip
-local function setNoClip(character, value)
-    for _, part in ipairs(character:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = not value
-        end
-    end
-end
-
-Tabs.Main:AddToggle("NoClipToggle", {
-    Title = "Enable No-Clip",
-    Default = false,
-    Callback = function(value)
-        if LocalPlayer.Character then
-            setNoClip(LocalPlayer.Character, value)
-        end
-    end
-})
-
--- Set Size
-local function setCharacterSize(size)
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.BodyScale.Value = size
-    end
-end
-
-Tabs.PlayerSettings:AddSlider("SizeSlider", {
-    Title = "Set Size",
-    Min = 1,
-    Max = 5,
-    Default = 1,
-    Callback = function(value)
-        setCharacterSize(value)
-    end
-})
-
--- Set Speed
-Tabs.PlayerSettings:AddSlider("SpeedSlider", {
-    Title = "Set Walk Speed",
-    Min = 16,
-    Max = 200,
-    Default = 16,
-    Callback = function(value)
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = value
-        end
-    end
-})
-
--- Set Time
-local function setGameTime(timeOfDay)
-    if timeOfDay == "Morning" then
-        game.Lighting.ClockTime = 6
-    elseif timeOfDay == "Afternoon" then
-        game.Lighting.ClockTime = 16
-    elseif timeOfDay == "Night" then
-        game.Lighting.ClockTime = 0
-    else
-        print("Invalid time of day.")
-    end
-end
-
-Tabs.Utilities:AddDropdown("TimeDropdown", {
-    Title = "Set Game Time",
-    Values = {"Morning", "Afternoon", "Night"},
-    Callback = function(value)
-        setGameTime(value)
-    end
-})
-
+-- Notify when the GUI is loaded
 Fluent:Notify({
     Title = "Fluent",
     Content = "The script has been loaded.",
-    Duration = 8
+    Duration = 5
 })
 
-Window:SelectTab(1)
+-- 1. Adjust Tool Cooldowns
+Tabs.PlayerActions:AddButton({
+    Title = "Adjust Tool Cooldowns",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local backpack = player:WaitForChild("Backpack")
+        local tools = {
+            {"Punch", "attackTime", 0.1},
+            {"Ground Slam", "attackTime", 0.1},
+            {"Stomp", "attackTime", 0.1},
+            {"Handstands", "repTime", 0.1},
+            {"Pushups", "repTime", 0.1},
+            {"Weight", "repTime", 0.1},
+            {"Situps", "repTime", 0.1}
+        }
+        for _, tool in ipairs(tools) do
+            local toolObj = backpack:FindFirstChild(tool[1])
+            if toolObj and toolObj:FindFirstChild(tool[2]) then
+                toolObj[tool[2]].Value = tool[3]
+            end
+        end
+    end
+})
+
+-- 2. Enable Auto Hit, Teleport, and Invisibility
+Tabs.PlayerActions:AddButton({
+    Title = "Enable Auto Hit, Teleport, Invisibility",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+
+        _G.autoHitActive = true
+        _G.teleportPlayersActive = true
+        _G.invisibilityActive = true
+
+        local function autoHit()
+            while _G.autoHitActive do
+                LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+                LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+                wait(0.1)
+            end
+        end
+
+        local function teleportPlayers()
+            while _G.teleportPlayersActive do
+                wait(0.1)
+                for _, otherPlayer in pairs(Players:GetPlayers()) do
+                    if otherPlayer ~= LocalPlayer then
+                        local targetCharacter = otherPlayer.Character
+                        if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                            targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
+                        end
+                    end
+                end
+            end
+        end
+
+        local function makePlayersInvisible()
+            while _G.invisibilityActive do
+                for _, otherPlayer in pairs(Players:GetPlayers()) do
+                    if otherPlayer ~= LocalPlayer then
+                        local targetCharacter = otherPlayer.Character
+                        if targetCharacter then
+                            for _, part in pairs(targetCharacter:GetChildren()) do
+                                if part:IsA("BasePart") then
+                                    part.Transparency = 1
+                                elseif part:IsA("Accessory") then
+                                    part.Handle.Transparency = 1
+                                end
+                            end
+                            for _, descendant in pairs(targetCharacter:GetDescendants()) do
+                                if descendant:IsA("BillboardGui") then
+                                    descendant.Enabled = false
+                                end
+                            end
+                        end
+                    end
+                end
+                wait(0.1)
+            end
+        end
+
+        LocalPlayer.Chatted:Connect(function(message)
+            if message:lower() == "lol" then
+                spawn(autoHit)
+                spawn(teleportPlayers)
+                spawn(makePlayersInvisible)
+            end
+        end)
+    end
+})
+
+-- 3. Set Low Graphics Quality
+Tabs.GameSettings:AddButton({
+    Title = "Set Low Graphics Quality",
+    Callback = function()
+        local UserSettings = UserSettings():GetService("UserGameSettings")
+        UserSettings.GraphicsQuality = 1
+    end
+})
+
+-- 4. Enable Infinite Jump
+Tabs.PlayerActions:AddButton({
+    Title = "Enable Infinite Jump",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local UserInputService = game:GetService("UserInputService")
+        for _, player in ipairs(Players:GetPlayers()) do
+            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                UserInputService.JumpRequest:Connect(function()
+                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end)
+            end
+        end
+    end
+})
+
+-- 5. Change Jump Power
+Tabs.GameSettings:AddButton({
+    Title = "Change Jump Power",
+    Callback = function()
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.JumpPower = 100 -- Set your desired jump power here
+                end
+            end
+        end
+    end
+})
+
+-- 6. Enable No-Clip
+Tabs.PlayerActions:AddButton({
+    Title = "Enable No-Clip",
+    Callback = function()
+        local function setNoClip(character, value)
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = not value
+                end
+            end
+        end
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                setNoClip(character, true)
+            end
+        end
+    end
+})
+
+-- 7. Change Size
+Tabs.GameSettings:AddButton({
+    Title = "Change Size",
+    Callback = function()
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local changeSizeSpeedRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("changeSpeedSizeRemote")
+        changeSizeSpeedSpeedRemote:InvokeServer("changeSize", 2) -- Change size to 2
+    end
+})
+
+-- 8. Change Speed
+Tabs.GameSettings:AddButton({
+    Title = "Change Speed",
+    Callback = function()
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local changeSizeSpeedRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("changeSpeedSizeRemote")
+        changeSizeSpeedRemote:InvokeServer("changeSpeed", 200) -- Change speed to 200
+    end
+})
+
+-- 9. Set Game Time to Morning
+Tabs.GameSettings:AddButton({
+    Title = "Set Game Time to Morning",
+    Callback = function()
+        game.Lighting.ClockTime = 6
+    end
+})
+
+-- 10. Set Game Time to Afternoon
+Tabs.GameSettings:AddButton({
+    Title = "Set Game Time to Afternoon",
+    Callback = function()
+        game.Lighting.ClockTime = 16
+    end
+})
+
+-- 11. Set Game Time to Night
+Tabs.GameSettings:AddButton({
+    Title = "Set Game Time to Night",
+    Callback = function()
+        game.Lighting.ClockTime = 0
+    end
+})
+
+-- Hand the library over to our managers
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+
+-- Set folders for saving configs
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+
+-- Build interface and config sections
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+-- Load any auto-loading config
+SaveManager:LoadAutoloadConfig()
