@@ -28,7 +28,7 @@ Tabs.Main:AddInput("SpeedInput", {
         if speedValue then
             local ReplicatedStorage = game:GetService("ReplicatedStorage")
             local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-            changeSizeSpeedSpeedRemote:InvokeServer("changeSpeed", speedValue)
+            changeSizeSpeedRemote:InvokeServer("changeSpeed", speedValue)
         end
     end
 })
@@ -109,39 +109,29 @@ Tabs.Main:AddToggle("NoClip", {
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-_G.autoPunchActive = false
-local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+_G.autoHitActive = false
 
 local function autoHit()
-    while _G.autoPunchActive do
-        local punchTool = character:FindFirstChild("Punch")
-        if punchTool and punchTool.Enabled then
-            punchTool:Activate()
-        end
+    while _G.autoHitActive do
+        LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+        LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
         wait(0.1)
     end
 end
 
-Tabs.Killer:AddToggle("Auto Punch", {
-    Title = "Enable Auto Punch",
+Tabs.Killer:AddToggle("Activate Auto Hit", {
+    Title = "Enable Auto Hit",
     Default = false,
     Callback = function(value)
-        _G.autoPunchActive = value
+        _G.autoHitActive = value
         if value then
             spawn(autoHit)
         end
     end
 })
 
-LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    if _G.autoPunchActive then
-        spawn(autoHit)
-    end
-end)
-
--- Auto Farm Tab (Currently empty)
--- Add any auto farming functions here if needed.
+-- Auto Farm Tab (Blank)
+-- This section is intentionally left empty for future use
 
 -- Misc Tab
 Tabs.Misc:AddDropdown("GameTime", {
@@ -149,14 +139,14 @@ Tabs.Misc:AddDropdown("GameTime", {
     Values = {"Morning", "Afternoon", "Night"},
     Default = 1,
     Callback = function(value)
-        setGameTime(value)  -- Assuming setGameTime function is defined
+        -- Define setGameTime function elsewhere
     end
 })
 
 Tabs.Misc:AddButton({
     Title = "Anti AFK",
     Callback = function()
-        antiAFK()  -- Assuming antiAFK function is defined
+        -- Define antiAFK function elsewhere
     end
 })
 
