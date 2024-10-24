@@ -16,7 +16,7 @@ local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Killer = Window:AddTab({ Title = "Killer", Icon = "skull" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "farm" })
-}
+})
 
 -- Main Tab Scripts
 Tabs.Main:AddButton({
@@ -93,29 +93,34 @@ Tabs.Main:AddButton({
     end
 })
 
-Tabs.Main:AddButton({
-    Title = "Size Script",
-    Callback = function()
+Tabs.Main:AddInput({
+    Title = "Set Size",
+    Default = "2",
+    Placeholder = "Enter Size Value",
+    Numeric = true,
+    Callback = function(value)
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
         local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-
-        changeSizeSpeedRemote:InvokeServer("changeSize", 2)
+        changeSizeSpeedRemote:InvokeServer("changeSize", tonumber(value))
     end
 })
 
-Tabs.Main:AddButton({
-    Title = "Speed Script",
-    Callback = function()
+Tabs.Main:AddInput({
+    Title = "Set Speed",
+    Default = "200",
+    Placeholder = "Enter Speed Value",
+    Numeric = true,
+    Callback = function(value)
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
         local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-
-        changeSizeSpeedRemote:InvokeServer("changeSpeed", 200)
+        changeSizeSpeedRemote:InvokeServer("changeSpeed", tonumber(value))
     end
 })
 
-Tabs.Main:AddButton({
-    Title = "Noclip",
-    Callback = function()
+Tabs.Main:AddToggle("NoClipToggle", {
+    Title = "No Clip",
+    Default = false,
+    Callback = function(value)
         local Players = game:GetService("Players")
 
         local function setNoClip(character, value)
@@ -129,45 +134,45 @@ Tabs.Main:AddButton({
         for _, player in ipairs(Players:GetPlayers()) do
             local character = player.Character
             if character then
-                setNoClip(character, true)
+                setNoClip(character, value)
             end
         end
     end
 })
 
-Tabs.Main:AddButton({
+Tabs.Main:AddDropdown("GameTimeDropdown", {
     Title = "Change Game Time",
-    Callback = function()
-        local function setGameTime(timeOfDay)
-            if timeOfDay == "Morning" then
-                game.Lighting.ClockTime = 6
-            elseif timeOfDay == "Afternoon" then
-                game.Lighting.ClockTime = 16
-            elseif timeOfDay == "Night" then
-                game.Lighting.ClockTime = 0
-            else
-                print("Invalid time of day.")
-            end
+    Values = {"Morning", "Afternoon", "Night"},
+    Default = 1,
+    Callback = function(value)
+        local timeOfDay = value
+        if timeOfDay == "Morning" then
+            game.Lighting.ClockTime = 6
+        elseif timeOfDay == "Afternoon" then
+            game.Lighting.ClockTime = 16
+        elseif timeOfDay == "Night" then
+            game.Lighting.ClockTime = 0
         end
-
-        setGameTime("Morning")
     end
 })
 
-Tabs.Main:AddButton({
+Tabs.Main:AddToggle("AntiAFKToggle", {
     Title = "Anti-AFK",
-    Callback = function()
+    Default = false,
+    Callback = function(value)
         local player = game.Players.LocalPlayer
 
         local function antiAFK()
-            while true do
+            while value do
                 player.Idled:Wait()
                 player:Move(Vector3.new(0, 0, 0))
                 wait(1)
             end
         end
 
-        antiAFK()
+        if value then
+            spawn(antiAFK)
+        end
     end
 })
 
@@ -194,46 +199,23 @@ Tabs.Main:AddButton({
     end
 })
 
-Tabs.Main:AddButton({
-    Title = "Graphics Quality Script",
-    Callback = function()
-        local UserSettings = UserSettings():GetService("UserGameSettings")
-
-        UserSettings.GraphicsQuality = 1
-        UserSettings:SetThirdPartyGraphicsQuality(1)
-
-        local function setQuality()
-            UserSettings.GraphicsQuality = 1
-        end
-
-        setQuality()
-
-        UserSettings.Changed:Connect(function(property)
-            if property == "GraphicsQuality" then
-                setQuality()
-            end
-        end)
-    end
-})
-
-Tabs.Main:AddButton({
+Tabs.Main:AddToggle("InfiniteJumpToggle", {
     Title = "Infinite Jump",
-    Callback = function()
+    Default = false,
+    Callback = function(value)
         local Players = game:GetService("Players")
         local UserInputService = game:GetService("UserInputService")
 
-        local function enableInfiniteJump()
-            for _, player in ipairs(Players:GetPlayers()) do
-                local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
+        for _, player in ipairs(Players:GetPlayers()) do
+            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                if value then
                     UserInputService.JumpRequest:Connect(function()
                         humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
                     end)
                 end
             end
         end
-
-        enableInfiniteJump()
     end
 })
 
