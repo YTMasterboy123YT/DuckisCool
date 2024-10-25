@@ -131,8 +131,10 @@ MainTab:AddInput("SizeInput", {
     Callback = function(value)
         local sizeValue = tonumber(value)
         if sizeValue then
-            changeSizeRemote:InvokeServer("changeSize", sizeValue)
-            character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
+            game:GetService("ReplicatedStorage").rEvents.changeSpeedSizeRemote:InvokeServer("changeSize", sizeValue)
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
+            end
         end
     end
 })
