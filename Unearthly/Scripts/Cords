@@ -1,1 +1,46 @@
+local player = game.Players.LocalPlayer
+local gui = script.Parent
+local cordList = {}
+local displayDuration = 3 -- Duration for each cord display in seconds
+local currentIndex = 1
+
+local function updateCordDisplay()
+    gui.ListBox:ClearAllChildren() -- Clear previous entries
+
+    if #cordList > 0 then
+        local cord = cordList[currentIndex]
+        local label = Instance.new("TextLabel")
+        label.Text = string.format("%s - %s - %s", cord.type, cord.color, cord.length)
+        label.Size = UDim2.new(1, 0, 0, 50) -- Adjust size as needed
+        label.Parent = gui.ListBox
+
+        -- Move to the next index or loop back
+        currentIndex = currentIndex % #cordList + 1
+    end
+end
+
+local function autoLoopCords()
+    while true do
+        updateCordDisplay()
+        wait(displayDuration) -- Wait for the specified duration before updating
+    end
+end
+
+gui.SubmitButton.MouseButton1Click:Connect(function()
+    local cordType = gui.TypeTextBox.Text
+    local cordColor = gui.ColorTextBox.Text
+    local cordLength = gui.LengthTextBox.Text
+
+    if cordType ~= "" and cordColor ~= "" and cordLength ~= "" then
+        table.insert(cordList, { type = cordType, color = cordColor, length = cordLength })
+        gui.TypeTextBox.Text = ""
+        gui.ColorTextBox.Text = ""
+        gui.LengthTextBox.Text = ""
+        
+        -- If this is the first cord added, start the auto-loop
+        if #cordList == 1 then
+            autoLoopCords()
+        end
+    end
+end)
 
