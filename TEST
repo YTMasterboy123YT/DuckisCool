@@ -220,23 +220,13 @@ antiAFKToggle:OnChanged(function()
     end
 end)
 
--- Mobile Toggle Button
-local playerGui = player:WaitForChild("PlayerGui")
-local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 100, 0, 50)
-toggleButton.Position = UDim2.new(0.5, -50, 0.9, 0) -- Positioned below the center
-toggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-toggleButton.BorderColor3 = Color3.fromRGB(110, 90, 130)
-toggleButton.BorderSizePixel = 2
-toggleButton.Text = "Toggle GUI"
-toggleButton.Parent = playerGui
-
-local circle = Instance.new("UICorner")
-circle.CornerRadius = UDim.new(0.5, 0)
-circle.Parent = toggleButton
-
-toggleButton.MouseButton1Click:Connect(function()
-    Window.Visible = not Window.Visible
+-- Chat commands for opening and closing the GUI
+game.Players.LocalPlayer.Chatted:Connect(function(message)
+    if message:lower() == "!open" then
+        Window.Visible = true
+    elseif message:lower() == "!close" then
+        Window.Visible = false
+    end
 end)
 
 -- SaveManager and InterfaceManager Setup
