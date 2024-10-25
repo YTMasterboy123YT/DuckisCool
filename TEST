@@ -169,6 +169,11 @@ local legendRockPosition = Vector3.new(4182.92138671875, 991.5241088867188, -405
 local muscleKingRockPosition = Vector3.new(-8979.7041015625, 7.644178867340088, -6128.27587890625)
 
 -- Teleport Toggles
+local function teleportToRock(position)
+    character.HumanoidRootPart.CFrame = CFrame.new(position)
+    wait(0.5)  -- Faster teleport wait time
+end
+
 local mythicRockToggle = AutoFarmTab:AddToggle("MythicRockToggle", {
     Title = "Teleport to Mythic Rock",
     Default = false,
@@ -176,10 +181,14 @@ local mythicRockToggle = AutoFarmTab:AddToggle("MythicRockToggle", {
 
 mythicRockToggle:OnChanged(function()
     if mythicRockToggle.Value then
+        isAutoHitEnabled = true
+        autoHit()  -- Start auto-hitting when the toggle is enabled
         while mythicRockToggle.Value do
-            character.HumanoidRootPart.CFrame = CFrame.new(mythicRockPosition)
-            wait(1)  -- Adjust the wait time as needed
+            teleportToRock(mythicRockPosition)
+            wait(0.5)  -- Adjust the wait time as needed
         end
+    else
+        isAutoHitEnabled = false  -- Stop auto-hitting when the toggle is off
     end
 end)
 
@@ -190,10 +199,14 @@ local legendRockToggle = AutoFarmTab:AddToggle("LegendRockToggle", {
 
 legendRockToggle:OnChanged(function()
     if legendRockToggle.Value then
+        isAutoHitEnabled = true
+        autoHit()  -- Start auto-hitting when the toggle is enabled
         while legendRockToggle.Value do
-            character.HumanoidRootPart.CFrame = CFrame.new(legendRockPosition)
-            wait(1)  -- Adjust the wait time as needed
+            teleportToRock(legendRockPosition)
+            wait(0.5)  -- Adjust the wait time as needed
         end
+    else
+        isAutoHitEnabled = false  -- Stop auto-hitting when the toggle is off
     end
 end)
 
@@ -204,10 +217,14 @@ local muscleKingRockToggle = AutoFarmTab:AddToggle("MuscleKingRockToggle", {
 
 muscleKingRockToggle:OnChanged(function()
     if muscleKingRockToggle.Value then
+        isAutoHitEnabled = true
+        autoHit()  -- Start auto-hitting when the toggle is enabled
         while muscleKingRockToggle.Value do
-            character.HumanoidRootPart.CFrame = CFrame.new(muscleKingRockPosition)
-            wait(1)  -- Adjust the wait time as needed
+            teleportToRock(muscleKingRockPosition)
+            wait(0.5)  -- Adjust the wait time as needed
         end
+    else
+        isAutoHitEnabled = false  -- Stop auto-hitting when the toggle is off
     end
 end)
 
