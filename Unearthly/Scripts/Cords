@@ -1,86 +1,20 @@
--- Cord Tracker Local Script
-local cordList = {}
-local displayDuration = 3
-local currentIndex = 1
+local player = game.Players.LocalPlayer
+local playerCharacter = player.Character or player.CharacterAdded:Wait()
 
--- Create GUI
-local ScreenGui = Instance.new("ScreenGui")
-local Frame = Instance.new("Frame")
-local ListBox = Instance.new("ScrollingFrame")
-local SubmitButton = Instance.new("TextButton")
-local TypeTextBox = Instance.new("TextBox")
-local ColorTextBox = Instance.new("TextBox")
-local LengthTextBox = Instance.new("TextBox")
-local UIListLayout = Instance.new("UIListLayout")
+-- Create a reference to the TextLabel
+local screenGui = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui")
+local textLabel = screenGui:WaitForChild("TextLabel")
 
-ScreenGui.Parent = game.CoreGui
-Frame.Parent = ScreenGui
-Frame.Size = UDim2.new(0.5, 0, 0.5, 0)
-Frame.Position = UDim2.new(0.25, 0, 0.25, 0)
-
-ListBox.Parent = Frame
-ListBox.Size = UDim2.new(1, 0, 0.6, 0)
-ListBox.CanvasSize = UDim2.new(0, 0, 2, 0) -- Allow for scrolling
-UIListLayout.Parent = ListBox
-UIListLayout.FillDirection = Enum.FillDirection.Vertical
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 5)
-
-TypeTextBox.Parent = Frame
-TypeTextBox.Size = UDim2.new(1, 0, 0.1, 0)
-TypeTextBox.PlaceholderText = "Cord Type"
-
-ColorTextBox.Parent = Frame
-ColorTextBox.Size = UDim2.new(1, 0, 0.1, 0)
-ColorTextBox.Position = UDim2.new(0, 0, 0.1, 0)
-ColorTextBox.PlaceholderText = "Cord Color"
-
-LengthTextBox.Parent = Frame
-LengthTextBox.Size = UDim2.new(1, 0, 0.1, 0)
-LengthTextBox.Position = UDim2.new(0, 0, 0.2, 0)
-LengthTextBox.PlaceholderText = "Cord Length"
-
-SubmitButton.Parent = Frame
-SubmitButton.Size = UDim2.new(1, 0, 0.1, 0)
-SubmitButton.Position = UDim2.new(0, 0, 0.3, 0)
-SubmitButton.Text = "Add Cord"
-
-local function updateCordDisplay()
-    ListBox:ClearAllChildren()
-    
-    for _, cord in ipairs(cordList) do
-        local label = Instance.new("TextLabel")
-        label.Text = string.format("%s - %s - %s", cord.type, cord.color, cord.length)
-        label.Size = UDim2.new(1, 0, 0, 50)
-        label.Parent = ListBox
+-- Function to update coordinates
+local function updateCoordinates()
+    while true do  -- This creates an infinite loop
+        if playerCharacter and playerCharacter.PrimaryPart then
+            local position = playerCharacter.PrimaryPart.Position
+            textLabel.Text = "Coordinates: (" .. math.floor(position.X) .. ", " .. math.floor(position.Y) .. ", " .. math.floor(position.Z) .. ")"
+        end
+        wait(0.1)  -- Pause for a short duration (100ms) before the next update
     end
 end
 
-local function autoLoopCords()
-    while true do
-        if #cordList > 0 then
-            currentIndex = (currentIndex % #cordList) + 1
-            ListBox.CanvasPosition = Vector2.new(0, (currentIndex - 1) * 50) -- Adjust position to show current cord
-        end
-        wait(displayDuration)
-    end
-end
-
-SubmitButton.MouseButton1Click:Connect(function()
-    local cordType = TypeTextBox.Text
-    local cordColor = ColorTextBox.Text
-    local cordLength = LengthTextBox.Text
-
-    if cordType ~= "" and cordColor ~= "" and cordLength ~= "" then
-        table.insert(cordList, { type = cordType, color = cordColor, length = cordLength })
-        TypeTextBox.Text = ""
-        ColorTextBox.Text = ""
-        LengthTextBox.Text = ""
-
-        updateCordDisplay()
-
-        if #cordList == 1 then
-            autoLoopCords()
-        end
-    end
-end)
+-- Start the update loop
+updateCoordinates()
