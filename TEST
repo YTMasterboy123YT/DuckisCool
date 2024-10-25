@@ -163,28 +163,50 @@ end)
 -- Auto Farm Tab
 local AutoFarmTab = Tabs.AutoFarm
 
--- Muscle King Machine Toggle
-local muscleKingToggle = AutoFarmTab:AddToggle("MuscleKingToggle", {
-    Title = "Use Muscle King Machine",
+-- Coordinates for the rocks
+local mythicRockPosition = Vector3.new(2222.570556640625, 7.32121467590332, 1238.2650146484375)
+local legendRockPosition = Vector3.new(4182.92138671875, 991.5241088867188, -4055.625)
+local muscleKingRockPosition = Vector3.new(-8979.7041015625, 7.644178867340088, -6128.27587890625)
+
+-- Teleport Toggles
+local mythicRockToggle = AutoFarmTab:AddToggle("MythicRockToggle", {
+    Title = "Teleport to Mythic Rock",
     Default = false,
 })
 
-muscleKingToggle:OnChanged(function()
-    while muscleKingToggle.Value do
-        local replicatedStorage = game:GetService("ReplicatedStorage")
-        local machineInteractRemote = replicatedStorage.rEvents.machineInteractRemote
-        local machine = workspace.machinesFolder["Muscle King Mountain"].interactSeat
+mythicRockToggle:OnChanged(function()
+    if mythicRockToggle.Value then
+        while mythicRockToggle.Value do
+            character.HumanoidRootPart.CFrame = CFrame.new(mythicRockPosition)
+            wait(1)  -- Adjust the wait time as needed
+        end
+    end
+end)
 
-        if machine then
-            machineInteractRemote:InvokeServer("useMachine", machine)
-            wait(1) -- Adjust the wait time as needed to avoid spamming
-        else
-            Fluent:Notify({
-                Title = "Error",
-                Content = "Machine not found!",
-                Duration = 5
-            })
-            break -- Exit loop if the machine is not found
+local legendRockToggle = AutoFarmTab:AddToggle("LegendRockToggle", {
+    Title = "Teleport to Legend Rock",
+    Default = false,
+})
+
+legendRockToggle:OnChanged(function()
+    if legendRockToggle.Value then
+        while legendRockToggle.Value do
+            character.HumanoidRootPart.CFrame = CFrame.new(legendRockPosition)
+            wait(1)  -- Adjust the wait time as needed
+        end
+    end
+end)
+
+local muscleKingRockToggle = AutoFarmTab:AddToggle("MuscleKingRockToggle", {
+    Title = "Teleport to Muscle King Rock",
+    Default = false,
+})
+
+muscleKingRockToggle:OnChanged(function()
+    if muscleKingRockToggle.Value then
+        while muscleKingRockToggle.Value do
+            character.HumanoidRootPart.CFrame = CFrame.new(muscleKingRockPosition)
+            wait(1)  -- Adjust the wait time as needed
         end
     end
 end)
