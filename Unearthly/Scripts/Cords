@@ -1,4 +1,4 @@
--- Cord Finder Local Script
+-- Cord Tracker Local Script
 local cordList = {}
 local displayDuration = 3
 local currentIndex = 1
@@ -48,20 +48,20 @@ SubmitButton.Text = "Add Cord"
 local function updateCordDisplay()
     ListBox:ClearAllChildren()
     
-    if #cordList > 0 then
-        local cord = cordList[currentIndex]
+    for _, cord in ipairs(cordList) do
         local label = Instance.new("TextLabel")
         label.Text = string.format("%s - %s - %s", cord.type, cord.color, cord.length)
         label.Size = UDim2.new(1, 0, 0, 50)
         label.Parent = ListBox
-        
-        currentIndex = (currentIndex % #cordList) + 1
     end
 end
 
 local function autoLoopCords()
     while true do
-        updateCordDisplay()
+        if #cordList > 0 then
+            currentIndex = (currentIndex % #cordList) + 1
+            ListBox.CanvasPosition = Vector2.new(0, (currentIndex - 1) * 50) -- Adjust position to show current cord
+        end
         wait(displayDuration)
     end
 end
@@ -76,7 +76,9 @@ SubmitButton.MouseButton1Click:Connect(function()
         TypeTextBox.Text = ""
         ColorTextBox.Text = ""
         LengthTextBox.Text = ""
-        
+
+        updateCordDisplay()
+
         if #cordList == 1 then
             autoLoopCords()
         end
