@@ -1,46 +1,84 @@
-local player = game.Players.LocalPlayer
-local gui = script.Parent
+-- Cord Finder Local Script
 local cordList = {}
-local displayDuration = 3 -- Duration for each cord display in seconds
+local displayDuration = 3
 local currentIndex = 1
 
-local function updateCordDisplay()
-    gui.ListBox:ClearAllChildren() -- Clear previous entries
+-- Create GUI
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local ListBox = Instance.new("ScrollingFrame")
+local SubmitButton = Instance.new("TextButton")
+local TypeTextBox = Instance.new("TextBox")
+local ColorTextBox = Instance.new("TextBox")
+local LengthTextBox = Instance.new("TextBox")
+local UIListLayout = Instance.new("UIListLayout")
 
+ScreenGui.Parent = game.CoreGui
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0.5, 0, 0.5, 0)
+Frame.Position = UDim2.new(0.25, 0, 0.25, 0)
+
+ListBox.Parent = Frame
+ListBox.Size = UDim2.new(1, 0, 0.6, 0)
+ListBox.CanvasSize = UDim2.new(0, 0, 2, 0) -- Allow for scrolling
+UIListLayout.Parent = ListBox
+UIListLayout.FillDirection = Enum.FillDirection.Vertical
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 5)
+
+TypeTextBox.Parent = Frame
+TypeTextBox.Size = UDim2.new(1, 0, 0.1, 0)
+TypeTextBox.PlaceholderText = "Cord Type"
+
+ColorTextBox.Parent = Frame
+ColorTextBox.Size = UDim2.new(1, 0, 0.1, 0)
+ColorTextBox.Position = UDim2.new(0, 0, 0.1, 0)
+ColorTextBox.PlaceholderText = "Cord Color"
+
+LengthTextBox.Parent = Frame
+LengthTextBox.Size = UDim2.new(1, 0, 0.1, 0)
+LengthTextBox.Position = UDim2.new(0, 0, 0.2, 0)
+LengthTextBox.PlaceholderText = "Cord Length"
+
+SubmitButton.Parent = Frame
+SubmitButton.Size = UDim2.new(1, 0, 0.1, 0)
+SubmitButton.Position = UDim2.new(0, 0, 0.3, 0)
+SubmitButton.Text = "Add Cord"
+
+local function updateCordDisplay()
+    ListBox:ClearAllChildren()
+    
     if #cordList > 0 then
         local cord = cordList[currentIndex]
         local label = Instance.new("TextLabel")
         label.Text = string.format("%s - %s - %s", cord.type, cord.color, cord.length)
-        label.Size = UDim2.new(1, 0, 0, 50) -- Adjust size as needed
-        label.Parent = gui.ListBox
-
-        -- Move to the next index or loop back
-        currentIndex = currentIndex % #cordList + 1
+        label.Size = UDim2.new(1, 0, 0, 50)
+        label.Parent = ListBox
+        
+        currentIndex = (currentIndex % #cordList) + 1
     end
 end
 
 local function autoLoopCords()
     while true do
         updateCordDisplay()
-        wait(displayDuration) -- Wait for the specified duration before updating
+        wait(displayDuration)
     end
 end
 
-gui.SubmitButton.MouseButton1Click:Connect(function()
-    local cordType = gui.TypeTextBox.Text
-    local cordColor = gui.ColorTextBox.Text
-    local cordLength = gui.LengthTextBox.Text
+SubmitButton.MouseButton1Click:Connect(function()
+    local cordType = TypeTextBox.Text
+    local cordColor = ColorTextBox.Text
+    local cordLength = LengthTextBox.Text
 
     if cordType ~= "" and cordColor ~= "" and cordLength ~= "" then
         table.insert(cordList, { type = cordType, color = cordColor, length = cordLength })
-        gui.TypeTextBox.Text = ""
-        gui.ColorTextBox.Text = ""
-        gui.LengthTextBox.Text = ""
+        TypeTextBox.Text = ""
+        ColorTextBox.Text = ""
+        LengthTextBox.Text = ""
         
-        -- If this is the first cord added, start the auto-loop
         if #cordList == 1 then
             autoLoopCords()
         end
     end
 end)
-
