@@ -168,12 +168,15 @@ local mythicRockPosition = Vector3.new(2222.570556640625, 7.32121467590332, 1238
 local legendRockPosition = Vector3.new(4182.92138671875, 991.5241088867188, -4055.625)
 local muscleKingRockPosition = Vector3.new(-8979.7041015625, 7.644178867340088, -6128.27587890625)
 
--- Teleport Toggles
-local function teleportToRock(position)
+-- Teleport and Auto Hit Function
+local function teleportAndAutoHit(position)
     character.HumanoidRootPart.CFrame = CFrame.new(position)
-    wait(0.5)  -- Faster teleport wait time
+    wait(0.5)  -- Small wait to ensure the teleport completes
+    isAutoHitEnabled = true  -- Enable auto hitting
+    autoHit()  -- Start auto-hitting
 end
 
+-- Mythic Rock Toggle
 local mythicRockToggle = AutoFarmTab:AddToggle("MythicRockToggle", {
     Title = "Teleport to Mythic Rock",
     Default = false,
@@ -181,17 +184,17 @@ local mythicRockToggle = AutoFarmTab:AddToggle("MythicRockToggle", {
 
 mythicRockToggle:OnChanged(function()
     if mythicRockToggle.Value then
-        isAutoHitEnabled = true
-        autoHit()  -- Start auto-hitting when the toggle is enabled
+        teleportAndAutoHit(mythicRockPosition)  -- Teleport and auto hit
         while mythicRockToggle.Value do
-            teleportToRock(mythicRockPosition)
-            wait(0.5)  -- Adjust the wait time as needed
+            teleportAndAutoHit(mythicRockPosition)
+            wait(2)  -- Adjust the wait time as needed to avoid spamming
         end
     else
         isAutoHitEnabled = false  -- Stop auto-hitting when the toggle is off
     end
 end)
 
+-- Legend Rock Toggle
 local legendRockToggle = AutoFarmTab:AddToggle("LegendRockToggle", {
     Title = "Teleport to Legend Rock",
     Default = false,
@@ -199,17 +202,17 @@ local legendRockToggle = AutoFarmTab:AddToggle("LegendRockToggle", {
 
 legendRockToggle:OnChanged(function()
     if legendRockToggle.Value then
-        isAutoHitEnabled = true
-        autoHit()  -- Start auto-hitting when the toggle is enabled
+        teleportAndAutoHit(legendRockPosition)  -- Teleport and auto hit
         while legendRockToggle.Value do
-            teleportToRock(legendRockPosition)
-            wait(0.5)  -- Adjust the wait time as needed
+            teleportAndAutoHit(legendRockPosition)
+            wait(2)  -- Adjust the wait time as needed to avoid spamming
         end
     else
         isAutoHitEnabled = false  -- Stop auto-hitting when the toggle is off
     end
 end)
 
+-- Muscle King Rock Toggle
 local muscleKingRockToggle = AutoFarmTab:AddToggle("MuscleKingRockToggle", {
     Title = "Teleport to Muscle King Rock",
     Default = false,
@@ -217,11 +220,10 @@ local muscleKingRockToggle = AutoFarmTab:AddToggle("MuscleKingRockToggle", {
 
 muscleKingRockToggle:OnChanged(function()
     if muscleKingRockToggle.Value then
-        isAutoHitEnabled = true
-        autoHit()  -- Start auto-hitting when the toggle is enabled
+        teleportAndAutoHit(muscleKingRockPosition)  -- Teleport and auto hit
         while muscleKingRockToggle.Value do
-            teleportToRock(muscleKingRockPosition)
-            wait(0.5)  -- Adjust the wait time as needed
+            teleportAndAutoHit(muscleKingRockPosition)
+            wait(2)  -- Adjust the wait time as needed to avoid spamming
         end
     else
         isAutoHitEnabled = false  -- Stop auto-hitting when the toggle is off
