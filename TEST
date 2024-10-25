@@ -94,7 +94,7 @@ local Tabs = {
 -- Main Tab
 local MainTab = Tabs.Main
 
--- Inputs for Speed, Size, Jump Power
+-- Inputs
 MainTab:AddInput("SpeedInput", {
     Title = "Change Speed",
     Placeholder = "Enter speed value",
@@ -223,8 +223,8 @@ end)
 -- Mobile Toggle Button
 local playerGui = player:WaitForChild("PlayerGui")
 local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 100, 0, 100)
-toggleButton.Position = UDim2.new(0.5, -50, 0.5, -50)
+toggleButton.Size = UDim2.new(0, 100, 0, 50)
+toggleButton.Position = UDim2.new(0.5, -50, 0.9, 0) -- Positioned below the center
 toggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 toggleButton.BorderColor3 = Color3.fromRGB(110, 90, 130)
 toggleButton.BorderSizePixel = 2
