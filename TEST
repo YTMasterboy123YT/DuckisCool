@@ -1,105 +1,24 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
 
-local Window = Fluent:CreateWindow({
-    Title = "Fluent " .. Fluent.Version,
-    SubTitle = "by dawid",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
+-- Function to teleport the player's hands to the Frozen Rock
+local function teleportHandsToFrozenRock()
+    -- Attempt to find the Frozen Rock directly in the workspace
+    local frozenRock = workspace:FindFirstChild("Frozen Rock") or workspace.MachinesFolder:FindFirstChild("Frozen Rock")
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-_G.autoHitActive = false
-_G.teleportPlayersActive = false
-_G.invisibilityActive = false
-
-local function autoHit()
-    while _G.autoHitActive do
-        LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-        LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-        wait(0.5) -- Adjust wait time to reduce lag
-    end
-end
-
-local function teleportPlayers()
-    while _G.teleportPlayersActive do
-        wait(1) -- Adjust wait time to reduce lag
-
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            if otherPlayer ~= LocalPlayer and otherPlayer.Character then
-                local targetCharacter = otherPlayer.Character
-                if targetCharacter:FindFirstChild("HumanoidRootPart") then
-                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
-                end
-            end
-        end
-    end
-end
-
-local function makePlayersInvisible()
-    while _G.invisibilityActive do
-        wait(1) -- Adjust wait time to reduce lag
-
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            if otherPlayer ~= LocalPlayer and otherPlayer.Character then
-                local targetCharacter = otherPlayer.Character
-                for _, part in pairs(targetCharacter:GetChildren()) do
-                    if part:IsA("BasePart") then
-                        part.Transparency = 1
-                    elseif part:IsA("Accessory") then
-                        part.Handle.Transparency = 1
-                    end
-                end
-
-                for _, descendant in pairs(targetCharacter:GetDescendants()) do
-                    if descendant:IsA("BillboardGui") then
-                        descendant.Enabled = false
-                    end
-                end
-            end
-        end
-    end
-end
-
--- Killer Tab
-local KillerTab = Window:AddTab({ Title = "Killer", Icon = "" })
-
--- Toggle for Auto Hit, Teleport, and Invisibility
-local toggleAll = KillerTab:AddToggle("MyToggle", {
-    Title = "Enable All (Auto Hit, Teleport, Invisibility)",
-    Description = "Toggle description",
-    Default = false
-})
-
-toggleAll:OnChanged(function(state)
-    _G.autoHitActive = state
-    _G.teleportPlayersActive = state
-    _G.invisibilityActive = state
-
-    if state then
-        spawn(autoHit)
-        spawn(teleportPlayers)
-        spawn(makePlayersInvisible)
-        print("Toggle On")
+    if frozenRock and character then
+        -- Move character's hands to the Frozen Rock's position
+        character.HumanoidRootPart.CFrame = CFrame.new(frozenRock.Position + Vector3.new(0, 0, 2))  -- Offset to keep hands visible
+        print("Teleported hands to Frozen Rock.")
     else
-        print("Toggle Off")
+        if not frozenRock then
+            print("Frozen Rock not found in the workspace or MachinesFolder!")
+        end
+        if not character then
+            print("Character not found!")
+        end
     end
-end)
+end
 
--- Other tabs and configurations can go here...
-
-Window:SelectTab(1)
-
-Fluent:Notify({
-    Title = "Fluent",
-    Content = "The script has been loaded.",
-    Duration = 8
-})
-
-SaveManager:LoadAutoloadConfig()
+-- Execute the teleport function
+teleportHandsToFrozenRock()
