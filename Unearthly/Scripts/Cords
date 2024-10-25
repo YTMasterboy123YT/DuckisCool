@@ -1,18 +1,29 @@
+-- Create ScreenGui and TextLabel
 local player = game.Players.LocalPlayer
-local playerCharacter = player.Character or player.CharacterAdded:Wait()
+local screenGui = Instance.new("ScreenGui")
+local textLabel = Instance.new("TextLabel")
 
--- Create a reference to the TextLabel
-local screenGui = player:WaitForChild("PlayerGui"):WaitForChild("ScreenGui")
-local textLabel = screenGui:WaitForChild("TextLabel")
+-- Configure ScreenGui
+screenGui.Name = "CoordinatesGui"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Configure TextLabel
+textLabel.Name = "CoordinatesLabel"
+textLabel.Size = UDim2.new(0, 300, 0, 50) -- Size of the TextLabel
+textLabel.Position = UDim2.new(0.5, -150, 0, 10) -- Centered at the top
+textLabel.BackgroundTransparency = 0.5 -- Semi-transparent background
+textLabel.TextColor3 = Color3.new(1, 1, 1) -- White text
+textLabel.TextScaled = true -- Scale text to fit
+textLabel.Parent = screenGui
 
 -- Function to update coordinates
 local function updateCoordinates()
-    while true do  -- This creates an infinite loop
-        if playerCharacter and playerCharacter.PrimaryPart then
-            local position = playerCharacter.PrimaryPart.Position
+    while wait(0.1) do
+        local character = player.Character
+        if character and character.PrimaryPart then
+            local position = character.PrimaryPart.Position
             textLabel.Text = "Coordinates: (" .. math.floor(position.X) .. ", " .. math.floor(position.Y) .. ", " .. math.floor(position.Z) .. ")"
         end
-        wait(0.1)  -- Pause for a short duration (100ms) before the next update
     end
 end
 
