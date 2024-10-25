@@ -221,11 +221,15 @@ antiAFKToggle:OnChanged(function()
 end)
 
 -- Chat commands for opening and closing the GUI
+local function toggleGUI(visible)
+    Window.Visible = visible
+end
+
 game.Players.LocalPlayer.Chatted:Connect(function(message)
     if message:lower() == "!open" then
-        Window.Visible = true
+        toggleGUI(true)
     elseif message:lower() == "!close" then
-        Window.Visible = false
+        toggleGUI(false)
     end
 end)
 
