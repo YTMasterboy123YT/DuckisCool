@@ -28,12 +28,10 @@ local tools = {
 
 local isAutoHitEnabled = false
 local isInfiniteJumpEnabled = false
-local isNoClipEnabled = false
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
 
--- Set tool properties
 local function setToolProperties()
     for _, toolInfo in pairs(tools) do
         local tool = backpack:FindFirstChild(toolInfo.name)
@@ -46,7 +44,6 @@ local function setToolProperties()
     end
 end
 
--- Auto hit function
 local function autoHit()
     while isAutoHitEnabled do
         local equippedTool = character:FindFirstChildOfClass("Tool")
@@ -57,30 +54,19 @@ local function autoHit()
     end
 end
 
--- Enable infinite jump function
+-- Enable Infinite Jump
 local function enableInfiniteJump()
     local UserInputService = game:GetService("UserInputService")
-    UserInputService.JumpRequest:Connect(function()
-        if isInfiniteJumpEnabled then
-            character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            UserInputService.JumpRequest:Connect(function()
+                if isInfiniteJumpEnabled then
+                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
         end
-    end)
-end
-
--- NoClip function
-local function toggleNoClip()
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    if not humanoid then return end
-
-    isNoClipEnabled = not isNoClipEnabled
-    humanoid:ChangeState(isNoClipEnabled and Enum.HumanoidStateType.Physics or Enum.HumanoidStateType.GettingUp)
-
-    while isNoClipEnabled do
-        character.HumanoidRootPart.CanCollide = false
-        wait()
     end
-
-    character.HumanoidRootPart.CanCollide = true
 end
 
 -- Tabs
@@ -94,7 +80,7 @@ local Tabs = {
 -- Main Tab
 local MainTab = Tabs.Main
 
--- Inputs
+-- Speed Input
 MainTab:AddInput("SpeedInput", {
     Title = "Change Speed",
     Placeholder = "Enter speed value",
@@ -102,11 +88,12 @@ MainTab:AddInput("SpeedInput", {
     Callback = function(value)
         local speedValue = tonumber(value)
         if speedValue then
-            player.Character.Humanoid.WalkSpeed = speedValue
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
         end
     end
 })
 
+-- Size Input
 MainTab:AddInput("SizeInput", {
     Title = "Change Size",
     Placeholder = "Enter size value",
@@ -120,13 +107,14 @@ MainTab:AddInput("SizeInput", {
     end
 })
 
+-- Jump Input
 MainTab:AddInput("JumpPowerInput", {
     Title = "Change Jump Power",
     Placeholder = "Enter jump power value",
     Numeric = true,
     Callback = function(value)
-        for _, p in ipairs(game.Players:GetPlayers()) do
-            local humanoid = p.Character and p.Character:FindFirstChildOfClass("Humanoid")
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
             if humanoid then
                 humanoid.JumpPower = tonumber(value)
             end
@@ -134,7 +122,7 @@ MainTab:AddInput("JumpPowerInput", {
     end
 })
 
--- Toggles
+-- Infinite Jump Toggle
 local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
     Title = "Enable Infinite Jump",
     Default = false,
@@ -143,22 +131,7 @@ local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
 infiniteJumpToggle:OnChanged(function()
     isInfiniteJumpEnabled = infiniteJumpToggle.Value
     if isInfiniteJumpEnabled then
-        enableInfiniteJump()
-    end
-end)
-
--- NoClip Toggle
-local noClipToggle = MainTab:AddToggle("NoClipToggle", {
-    Title = "Enable NoClip",
-    Default = false,
-})
-
-noClipToggle:OnChanged(function()
-    if noClipToggle.Value then
-        toggleNoClip()
-    else
-        isNoClipEnabled = false
-        character.HumanoidRootPart.CanCollide = true
+        enableInfiniteJump()  -- Enable infinite jump when the toggle is on
     end
 end)
 
@@ -174,17 +147,47 @@ local autoHitToggle = KillerTab:AddToggle("AutoHitToggle", {
 autoHitToggle:OnChanged(function()
     isAutoHitEnabled = autoHitToggle.Value
     if isAutoHitEnabled then
-        autoHit()
+        autoHit()  -- Start auto-hitting when the toggle is enabled
     end
 end)
 
--- Auto Farm Tab (add your functionality here)
+-- Set Tool Properties
+setToolProperties()
+
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    backpack = player:WaitForChild("Backpack")
+    setToolProperties()
+end)
+
+-- Auto Farm Tab
 local AutoFarmTab = Tabs.AutoFarm
 
-AutoFarmTab:AddToggle("AutoFarmToggle", {
-    Title = "Enable Auto Farm",
+-- Muscle King Machine Toggle
+local muscleKingToggle = AutoFarmTab:AddToggle("MuscleKingToggle", {
+    Title = "Use Muscle King Machine",
     Default = false,
 })
+
+muscleKingToggle:OnChanged(function()
+    while muscleKingToggle.Value do
+        local replicatedStorage = game:GetService("ReplicatedStorage")
+        local machineInteractRemote = replicatedStorage.rEvents.machineInteractRemote
+        local machine = workspace.machinesFolder["Muscle King Mountain"].interactSeat
+
+        if machine then
+            machineInteractRemote:InvokeServer("useMachine", machine)
+            wait(1) -- Adjust the wait time as needed to avoid spamming
+        else
+            Fluent:Notify({
+                Title = "Error",
+                Content = "Machine not found!",
+                Duration = 5
+            })
+            break -- Exit loop if the machine is not found
+        end
+    end
+end)
 
 -- Misc Tab
 local MiscTab = Tabs.Misc
@@ -217,19 +220,6 @@ antiAFKToggle:OnChanged(function()
         player.Idled:Wait()
         player:Move(Vector3.new(0, 0, 0))
         wait(1)
-    end
-end)
-
--- Chat commands for opening and closing the GUI
-local function toggleGUI(visible)
-    Window.Visible = visible
-end
-
-game.Players.LocalPlayer.Chatted:Connect(function(message)
-    if message:lower() == "!open" then
-        toggleGUI(true)
-    elseif message:lower() == "!close" then
-        toggleGUI(false)
     end
 end)
 
