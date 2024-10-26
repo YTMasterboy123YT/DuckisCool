@@ -27,7 +27,8 @@ local tools = {
 }
 
 local isAutoHitEnabled = false
-local isInfiniteJumpEnabled = false
+local currentRockToggle = nil  -- Track which rock toggle is currently active
+local teleportLoopActive = false  -- Flag for teleport loop
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
@@ -54,22 +55,20 @@ local function autoHit()
     end
 end
 
--- Enable Infinite Jump
-local function enableInfiniteJump()
-    local UserInputService = game:GetService("UserInputService")
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            UserInputService.JumpRequest:Connect(function()
-                if isInfiniteJumpEnabled then
-                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-            end)
-        end
+local function teleportAndAutoHit(position)
+    character.HumanoidRootPart.CFrame = CFrame.new(position)
+    wait(0.5)  -- Wait to ensure teleportation completes
+end
+
+local function startTeleportLoop(position)
+    teleportLoopActive = true
+    while teleportLoopActive do
+        teleportAndAutoHit(position)
+        wait(1)  -- Wait before teleporting again (adjust as needed)
     end
 end
 
--- Tabs
+-- Create Tabs
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
@@ -88,7 +87,7 @@ MainTab:AddInput("SpeedInput", {
     Callback = function(value)
         local speedValue = tonumber(value)
         if speedValue then
-            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
+            character.Humanoid.WalkSpeed = speedValue
         end
     end
 })
@@ -113,12 +112,7 @@ MainTab:AddInput("JumpPowerInput", {
     Placeholder = "Enter jump power value",
     Numeric = true,
     Callback = function(value)
-        for _, player in ipairs(game.Players:GetPlayers()) do
-            local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.JumpPower = tonumber(value)
-            end
-        end
+        character.Humanoid.JumpPower = tonumber(value)
     end
 })
 
@@ -129,9 +123,13 @@ local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
 })
 
 infiniteJumpToggle:OnChanged(function()
-    isInfiniteJumpEnabled = infiniteJumpToggle.Value
-    if isInfiniteJumpEnabled then
-        enableInfiniteJump()  -- Enable infinite jump when the toggle is on
+    local UserInputService = game:GetService("UserInputService")
+    if infiniteJumpToggle.Value then
+        UserInputService.JumpRequest:Connect(function()
+            if infiniteJumpToggle.Value then
+                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
     end
 end)
 
@@ -151,84 +149,42 @@ autoHitToggle:OnChanged(function()
     end
 end)
 
--- Set Tool Properties
-setToolProperties()
-
-player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    backpack = player:WaitForChild("Backpack")
-    setToolProperties()
-end)
-
 -- Auto Farm Tab
 local AutoFarmTab = Tabs.AutoFarm
 
--- Coordinates for the rocks
-local mythicRockPosition = Vector3.new(2222.570556640625, 7.32121467590332, 1238.2650146484375)
-local legendRockPosition = Vector3.new(4182.92138671875, 991.5241088867188, -4055.625)
-local muscleKingRockPosition = Vector3.new(-8979.7041015625, 7.644178867340088, -6128.27587890625)
+-- Updated coordinates for the rocks
+local rocks = {
+    MythicRock = Vector3.new(2220.0595703125, 7.321215629577637, 1228.5823974609375),
+    LegendRock = Vector3.new(4187.1787109375, 991.5241088867188, -4065.08251953125),
+    MuscleKingRock = Vector3.new(-8976.455078125, 9.191204071044922, -6130.7373046875)
+}
 
--- Teleport and Auto Hit Function
-local function teleportAndAutoHit(position)
-    character.HumanoidRootPart.CFrame = CFrame.new(position)
-    wait(0.5)  -- Small wait to ensure the teleport completes
-    isAutoHitEnabled = true  -- Enable auto hitting
-    autoHit()  -- Start auto-hitting
+-- Toggle for each rock
+for rockName, position in pairs(rocks) do
+    local rockToggle = AutoFarmTab:AddToggle(rockName .. "Toggle", {
+        Title = "Teleport to " .. rockName,
+        Default = false,
+    })
+
+    rockToggle:OnChanged(function()
+        if rockToggle.Value then
+            -- If another rock is currently active, disable it
+            if currentRockToggle and currentRockToggle ~= rockToggle then
+                currentRockToggle.Value = false  -- Turn off the previous rock toggle
+                teleportLoopActive = false  -- Stop the teleport loop
+            end
+
+            currentRockToggle = rockToggle  -- Set the current rock toggle
+            isAutoHitEnabled = true  -- Enable auto hitting
+            startTeleportLoop(position)  -- Start looping teleportation
+        else
+            -- Stop auto-hitting and teleporting when the toggle is off
+            isAutoHitEnabled = false  
+            teleportLoopActive = false  -- Stop the teleport loop
+            currentRockToggle = nil  -- Clear the current rock toggle
+        end
+    end)
 end
-
--- Mythic Rock Toggle
-local mythicRockToggle = AutoFarmTab:AddToggle("MythicRockToggle", {
-    Title = "Teleport to Mythic Rock",
-    Default = false,
-})
-
-mythicRockToggle:OnChanged(function()
-    if mythicRockToggle.Value then
-        teleportAndAutoHit(mythicRockPosition)  -- Teleport and auto hit
-        while mythicRockToggle.Value do
-            teleportAndAutoHit(mythicRockPosition)
-            wait(2)  -- Adjust the wait time as needed to avoid spamming
-        end
-    else
-        isAutoHitEnabled = false  -- Stop auto-hitting when the toggle is off
-    end
-end)
-
--- Legend Rock Toggle
-local legendRockToggle = AutoFarmTab:AddToggle("LegendRockToggle", {
-    Title = "Teleport to Legend Rock",
-    Default = false,
-})
-
-legendRockToggle:OnChanged(function()
-    if legendRockToggle.Value then
-        teleportAndAutoHit(legendRockPosition)  -- Teleport and auto hit
-        while legendRockToggle.Value do
-            teleportAndAutoHit(legendRockPosition)
-            wait(2)  -- Adjust the wait time as needed to avoid spamming
-        end
-    else
-        isAutoHitEnabled = false  -- Stop auto-hitting when the toggle is off
-    end
-end)
-
--- Muscle King Rock Toggle
-local muscleKingRockToggle = AutoFarmTab:AddToggle("MuscleKingRockToggle", {
-    Title = "Teleport to Muscle King Rock",
-    Default = false,
-})
-
-muscleKingRockToggle:OnChanged(function()
-    if muscleKingRockToggle.Value then
-        teleportAndAutoHit(muscleKingRockPosition)  -- Teleport and auto hit
-        while muscleKingRockToggle.Value do
-            teleportAndAutoHit(muscleKingRockPosition)
-            wait(2)  -- Adjust the wait time as needed to avoid spamming
-        end
-    else
-        isAutoHitEnabled = false  -- Stop auto-hitting when the toggle is off
-    end
-end)
 
 -- Misc Tab
 local MiscTab = Tabs.Misc
@@ -262,6 +218,15 @@ antiAFKToggle:OnChanged(function()
         player:Move(Vector3.new(0, 0, 0))
         wait(1)
     end
+end)
+
+-- Set Tool Properties
+setToolProperties()
+
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    backpack = player:WaitForChild("Backpack")
+    setToolProperties()
 end)
 
 -- SaveManager and InterfaceManager Setup
