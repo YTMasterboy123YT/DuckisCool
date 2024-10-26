@@ -33,6 +33,22 @@ local teleportLoopActive = false  -- Flag for teleport loop
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
 
+-- Define rock positions and orientations
+local rocks = {
+    MythicalRock = {
+        position = Vector3.new(2220.0595703125, 7.321215629577637, 1228.5823974609375),
+        orientation = CFrame.Angles(0, math.rad(90), 0) -- Adjust orientation as needed
+    },
+    LegendRock = {
+        position = Vector3.new(4187.1787109375, 991.5241088867188, -4065.08251953125),
+        orientation = CFrame.Angles(0, math.rad(180), 0) -- Adjust orientation as needed
+    },
+    MuscleKingMountain = {
+        position = Vector3.new(-8976.455078125, 9.191204071044922, -6130.7373046875),
+        orientation = CFrame.Angles(0, math.rad(270), 0) -- Adjust orientation as needed
+    }
+}
+
 local function setToolProperties()
     for _, toolInfo in pairs(tools) do
         local tool = backpack:FindFirstChild(toolInfo.name)
@@ -55,15 +71,15 @@ local function autoHit()
     end
 end
 
-local function teleportAndAutoHit(position)
-    character.HumanoidRootPart.CFrame = CFrame.new(position)
+local function teleportAndAutoHit(rock)
+    character.HumanoidRootPart.CFrame = CFrame.new(rock.position) * rock.orientation
     wait(0.5)  -- Wait to ensure teleportation completes
 end
 
-local function startTeleportLoop(position)
+local function startTeleportLoop(rock)
     teleportLoopActive = true
     while teleportLoopActive do
-        teleportAndAutoHit(position)
+        teleportAndAutoHit(rock)
         wait(0.1)  -- Teleport every 0.1 seconds
     end
 end
@@ -152,15 +168,8 @@ end)
 -- Auto Farm Tab
 local AutoFarmTab = Tabs.AutoFarm
 
--- Updated coordinates for the rocks
-local rocks = {
-    MythicalRock = Vector3.new(2220.0595703125, 7.321215629577637, 1228.5823974609375),
-    LegendRock = Vector3.new(4187.1787109375, 991.5241088867188, -4065.08251953125),
-    MuscleKingMountain = Vector3.new(-8976.455078125, 9.191204071044922, -6130.7373046875)
-}
-
 -- Toggle for each rock
-for rockName, position in pairs(rocks) do
+for rockName, rockData in pairs(rocks) do
     local rockToggle = AutoFarmTab:AddToggle(rockName .. "Toggle", {
         Title = "Teleport to " .. rockName,
         Default = false,
@@ -176,7 +185,7 @@ for rockName, position in pairs(rocks) do
 
             currentRockToggle = rockToggle  -- Set the current rock toggle
             isAutoHitEnabled = true  -- Enable auto hitting
-            startTeleportLoop(position)  -- Start looping teleportation
+            startTeleportLoop(rockData)  -- Start looping teleportation
         else
             -- Stop auto-hitting and teleporting when the toggle is off
             isAutoHitEnabled = false  
