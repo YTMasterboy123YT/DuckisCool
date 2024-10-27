@@ -19,7 +19,7 @@ local function teleportPlayers()
                 local handPosition = LocalPlayer.Character.LeftHand.Position
                 
                 head.Anchored = true
-                head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0))
+                head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0)) -- Adjust height if necessary
             end
         end
     end
