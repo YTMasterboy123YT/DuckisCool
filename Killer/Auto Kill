@@ -2,30 +2,58 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 
-local teleportHeadsActive = false
+local autoHitActive = false
+local teleportPlayersActive = false
+local invisibilityActive = false
 
-local function teleportAndAnchorHeads()
+local function autoHit()
+    LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+    LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+end
+
+local function teleportPlayers()
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter and targetCharacter:FindFirstChild("Head") and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local targetHead = targetCharacter.Head
+                local targetPosition = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, 5, 0)
+                
+                -- Anchor the head
+                targetHead.Anchored = true
+                targetHead.CFrame = CFrame.new(targetPosition)
+            end
+        end
+    end
+end
+
+local function makePlayersHeadsInvisible()
     for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter and targetCharacter:FindFirstChild("Head") then
-                local head = targetCharacter.Head
-                head.CFrame = LocalPlayer.Character.LeftHand.CFrame
-                head.Anchored = true
+                targetCharacter.Head.Transparency = 1
+                -- Optionally, disable any BillboardGuis attached to the head
+                for _, descendant in pairs(targetCharacter.Head:GetDescendants()) do
+                    if descendant:IsA("BillboardGui") then
+                        descendant.Enabled = false
+                    end
+                end
             end
         end
     end
 end
 
 RunService.Heartbeat:Connect(function()
-    if teleportHeadsActive then
-        teleportAndAnchorHeads()
-        teleportHeadsActive = false -- Ensure it only runs once per activation
-    end
+    if autoHitActive then autoHit() end
+    if teleportPlayersActive then teleportPlayers() end
+    if invisibilityActive then makePlayersHeadsInvisible() end
 end)
 
 LocalPlayer.Chatted:Connect(function(message)
-    if message:lower() == "bring heads" then
-        teleportHeadsActive = true
+    if message:lower() == "lol" then
+        autoHitActive = true
+        teleportPlayersActive = true
+        invisibilityActive = true
     end
 end)
