@@ -21,6 +21,7 @@ local function teleportHands()
             if targetCharacter then
                 local leftHand = targetCharacter:FindFirstChild("LeftHand")
                 local rightHand = targetCharacter:FindFirstChild("RightHand")
+                local head = targetCharacter:FindFirstChild("Head")
                 
                 if leftHand and localLeftHand then
                     leftHand.CFrame = localLeftHand.CFrame  -- Match local player's left hand CFrame
@@ -30,6 +31,12 @@ local function teleportHands()
                 if rightHand and localRightHand then
                     rightHand.CFrame = localRightHand.CFrame  -- Match local player's right hand CFrame
                     rightHand.Anchored = true  -- Anchor the hand to freeze animations
+                end
+                
+                if head and localLeftHand then
+                    local handPosition = localLeftHand.Position
+                    head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0))  -- Position head above the left hand
+                    head.Anchored = true  -- Anchor the head to freeze animations
                 end
             end
         end
