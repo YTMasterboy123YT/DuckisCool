@@ -29,10 +29,10 @@ local function teleportHeads()
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter then
-                -- Anchor the entire character to prevent movement
-                anchorCharacter(targetCharacter, true)
-
+                -- Anchor the head to prevent movement
                 local head = targetCharacter:FindFirstChild("Head")
+                anchorCharacter(targetCharacter, true)  -- Anchor the whole character first
+
                 if head and localLeftHand then
                     local handPosition = localLeftHand.Position
                     head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0))  -- Position head above the left hand
@@ -78,6 +78,14 @@ local function restoreLimbs()
     originalParts = {}  -- Clear the stored parts
 end
 
+local function unanchorAllExceptHead(character)
+    for _, part in pairs(character:GetChildren()) do
+        if part:IsA("BasePart") and part.Name ~= "Head" then
+            part.Anchored = false  -- Unanchor all parts except head
+        end
+    end
+end
+
 RunService.Heartbeat:Connect(function()
     if autoHitActive then autoHit() end
     if teleportPlayersActive then teleportHeads() end
@@ -91,6 +99,11 @@ LocalPlayer.Chatted:Connect(function(message)
         destroyLimbsActive = true
     elseif message:lower() == "off" then
         restoreLimbs()  -- Restore body parts when "off" is typed
+        for _, otherPlayer in pairs(Players:GetPlayers()) do
+            if otherPlayer ~= LocalPlayer and otherPlayer.Character then
+                unanchorAllExceptHead(otherPlayer.Character)  -- Unanchor all parts except head
+            end
+        end
         autoHitActive = false
         teleportPlayersActive = false
         destroyLimbsActive = false
