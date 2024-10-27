@@ -15,8 +15,13 @@ local function teleportPlayers()
     for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
-            if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
+            if targetCharacter and targetCharacter:FindFirstChild("Head") then
+                local head = targetCharacter.Head
+                local handPosition = LocalPlayer.Character.LeftHand.Position -- or RightHand based on your preference
+                
+                -- Anchor the head to prevent animation interference
+                head.Anchored = true
+                head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0)) -- Adjust height as needed
             end
         end
     end
@@ -30,6 +35,7 @@ local function makePlayersInvisible()
                 for _, part in pairs(targetCharacter:GetChildren()) do
                     if part:IsA("BasePart") then
                         part.Transparency = 1
+                        part.Anchored = true -- Anchor to prevent animations
                     elseif part:IsA("Accessory") then
                         part.Handle.Transparency = 1
                     end
