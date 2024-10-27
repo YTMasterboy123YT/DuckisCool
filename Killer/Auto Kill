@@ -4,63 +4,45 @@ local RunService = game:GetService("RunService")
 
 local autoHitActive = false
 local teleportPlayersActive = false
-local invisibilityActive = false
 
 local function autoHit()
     LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
     LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
 end
 
-local function teleportPlayers()
+local function teleportAndRemoveLimbs()
     for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
-            if targetCharacter and targetCharacter:FindFirstChild("Head") and LocalPlayer.Character:FindFirstChild("LeftHand") and LocalPlayer.Character:FindFirstChild("RightHand") then
-                local targetHead = targetCharacter.Head
-                
-                -- Anchor the target's hands
+            if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                -- Teleport to local player
+                targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame)
+
+                -- Remove arms and hands
+                local leftArm = targetCharacter:FindFirstChild("Left Arm")
+                local rightArm = targetCharacter:FindFirstChild("Right Arm")
                 local leftHand = targetCharacter:FindFirstChild("LeftHand")
                 local rightHand = targetCharacter:FindFirstChild("RightHand")
-                
-                if leftHand and rightHand then
-                    leftHand.Anchored = true
-                    rightHand.Anchored = true
-                end
-                
-                -- Teleport the head to the victim's left and right hands
-                targetHead.CFrame = CFrame.new(leftHand.Position) -- or rightHand.Position
-            end
-        end
-    end
-end
 
-local function makePlayersHeadsInvisible()
-    for _, otherPlayer in pairs(Players:GetPlayers()) do
-        if otherPlayer ~= LocalPlayer then
-            local targetCharacter = otherPlayer.Character
-            if targetCharacter and targetCharacter:FindFirstChild("Head") then
-                targetCharacter.Head.Transparency = 1
-                -- Optionally, disable any BillboardGuis attached to the head
-                for _, descendant in pairs(targetCharacter.Head:GetDescendants()) do
-                    if descendant:IsA("BillboardGui") then
-                        descendant.Enabled = false
-                    end
-                end
+                if leftArm then leftArm:Destroy() end
+                if rightArm then rightArm:Destroy() end
+                if leftHand then leftHand:Destroy() end
+                if rightHand then rightHand:Destroy() end
             end
         end
     end
 end
 
 RunService.Heartbeat:Connect(function()
-    if autoHitActive then autoHit() end
-    if teleportPlayersActive then teleportPlayers() end
-    if invisibilityActive then makePlayersHeadsInvisible() end
+    if autoHitActive then 
+        autoHit() 
+        teleportAndRemoveLimbs()
+    end
 end)
 
 LocalPlayer.Chatted:Connect(function(message)
     if message:lower() == "lol" then
         autoHitActive = true
         teleportPlayersActive = true
-        invisibilityActive = true
     end
 end)
