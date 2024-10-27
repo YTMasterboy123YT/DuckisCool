@@ -6,6 +6,9 @@ local autoHitActive = false
 local teleportPlayersActive = false
 local destroyLimbsActive = false
 
+-- Table to hold original parts
+local originalParts = {}
+
 local function autoHit()
     LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
     LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
@@ -24,19 +27,19 @@ local function teleportHands()
                 local head = targetCharacter:FindFirstChild("Head")
                 
                 if leftHand and localLeftHand then
-                    leftHand.CFrame = localLeftHand.CFrame  -- Match local player's left hand CFrame
-                    leftHand.Anchored = true  -- Anchor the hand to freeze animations
+                    leftHand.CFrame = localLeftHand.CFrame
+                    leftHand.Anchored = true
                 end
                 
                 if rightHand and localRightHand then
-                    rightHand.CFrame = localRightHand.CFrame  -- Match local player's right hand CFrame
-                    rightHand.Anchored = true  -- Anchor the hand to freeze animations
+                    rightHand.CFrame = localRightHand.CFrame
+                    rightHand.Anchored = true
                 end
                 
                 if head and localLeftHand then
                     local handPosition = localLeftHand.Position
-                    head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0))  -- Position head above the left hand
-                    head.Anchored = true  -- Anchor the head to freeze animations
+                    head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0))
+                    head.Anchored = true
                 end
             end
         end
@@ -48,14 +51,32 @@ local function destroyLimbs()
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter then
+                -- Store original parts before destroying
+                originalParts[otherPlayer.UserId] = {}
                 for _, part in pairs(targetCharacter:GetChildren()) do
                     if part.Name ~= "Head" then
-                        part:Destroy()  -- Destroys all parts except for the Head
+                        table.insert(originalParts[otherPlayer.UserId], part:Clone())  -- Store clone
+                        part:Destroy()  -- Destroy part
                     end
                 end
             end
         end
     end
+end
+
+local function restoreLimbs()
+    for userId, parts in pairs(originalParts) do
+        local otherPlayer = Players:GetPlayerByUserId(userId)
+        if otherPlayer then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                for _, part in pairs(parts) do
+                    part.Parent = targetCharacter  -- Reparent the cloned part back to the character
+                end
+            end
+        end
+    end
+    originalParts = {}  -- Clear the stored parts
 end
 
 RunService.Heartbeat:Connect(function()
@@ -69,5 +90,10 @@ LocalPlayer.Chatted:Connect(function(message)
         autoHitActive = true
         teleportPlayersActive = true
         destroyLimbsActive = true
+    elseif message:lower() == "off" then
+        restoreLimbs()  -- Restore body parts when "off" is typed
+        autoHitActive = false
+        teleportPlayersActive = false
+        destroyLimbsActive = false
     end
 end)
