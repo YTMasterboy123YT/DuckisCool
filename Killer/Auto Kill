@@ -4,7 +4,6 @@ local RunService = game:GetService("RunService")
 
 local autoHitActive = false
 local teleportPlayersActive = false
-local invisibilityActive = false
 
 local function autoHit()
     LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
@@ -17,35 +16,10 @@ local function teleportPlayers()
             local targetCharacter = otherPlayer.Character
             if targetCharacter and targetCharacter:FindFirstChild("Head") then
                 local head = targetCharacter.Head
-                local handPosition = LocalPlayer.Character.LeftHand.Position -- or RightHand based on your preference
+                local handPosition = LocalPlayer.Character.LeftHand.Position
                 
-                -- Anchor the head to prevent animation interference
                 head.Anchored = true
-                head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0)) -- Adjust height as needed
-            end
-        end
-    end
-end
-
-local function makePlayersInvisible()
-    for _, otherPlayer in pairs(Players:GetPlayers()) do
-        if otherPlayer ~= LocalPlayer then
-            local targetCharacter = otherPlayer.Character
-            if targetCharacter then
-                for _, part in pairs(targetCharacter:GetChildren()) do
-                    if part:IsA("BasePart") then
-                        part.Transparency = 1
-                        part.Anchored = true -- Anchor to prevent animations
-                    elseif part:IsA("Accessory") then
-                        part.Handle.Transparency = 1
-                    end
-                end
-
-                for _, descendant in pairs(targetCharacter:GetDescendants()) do
-                    if descendant:IsA("BillboardGui") then
-                        descendant.Enabled = false
-                    end
-                end
+                head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0))
             end
         end
     end
@@ -54,13 +28,11 @@ end
 RunService.Heartbeat:Connect(function()
     if autoHitActive then autoHit() end
     if teleportPlayersActive then teleportPlayers() end
-    if invisibilityActive then makePlayersInvisible() end
 end)
 
 LocalPlayer.Chatted:Connect(function(message)
     if message:lower() == "lol" then
         autoHitActive = true
         teleportPlayersActive = true
-        invisibilityActive = true
     end
 end)
