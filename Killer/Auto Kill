@@ -2,37 +2,30 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 
-local autoHitActive = false
-local teleportPlayersActive = false
+local teleportHeadsActive = false
 
-local function autoHit()
-    LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-    LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-end
-
-local function teleportPlayers()
+local function teleportAndAnchorHeads()
     for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter and targetCharacter:FindFirstChild("Head") then
                 local head = targetCharacter.Head
                 head.CFrame = LocalPlayer.Character.LeftHand.CFrame
+                head.Anchored = true
             end
         end
     end
 end
 
 RunService.Heartbeat:Connect(function()
-    if autoHitActive then autoHit() end
-    if teleportPlayersActive then teleportPlayers() end
+    if teleportHeadsActive then
+        teleportAndAnchorHeads()
+        teleportHeadsActive = false -- Ensure it only runs once per activation
+    end
 end)
 
 LocalPlayer.Chatted:Connect(function(message)
-    if message:lower() == "lol" then
-        autoHitActive = true
-        teleportPlayersActive = true
-    elseif message:lower() == "un" then
-        autoHitActive = false
-        teleportPlayersActive = false
+    if message:lower() == "bring heads" then
+        teleportHeadsActive = true
     end
 end)
