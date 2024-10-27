@@ -21,17 +21,15 @@ end
 
 local function teleportHeads()
     local localLeftHand = LocalPlayer.Character:FindFirstChild("LeftHand")
-
     for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter then
                 local head = targetCharacter:FindFirstChild("Head")
-                anchorCharacter(targetCharacter, true)  -- Anchor the whole character first
-
+                anchorCharacter(targetCharacter, true)
                 if head and localLeftHand then
                     local handPosition = localLeftHand.Position
-                    head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0))  -- Position head above the left hand
+                    head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0))
                 end
             end
         end
@@ -45,7 +43,7 @@ local function turnHeadsInvisible()
             if targetCharacter then
                 local head = targetCharacter:FindFirstChild("Head")
                 if head then
-                    head.Transparency = 1  -- Make the head invisible
+                    head.Transparency = 1
                 end
             end
         end
@@ -59,7 +57,7 @@ local function restoreHeads()
             if targetCharacter then
                 local head = targetCharacter:FindFirstChild("Head")
                 if head then
-                    head.Transparency = 0  -- Restore visibility of the head
+                    head.Transparency = 0
                 end
             end
         end
@@ -78,7 +76,7 @@ LocalPlayer.Chatted:Connect(function(message)
         teleportPlayersActive = true
         turnHeadsInvisibleActive = true
     elseif message:lower() == "off" then
-        restoreHeads()  -- Restore heads when "off" is typed
+        restoreHeads()
         autoHitActive = false
         teleportPlayersActive = false
         turnHeadsInvisibleActive = false
