@@ -16,10 +16,11 @@ local function teleportPlayers()
             local targetCharacter = otherPlayer.Character
             if targetCharacter and targetCharacter:FindFirstChild("Head") then
                 local head = targetCharacter.Head
-                local handPosition = LocalPlayer.Character.LeftHand.Position
                 
+                head.Anchored = false
+                local handPosition = LocalPlayer.Character.LeftHand.Position
+                head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0))
                 head.Anchored = true
-                head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0)) -- Adjust height if necessary
             end
         end
     end
@@ -34,5 +35,8 @@ LocalPlayer.Chatted:Connect(function(message)
     if message:lower() == "lol" then
         autoHitActive = true
         teleportPlayersActive = true
+    elseif message:lower() == "un" then
+        autoHitActive = false
+        teleportPlayersActive = false
     end
 end)
