@@ -1,66 +1,60 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
 
-_G.autoHitActive = false
-_G.teleportPlayersActive = false
-_G.invisibilityActive = false
+local autoHitActive = false
+local teleportPlayersActive = false
+local invisibilityActive = false
 
 local function autoHit()
-    while _G.autoHitActive do
-        LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-        LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-        wait(0.1)
-    end
+    LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+    LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
 end
 
 local function teleportPlayers()
-    while _G.teleportPlayersActive do
-        wait(0.1)
-
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            if otherPlayer ~= LocalPlayer then
-                local targetCharacter = otherPlayer.Character
-                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                    targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
-                end
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0))
             end
         end
     end
 end
 
 local function makePlayersInvisible()
-    while _G.invisibilityActive do
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            if otherPlayer ~= LocalPlayer then
-                local targetCharacter = otherPlayer.Character
-                if targetCharacter then
-                    for _, part in pairs(targetCharacter:GetChildren()) do
-                        if part:IsA("BasePart") then
-                            part.Transparency = 1
-                        elseif part:IsA("Accessory") then
-                            part.Handle.Transparency = 1
-                        end
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                for _, part in pairs(targetCharacter:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.Transparency = 1
+                    elseif part:IsA("Accessory") then
+                        part.Handle.Transparency = 1
                     end
+                end
 
-                    for _, descendant in pairs(targetCharacter:GetDescendants()) do
-                        if descendant:IsA("BillboardGui") then
-                            descendant.Enabled = false
-                        end
+                for _, descendant in pairs(targetCharacter:GetDescendants()) do
+                    if descendant:IsA("BillboardGui") then
+                        descendant.Enabled = false
                     end
                 end
             end
         end
-        wait(0.1)
     end
 end
 
+RunService.Heartbeat:Connect(function()
+    if autoHitActive then autoHit() end
+    if teleportPlayersActive then teleportPlayers() end
+    if invisibilityActive then makePlayersInvisible() end
+end)
+
 LocalPlayer.Chatted:Connect(function(message)
     if message:lower() == "lol" then
-        _G.autoHitActive = true
-        _G.teleportPlayersActive = true
-        _G.invisibilityActive = true
-        spawn(autoHit)
-        spawn(teleportPlayers)
-        spawn(makePlayersInvisible)
+        autoHitActive = true
+        teleportPlayersActive = true
+        invisibilityActive = true
     end
 end)
