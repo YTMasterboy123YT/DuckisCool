@@ -23,12 +23,12 @@ local function teleportHands()
                 local rightHand = targetCharacter:FindFirstChild("RightHand")
                 
                 if leftHand and localLeftHand then
-                    leftHand.Position = localLeftHand.Position
+                    leftHand.CFrame = localLeftHand.CFrame  -- Set the CFrame to match local player's hand
                     leftHand.Anchored = true
                 end
                 
                 if rightHand and localRightHand then
-                    rightHand.Position = localRightHand.Position
+                    rightHand.CFrame = localRightHand.CFrame  -- Set the CFrame to match local player's hand
                     rightHand.Anchored = true
                 end
             end
@@ -43,7 +43,7 @@ local function destroyLimbs()
             if targetCharacter then
                 for _, part in pairs(targetCharacter:GetChildren()) do
                     if part.Name ~= "Head" then
-                        part:Destroy()
+                        part:Destroy()  -- Destroys all parts except for the Head
                     end
                 end
             end
