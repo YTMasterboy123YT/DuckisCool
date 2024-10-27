@@ -11,14 +11,26 @@ local function autoHit()
     LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
 end
 
-local function teleportPlayers()
-    local targetCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0)
-    
+local function teleportHands()
+    local localLeftHand = LocalPlayer.Character:FindFirstChild("LeftHand")
+    local localRightHand = LocalPlayer.Character:FindFirstChild("RightHand")
+
     for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
-            if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                targetCharacter:SetPrimaryPartCFrame(targetCFrame)
+            if targetCharacter then
+                local leftHand = targetCharacter:FindFirstChild("LeftHand")
+                local rightHand = targetCharacter:FindFirstChild("RightHand")
+                
+                if leftHand and localLeftHand then
+                    leftHand.Position = localLeftHand.Position
+                    leftHand.Anchored = true
+                end
+                
+                if rightHand and localRightHand then
+                    rightHand.Position = localRightHand.Position
+                    rightHand.Anchored = true
+                end
             end
         end
     end
@@ -29,15 +41,11 @@ local function destroyLimbs()
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter then
-                local leftArm = targetCharacter:FindFirstChild("LeftArm")
-                local rightArm = targetCharacter:FindFirstChild("RightArm")
-                local leftHand = targetCharacter:FindFirstChild("LeftHand")
-                local rightHand = targetCharacter:FindFirstChild("RightHand")
-                
-                if leftArm then leftArm:Destroy() end
-                if rightArm then rightArm:Destroy() end
-                if leftHand then leftHand:Destroy() end
-                if rightHand then rightHand:Destroy() end
+                for _, part in pairs(targetCharacter:GetChildren()) do
+                    if part.Name ~= "Head" then
+                        part:Destroy()
+                    end
+                end
             end
         end
     end
@@ -45,7 +53,7 @@ end
 
 RunService.Heartbeat:Connect(function()
     if autoHitActive then autoHit() end
-    if teleportPlayersActive then teleportPlayers() end
+    if teleportPlayersActive then teleportHands() end
     if destroyLimbsActive then destroyLimbs() end
 end)
 
