@@ -4,10 +4,7 @@ local RunService = game:GetService("RunService")
 
 local autoHitActive = false
 local teleportPlayersActive = false
-local destroyLimbsActive = false
-
--- Table to hold original parts and their positions
-local originalParts = {}
+local turnHeadsInvisibleActive = false
 
 local function autoHit()
     LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
@@ -29,7 +26,6 @@ local function teleportHeads()
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter then
-                -- Anchor the head to prevent movement
                 local head = targetCharacter:FindFirstChild("Head")
                 anchorCharacter(targetCharacter, true)  -- Anchor the whole character first
 
@@ -42,46 +38,30 @@ local function teleportHeads()
     end
 end
 
-local function destroyLimbs()
+local function turnHeadsInvisible()
     for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter then
-                -- Store original parts and their positions before destroying
-                originalParts[otherPlayer.UserId] = {}
-                for _, part in pairs(targetCharacter:GetChildren()) do
-                    if part.Name ~= "Head" then
-                        local partData = {Part = part:Clone(), Position = part.Position}  -- Store clone and position
-                        table.insert(originalParts[otherPlayer.UserId], partData)  -- Store data
-                        part:Destroy()  -- Destroy part
-                    end
+                local head = targetCharacter:FindFirstChild("Head")
+                if head then
+                    head.Transparency = 1  -- Make the head invisible
                 end
             end
         end
     end
 end
 
-local function restoreLimbs()
-    for userId, parts in pairs(originalParts) do
-        local otherPlayer = Players:GetPlayerByUserId(userId)
-        if otherPlayer then
+local function restoreHeads()
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter then
-                for _, partData in pairs(parts) do
-                    local partClone = partData.Part
-                    partClone.Parent = targetCharacter  -- Reparent the cloned part back to the character
-                    partClone.Position = partData.Position  -- Restore original position
+                local head = targetCharacter:FindFirstChild("Head")
+                if head then
+                    head.Transparency = 0  -- Restore visibility of the head
                 end
             end
-        end
-    end
-    originalParts = {}  -- Clear the stored parts
-end
-
-local function unanchorAllExceptHead(character)
-    for _, part in pairs(character:GetChildren()) do
-        if part:IsA("BasePart") and part.Name ~= "Head" then
-            part.Anchored = false  -- Unanchor all parts except head
         end
     end
 end
@@ -89,23 +69,18 @@ end
 RunService.Heartbeat:Connect(function()
     if autoHitActive then autoHit() end
     if teleportPlayersActive then teleportHeads() end
-    if destroyLimbsActive then destroyLimbs() end
+    if turnHeadsInvisibleActive then turnHeadsInvisible() end
 end)
 
 LocalPlayer.Chatted:Connect(function(message)
     if message:lower() == "lol" then
         autoHitActive = true
         teleportPlayersActive = true
-        destroyLimbsActive = true
+        turnHeadsInvisibleActive = true
     elseif message:lower() == "off" then
-        restoreLimbs()  -- Restore body parts when "off" is typed
-        for _, otherPlayer in pairs(Players:GetPlayers()) do
-            if otherPlayer ~= LocalPlayer and otherPlayer.Character then
-                unanchorAllExceptHead(otherPlayer.Character)  -- Unanchor all parts except head
-            end
-        end
+        restoreHeads()  -- Restore heads when "off" is typed
         autoHitActive = false
         teleportPlayersActive = false
-        destroyLimbsActive = false
+        turnHeadsInvisibleActive = false
     end
 end)
