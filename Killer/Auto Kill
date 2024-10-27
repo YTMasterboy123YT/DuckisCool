@@ -11,25 +11,22 @@ local function autoHit()
 end
 
 local function teleportPlayers()
-    local heads = {}
-    
-    -- Unanchor all heads first
     for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter and targetCharacter:FindFirstChild("Head") then
                 local head = targetCharacter.Head
+
+                -- Unanchor the head from the character
                 head.Anchored = false
-                table.insert(heads, head) -- Store heads for teleporting
+                
+                -- Teleport the head to the local player's hand
+                head.CFrame = LocalPlayer.Character.LeftHand.CFrame
+                
+                -- Anchor the head after teleporting
+                head.Anchored = true
             end
         end
-    end
-    
-    -- Teleport all heads to the local player's hand position
-    local handCFrame = LocalPlayer.Character.LeftHand.CFrame
-    for _, head in pairs(heads) do
-        head.CFrame = handCFrame
-        head.Anchored = true -- Anchor after teleporting
     end
 end
 
