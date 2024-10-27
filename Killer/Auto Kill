@@ -16,15 +16,7 @@ local function teleportPlayers()
             local targetCharacter = otherPlayer.Character
             if targetCharacter and targetCharacter:FindFirstChild("Head") then
                 local head = targetCharacter.Head
-
-                -- Unanchor the head from the character
-                head.Anchored = false
-                
-                -- Teleport the head to the local player's hand
                 head.CFrame = LocalPlayer.Character.LeftHand.CFrame
-                
-                -- Anchor the head after teleporting
-                head.Anchored = true
             end
         end
     end
