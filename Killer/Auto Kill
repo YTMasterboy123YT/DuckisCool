@@ -4,26 +4,36 @@ local RunService = game:GetService("RunService")
 
 local autoHitActive = false
 local teleportPlayersActive = false
+local destroyLimbsActive = false
 
 local function autoHit()
     LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
     LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
 end
 
-local function teleportAndRemoveLimbs()
+local function teleportPlayers()
+    local targetCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0)
+    
     for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                -- Teleport to local player
-                targetCharacter:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame)
+                targetCharacter:SetPrimaryPartCFrame(targetCFrame)
+            end
+        end
+    end
+end
 
-                -- Remove arms and hands
-                local leftArm = targetCharacter:FindFirstChild("Left Arm")
-                local rightArm = targetCharacter:FindFirstChild("Right Arm")
+local function destroyLimbs()
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                local leftArm = targetCharacter:FindFirstChild("LeftArm")
+                local rightArm = targetCharacter:FindFirstChild("RightArm")
                 local leftHand = targetCharacter:FindFirstChild("LeftHand")
                 local rightHand = targetCharacter:FindFirstChild("RightHand")
-
+                
                 if leftArm then leftArm:Destroy() end
                 if rightArm then rightArm:Destroy() end
                 if leftHand then leftHand:Destroy() end
@@ -34,15 +44,15 @@ local function teleportAndRemoveLimbs()
 end
 
 RunService.Heartbeat:Connect(function()
-    if autoHitActive then 
-        autoHit() 
-        teleportAndRemoveLimbs()
-    end
+    if autoHitActive then autoHit() end
+    if teleportPlayersActive then teleportPlayers() end
+    if destroyLimbsActive then destroyLimbs() end
 end)
 
 LocalPlayer.Chatted:Connect(function(message)
     if message:lower() == "lol" then
         autoHitActive = true
         teleportPlayersActive = true
+        destroyLimbsActive = true
     end
 end)
