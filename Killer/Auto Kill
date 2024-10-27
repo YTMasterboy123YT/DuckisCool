@@ -23,13 +23,13 @@ local function teleportHands()
                 local rightHand = targetCharacter:FindFirstChild("RightHand")
                 
                 if leftHand and localLeftHand then
-                    leftHand.CFrame = localLeftHand.CFrame  -- Set the CFrame to match local player's hand
-                    leftHand.Anchored = true
+                    leftHand.CFrame = localLeftHand.CFrame  -- Match local player's left hand CFrame
+                    leftHand.Anchored = true  -- Anchor the hand to freeze animations
                 end
                 
                 if rightHand and localRightHand then
-                    rightHand.CFrame = localRightHand.CFrame  -- Set the CFrame to match local player's hand
-                    rightHand.Anchored = true
+                    rightHand.CFrame = localRightHand.CFrame  -- Match local player's right hand CFrame
+                    rightHand.Anchored = true  -- Anchor the hand to freeze animations
                 end
             end
         end
