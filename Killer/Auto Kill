@@ -22,31 +22,20 @@ local function anchorCharacter(character, anchor)
     end
 end
 
-local function teleportHands()
+local function teleportHeads()
     local localLeftHand = LocalPlayer.Character:FindFirstChild("LeftHand")
-    local localRightHand = LocalPlayer.Character:FindFirstChild("RightHand")
 
     for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter then
-                anchorCharacter(targetCharacter, true)  -- Anchor the whole character
-                
-                local leftHand = targetCharacter:FindFirstChild("LeftHand")
-                local rightHand = targetCharacter:FindFirstChild("RightHand")
+                -- Anchor the entire character to prevent movement
+                anchorCharacter(targetCharacter, true)
+
                 local head = targetCharacter:FindFirstChild("Head")
-                
-                if leftHand and localLeftHand then
-                    leftHand.CFrame = localLeftHand.CFrame
-                end
-                
-                if rightHand and localRightHand then
-                    rightHand.CFrame = localRightHand.CFrame
-                end
-                
                 if head and localLeftHand then
                     local handPosition = localLeftHand.Position
-                    head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0))
+                    head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0))  -- Position head above the left hand
                 end
             end
         end
@@ -91,7 +80,7 @@ end
 
 RunService.Heartbeat:Connect(function()
     if autoHitActive then autoHit() end
-    if teleportPlayersActive then teleportHands() end
+    if teleportPlayersActive then teleportHeads() end
     if destroyLimbsActive then destroyLimbs() end
 end)
 
