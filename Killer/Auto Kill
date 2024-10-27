@@ -15,13 +15,20 @@ local function teleportPlayers()
     for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
-            if targetCharacter and targetCharacter:FindFirstChild("Head") and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            if targetCharacter and targetCharacter:FindFirstChild("Head") and LocalPlayer.Character:FindFirstChild("LeftHand") and LocalPlayer.Character:FindFirstChild("RightHand") then
                 local targetHead = targetCharacter.Head
-                local targetPosition = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, 5, 0)
                 
-                -- Anchor the head
-                targetHead.Anchored = true
-                targetHead.CFrame = CFrame.new(targetPosition)
+                -- Anchor the target's hands
+                local leftHand = targetCharacter:FindFirstChild("LeftHand")
+                local rightHand = targetCharacter:FindFirstChild("RightHand")
+                
+                if leftHand and rightHand then
+                    leftHand.Anchored = true
+                    rightHand.Anchored = true
+                end
+                
+                -- Teleport the head to the victim's left and right hands
+                targetHead.CFrame = CFrame.new(leftHand.Position) -- or rightHand.Position
             end
         end
     end
