@@ -199,7 +199,7 @@ end)
 -- Killer Tab
 local KillerTab = Tabs.Killer
 
--- Toggle for auto hit, teleport, and accessories
+-- Auto Hit and Player Manipulation Toggle
 local toggleKiller = KillerTab:AddToggle("KillerToggle", {
     Title = "Activate Killer Features",
     Description = "Toggle auto hit, teleport heads, and turn accessories invisible.",
@@ -212,6 +212,7 @@ local toggleKiller = KillerTab:AddToggle("KillerToggle", {
         if state then
             print("Killer Features Activated")
             autoHitActive = true  -- Enable auto hit
+            spawn(autoHit)  -- Start auto hit coroutine
         else
             restoreAccessories()  -- Restore accessories when toggled off
             print("Killer Features Deactivated")
