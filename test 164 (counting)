@@ -1,3 +1,17 @@
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -75,60 +89,65 @@ RunService.Heartbeat:Connect(function()
     if turnAccessoriesInvisibleActive then turnAccessoriesInvisible() end
 end)
 
--- GUI Setup
-local ScreenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
-local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 300, 0, 200)
-Frame.Position = UDim2.new(0.5, -150, 0.5, -100)
-Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Frame.BorderSizePixel = 0
+-- Create Killer Tab
+local Tabs = {
+    Killer = Window:AddTab({ Title = "Killer", Icon = "" })
+}
 
-local autoHitToggle = Instance.new("TextButton", Frame)
-autoHitToggle.Size = UDim2.new(1, 0, 0, 50)
-autoHitToggle.Position = UDim2.new(0, 0, 0, 0)
-autoHitToggle.Text = "Toggle Auto Hit"
-autoHitToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+-- Killer Tab Toggle for Auto Hit
+local autoHitToggle = Tabs.Killer:AddToggle("AutoHitToggle", {
+    Title = "Enable Auto Hit",
+    Default = false,
+})
 
-autoHitToggle.MouseButton1Click:Connect(function()
-    autoHitActive = not autoHitActive
+autoHitToggle:OnChanged(function()
+    autoHitActive = autoHitToggle.Value
     if autoHitActive then
-        spawn(autoHit)  -- Start auto-hitting when activated
-        autoHitToggle.Text = "Auto Hit: ON"
+        spawn(autoHit) -- Start auto-hitting when the toggle is enabled
     else
-        restoreAccessories()  -- Restore accessories when toggled off
-        autoHitToggle.Text = "Toggle Auto Hit"
+        restoreAccessories() -- Restore accessories when toggled off
     end
 end)
 
-local teleportToggle = Instance.new("TextButton", Frame)
-teleportToggle.Size = UDim2.new(1, 0, 0, 50)
-teleportToggle.Position = UDim2.new(0, 0, 0, 60)
-teleportToggle.Text = "Toggle Teleport Heads"
-teleportToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+-- Killer Tab Toggle for Teleport Heads
+local teleportToggle = Tabs.Killer:AddToggle("TeleportHeadsToggle", {
+    Title = "Enable Teleport Heads",
+    Default = false,
+})
 
-teleportToggle.MouseButton1Click:Connect(function()
-    teleportPlayersActive = not teleportPlayersActive
-    if teleportPlayersActive then
-        teleportToggle.Text = "Teleport Heads: ON"
-    else
-        teleportToggle.Text = "Toggle Teleport Heads"
+teleportToggle:OnChanged(function()
+    teleportPlayersActive = teleportToggle.Value
+end)
+
+-- Killer Tab Toggle for Invisibility
+local invisibilityToggle = Tabs.Killer:AddToggle("InvisibilityToggle", {
+    Title = "Enable Invisibility",
+    Default = false,
+})
+
+invisibilityToggle:OnChanged(function()
+    turnAccessoriesInvisibleActive = invisibilityToggle.Value
+    if not turnAccessoriesInvisibleActive then
+        restoreAccessories() -- Restore accessories when toggled off
     end
 end)
 
-local invisibilityToggle = Instance.new("TextButton", Frame)
-invisibilityToggle.Size = UDim2.new(1, 0, 0, 50)
-invisibilityToggle.Position = UDim2.new(0, 0, 0, 120)
-invisibilityToggle.Text = "Toggle Invisibility"
-invisibilityToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+-- SaveManager and InterfaceManager Setup
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+InterfaceManager:BuildInterfaceSection(Tabs.Killer)
+SaveManager:BuildConfigSection(Tabs.Killer)
 
-invisibilityToggle.MouseButton1Click:Connect(function()
-    turnAccessoriesInvisibleActive = not turnAccessoriesInvisibleActive
-    if turnAccessoriesInvisibleActive then
-        invisibilityToggle.Text = "Invisibility: ON"
-    else
-        restoreAccessories()  -- Restore accessories when toggled off
-        invisibilityToggle.Text = "Toggle Invisibility"
-    end
-end)
+Window:SelectTab(1)
 
-print("Killer script loaded.")
+Fluent:Notify({
+    Title = "Fluent",
+    Content = "The Killer features have been loaded.",
+    Duration = 8
+})
+
+SaveManager:LoadAutoloadConfig()
