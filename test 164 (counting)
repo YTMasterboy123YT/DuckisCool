@@ -19,16 +19,10 @@ local RunService = game:GetService("RunService")
 local autoHitActive = false
 local teleportPlayersActive = false
 local turnAccessoriesInvisibleActive = false
-local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local function autoHit()
-    while autoHitActive do
-        local punchTool = character:FindFirstChild("Punch")
-        if punchTool and punchTool.Enabled then
-            punchTool:Activate()
-        end
-        wait(0.1)
-    end
+    LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+    LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
 end
 
 local function anchorCharacter(character, anchor)
@@ -103,7 +97,7 @@ local Tabs = {
 -- Killer Tab
 local KillerTab = Tabs.Killer
 
--- Toggle for all functionalities
+-- Single toggle for all functionalities
 local allInOneToggle = KillerTab:AddToggle("AllInOneToggle", {
     Title = "Enable Auto Hit, Teleport Heads, and Invisible",
     Description = "Automatically hit, teleport heads of players, and make accessories invisible.",
@@ -113,9 +107,7 @@ local allInOneToggle = KillerTab:AddToggle("AllInOneToggle", {
         teleportPlayersActive = state
         turnAccessoriesInvisibleActive = state
         
-        if state then
-            autoHit()  -- Start auto-hitting
-        else
+        if not state then
             restoreAccessories()  -- Restore accessories when toggled off
         end
     end
@@ -123,10 +115,7 @@ local allInOneToggle = KillerTab:AddToggle("AllInOneToggle", {
 
 -- Character change handling
 LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    if autoHitActive then
-        autoHit()  -- Restart auto-hit if it was active
-    end
+    LocalPlayer.Character = newCharacter
 end)
 
 -- SaveManager and InterfaceManager Setup
