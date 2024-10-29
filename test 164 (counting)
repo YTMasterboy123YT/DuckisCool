@@ -31,17 +31,6 @@ local function autoHit()
     end
 end
 
-local function startAutoHit()
-    if not autoHitActive then
-        autoHitActive = true
-        autoHit()
-    end
-end
-
-local function stopAutoHit()
-    autoHitActive = false
-end
-
 local function anchorCharacter(character, anchor)
     for _, part in pairs(character:GetChildren()) do
         if part:IsA("BasePart") then
@@ -114,10 +103,10 @@ local Tabs = {
 -- Killer Tab
 local KillerTab = Tabs.Killer
 
--- Toggle for activating killer features
-local Toggle = KillerTab:AddToggle("KillerToggle", {
-    Title = "Activate Killer Features",
-    Description = "Toggle auto hit, teleport heads, and turn accessories invisible.",
+-- Toggle for all functionalities
+local allInOneToggle = KillerTab:AddToggle("AllInOneToggle", {
+    Title = "Enable Auto Hit, Teleport Heads, and Invisible",
+    Description = "Automatically hit, teleport heads of players, and make accessories invisible.",
     Default = false,
     Callback = function(state)
         autoHitActive = state
@@ -125,21 +114,18 @@ local Toggle = KillerTab:AddToggle("KillerToggle", {
         turnAccessoriesInvisibleActive = state
         
         if state then
-            print("Killer Features Activated")
-            startAutoHit()
+            autoHit()  -- Start auto-hitting
         else
             restoreAccessories()  -- Restore accessories when toggled off
-            print("Killer Features Deactivated")
-            stopAutoHit()
         end
-    end 
+    end
 })
 
 -- Character change handling
 LocalPlayer.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     if autoHitActive then
-        startAutoHit()  -- Restart auto-hit if it was active
+        autoHit()  -- Restart auto-hit if it was active
     end
 end)
 
