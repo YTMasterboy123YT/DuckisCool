@@ -43,7 +43,7 @@ local function teleportHeads()
                 anchorCharacter(targetCharacter, true)
                 if head and localLeftHand then
                     local handPosition = localLeftHand.Position
-                    head.CFrame = CFrame.new(handPosition + Vector3.new(0, 5, 0))  -- Height set to 5
+                    head.CFrame = CFrame.new(handPosition + Vector3.new(0, 0, 0))  -- Height set to 0
                 end
             end
         end
@@ -94,6 +94,62 @@ local Tabs = {
     Misc = Window:AddTab({ Title = "Misc", Icon = "" })
 }
 
+-- Main Tab
+local MainTab = Tabs.Main
+
+-- Speed Input
+MainTab:AddInput("SpeedInput", {
+    Title = "Change Speed",
+    Placeholder = "Enter speed value",
+    Numeric = true,
+    Callback = function(value)
+        local speedValue = tonumber(value)
+        if speedValue then
+            LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
+        end
+    end
+})
+
+-- Size Input
+MainTab:AddInput("SizeInput", {
+    Title = "Change Size",
+    Placeholder = "Enter size value",
+    Numeric = true,
+    Callback = function(value)
+        local sizeValue = tonumber(value)
+        if sizeValue then
+            LocalPlayer.Character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
+        end
+    end
+})
+
+-- Jump Input
+MainTab:AddInput("JumpPowerInput", {
+    Title = "Change Jump Power",
+    Placeholder = "Enter jump power value",
+    Numeric = true,
+    Callback = function(value)
+        LocalPlayer.Character.Humanoid.JumpPower = tonumber(value)
+    end
+})
+
+-- Infinite Jump Toggle
+local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
+    Title = "Enable Infinite Jump",
+    Default = false,
+})
+
+infiniteJumpToggle:OnChanged(function()
+    local UserInputService = game:GetService("UserInputService")
+    if infiniteJumpToggle.Value then
+        UserInputService.JumpRequest:Connect(function()
+            if infiniteJumpToggle.Value then
+                LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    end
+end)
+
 -- Killer Tab
 local KillerTab = Tabs.Killer
 
@@ -113,9 +169,43 @@ local allInOneToggle = KillerTab:AddToggle("AllInOneToggle", {
     end
 })
 
--- Character change handling
-LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-    LocalPlayer.Character = newCharacter
+-- Auto Farm Tab
+local AutoFarmTab = Tabs.AutoFarm
+
+-- Add Auto Farm functionalities as needed
+
+-- Misc Tab
+local MiscTab = Tabs.Misc
+
+-- Game Time Dropdown
+MiscTab:AddDropdown("GameTimeDropdown", {
+    Title = "Set Game Time",
+    Values = {"Morning", "Afternoon", "Night"},
+    Default = 1,
+    Callback = function(value)
+        if value == "Morning" then
+            game.Lighting.ClockTime = 6
+        elseif value == "Afternoon" then
+            game.Lighting.ClockTime = 16
+        elseif value == "Night" then
+            game.Lighting.ClockTime = 0
+        end
+    end
+})
+
+-- Anti AFK Toggle
+local antiAFKToggle = MiscTab:AddToggle("AntiAFKToggle", {
+    Title = "Enable Anti-AFK",
+    Default = false,
+})
+
+antiAFKToggle:OnChanged(function()
+    local player = game.Players.LocalPlayer
+    while antiAFKToggle.Value do
+        player.Idled:Wait()
+        player:Move(Vector3.new(0, 0, 0))
+        wait(1)
+    end
 end)
 
 -- SaveManager and InterfaceManager Setup
