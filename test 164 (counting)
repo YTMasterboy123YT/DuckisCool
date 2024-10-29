@@ -1,76 +1,16 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
 
-local Window = Fluent:CreateWindow({
-    Title = "Fluent " .. Fluent.Version,
-    SubTitle = "by dawid",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
-
-local player = game.Players.LocalPlayer
-local backpack = player:WaitForChild("Backpack")
-local character = player.Character or player.CharacterAdded:Wait()
-
--- Tools and Variables
-local tools = {
-    {name = "Punch", type = "attackTime"},
-    {name = "Ground Slam", type = "attackTime"},
-    {name = "Stomp", type = "attackTime"},
-    {name = "Handstands", type = "repTime"},
-    {name = "Pushups", type = "repTime"},
-    {name = "Weight", type = "repTime"},
-    {name = "Situps", type = "repTime"}
-}
-
-local isAutoHitEnabled = false
-local currentRockToggle = nil
-local teleportLoopActive = false
 local autoHitActive = false
 local teleportPlayersActive = false
 local turnAccessoriesInvisibleActive = false
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-
--- Rock Positions with Updated Orientations
-local rocks = {
-    MythicalRock = {
-        position = Vector3.new(2220.0595703125, 7.321215629577637, 1228.5823974609375),
-        orientation = CFrame.Angles(0, math.rad(90), 0)
-    },
-    LegendRock = {
-        position = Vector3.new(4187.1787109375, 991.5241088867188, -4065.08251953125),
-        orientation = CFrame.Angles(0, math.rad(90), 0)
-    },
-    MuscleKingMountain = {
-        position = Vector3.new(-8976.455078125, 9.191204071044922, -6130.7373046875),
-        orientation = CFrame.Angles(0, math.rad(180), 0)
-    }
-}
-
--- Function Definitions
-local function setToolProperties()
-    for _, toolInfo in pairs(tools) do
-        local tool = backpack:FindFirstChild(toolInfo.name)
-        if tool then
-            local cooldown = tool:FindFirstChild(toolInfo.type)
-            if cooldown and cooldown:IsA("NumberValue") then
-                cooldown.Value = 0.1
-            end
-        end
-    end
-end
-
 local function autoHit()
     while autoHitActive do
-        player.muscleEvent:FireServer("punch", "leftHand")
-        player.muscleEvent:FireServer("punch", "rightHand")
-        wait(0.1)
+        LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+        LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+        wait(0.1) -- Adjust the delay as needed
     end
 end
 
@@ -83,9 +23,9 @@ local function anchorCharacter(character, anchor)
 end
 
 local function teleportHeads()
-    local localLeftHand = player.Character:FindFirstChild("LeftHand")
-    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-        if otherPlayer ~= player then
+    local localLeftHand = LocalPlayer.Character:FindFirstChild("LeftHand")
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter then
                 local head = targetCharacter:FindFirstChild("Head")
@@ -100,8 +40,8 @@ local function teleportHeads()
 end
 
 local function turnAccessoriesInvisible()
-    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-        if otherPlayer ~= player then
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter then
                 for _, accessory in pairs(targetCharacter:GetChildren()) do
@@ -115,8 +55,8 @@ local function turnAccessoriesInvisible()
 end
 
 local function restoreAccessories()
-    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-        if otherPlayer ~= player then
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer then
             local targetCharacter = otherPlayer.Character
             if targetCharacter then
                 for _, accessory in pairs(targetCharacter:GetChildren()) do
@@ -129,178 +69,66 @@ local function restoreAccessories()
     end
 end
 
--- Heartbeat Function
-game:GetService("RunService").Heartbeat:Connect(function()
+RunService.Heartbeat:Connect(function()
     if autoHitActive then autoHit() end
     if teleportPlayersActive then teleportHeads() end
     if turnAccessoriesInvisibleActive then turnAccessoriesInvisible() end
 end)
 
--- Create Unified Tabs
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
-    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
-    Misc = Window:AddTab({ Title = "Misc", Icon = "" })
-})
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 300, 0, 200)
+Frame.Position = UDim2.new(0.5, -150, 0.5, -100)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.BorderSizePixel = 0
 
--- Main Tab
-local MainTab = Tabs.Main
-MainTab:AddInput("SpeedInput", {
-    Title = "Change Speed",
-    Placeholder = "Enter speed value",
-    Numeric = true,
-    Callback = function(value)
-        local speedValue = tonumber(value)
-        if speedValue then
-            character.Humanoid.WalkSpeed = speedValue
-        end
-    end
-})
+local autoHitToggle = Instance.new("TextButton", Frame)
+autoHitToggle.Size = UDim2.new(1, 0, 0, 50)
+autoHitToggle.Position = UDim2.new(0, 0, 0, 0)
+autoHitToggle.Text = "Toggle Auto Hit"
+autoHitToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 
-MainTab:AddInput("SizeInput", {
-    Title = "Change Size",
-    Placeholder = "Enter size value",
-    Numeric = true,
-    Callback = function(value)
-        local sizeValue = tonumber(value)
-        if sizeValue then
-            changeSizeRemote:InvokeServer("changeSize", sizeValue)
-            character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
-        end
-    end
-})
-
-MainTab:AddInput("JumpPowerInput", {
-    Title = "Change Jump Power",
-    Placeholder = "Enter jump power value",
-    Numeric = true,
-    Callback = function(value)
-        character.Humanoid.JumpPower = tonumber(value)
-    end
-})
-
--- Infinite Jump Toggle
-local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
-    Title = "Enable Infinite Jump",
-    Default = false,
-})
-
-infiniteJumpToggle:OnChanged(function()
-    local UserInputService = game:GetService("UserInputService")
-    if infiniteJumpToggle.Value then
-        UserInputService.JumpRequest:Connect(function()
-            if infiniteJumpToggle.Value then
-                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end)
+autoHitToggle.MouseButton1Click:Connect(function()
+    autoHitActive = not autoHitActive
+    if autoHitActive then
+        spawn(autoHit)  -- Start auto-hitting when activated
+        autoHitToggle.Text = "Auto Hit: ON"
+    else
+        restoreAccessories()  -- Restore accessories when toggled off
+        autoHitToggle.Text = "Toggle Auto Hit"
     end
 end)
 
--- Killer Tab
-local KillerTab = Tabs.Killer
+local teleportToggle = Instance.new("TextButton", Frame)
+teleportToggle.Size = UDim2.new(1, 0, 0, 50)
+teleportToggle.Position = UDim2.new(0, 0, 0, 60)
+teleportToggle.Text = "Toggle Teleport Heads"
+teleportToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 
--- Auto Hit and Player Manipulation Toggle
-local toggleKiller = KillerTab:AddToggle("KillerToggle", {
-    Title = "Activate Killer Features",
-    Description = "Toggle auto hit, teleport heads, and turn accessories invisible.",
-    Default = false,
-    Callback = function(state)
-        autoHitActive = state
-        teleportPlayersActive = state
-        turnAccessoriesInvisibleActive = state
-        
-        if state then
-            print("Killer Features Activated")
-            spawn(autoHit)  -- Start auto hit coroutine
-        else
-            restoreAccessories()  -- Restore accessories when toggled off
-            print("Killer Features Deactivated")
-            autoHitActive = false  -- Disable auto hit
-        end
-    end 
-})
-
--- Auto Farm Tab
-local AutoFarmTab = Tabs.AutoFarm
-for rockName, rockData in pairs(rocks) do
-    local rockToggle = AutoFarmTab:AddToggle(rockName .. "Toggle", {
-        Title = "Teleport to " .. rockName,
-        Default = false,
-    })
-
-    rockToggle:OnChanged(function()
-        if rockToggle.Value then
-            if currentRockToggle and currentRockToggle ~= rockToggle then
-                currentRockToggle.Value = false
-                teleportLoopActive = false
-            end
-
-            currentRockToggle = rockToggle
-            isAutoHitEnabled = true
-            teleportAndAutoHit(rockData)
-        else
-            isAutoHitEnabled = false
-            teleportLoopActive = false
-            currentRockToggle = nil
-        end
-    end)
-end
-
--- Misc Tab
-local MiscTab = Tabs.Misc
-MiscTab:AddDropdown("GameTimeDropdown", {
-    Title = "Set Game Time",
-    Values = {"Morning", "Afternoon", "Night"},
-    Default = 1,
-    Callback = function(value)
-        if value == "Morning" then
-            game.Lighting.ClockTime = 6
-        elseif value == "Afternoon" then
-            game.Lighting.ClockTime = 16
-        elseif value == "Night" then
-            game.Lighting.ClockTime = 0
-        end
-    end
-})
-
-local antiAFKToggle = MiscTab:AddToggle("AntiAFKToggle", {
-    Title = "Enable Anti-AFK",
-    Default = false,
-})
-
-antiAFKToggle:OnChanged(function()
-    while antiAFKToggle.Value do
-        player.Idled:Wait()
-        player:Move(Vector3.new(0, 0, 0))
-        wait(1)
+teleportToggle.MouseButton1Click:Connect(function()
+    teleportPlayersActive = not teleportPlayersActive
+    if teleportPlayersActive then
+        teleportToggle.Text = "Teleport Heads: ON"
+    else
+        teleportToggle.Text = "Toggle Teleport Heads"
     end
 end)
 
--- Set Tool Properties
-setToolProperties()
-player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    backpack = player:WaitForChild("Backpack")
-    setToolProperties()
+local invisibilityToggle = Instance.new("TextButton", Frame)
+invisibilityToggle.Size = UDim2.new(1, 0, 0, 50)
+invisibilityToggle.Position = UDim2.new(0, 0, 0, 120)
+invisibilityToggle.Text = "Toggle Invisibility"
+invisibilityToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+
+invisibilityToggle.MouseButton1Click:Connect(function()
+    turnAccessoriesInvisibleActive = not turnAccessoriesInvisibleActive
+    if turnAccessoriesInvisibleActive then
+        invisibilityToggle.Text = "Invisibility: ON"
+    else
+        restoreAccessories()  -- Restore accessories when toggled off
+        invisibilityToggle.Text = "Toggle Invisibility"
+    end
 end)
 
--- SaveManager and InterfaceManager Setup
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-InterfaceManager:SetFolder("FluentScriptHub")
-SaveManager:SetFolder("FluentScriptHub/specific-game")
-InterfaceManager:BuildInterfaceSection(MiscTab)
-SaveManager:BuildConfigSection(MiscTab)
-
-Window:SelectTab(1)
-
-Fluent:Notify({
-    Title = "Fluent",
-    Content = "The script has been loaded.",
-    Duration = 8
-})
-
-SaveManager:LoadAutoloadConfig()
+print("Killer script loaded.")
