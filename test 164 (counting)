@@ -129,7 +129,8 @@ local function restoreAccessories()
     end
 end
 
-RunService.Heartbeat:Connect(function()
+-- Heartbeat Function
+game:GetService("RunService").Heartbeat:Connect(function()
     if autoHitActive then autoHit() end
     if teleportPlayersActive then teleportHeads() end
     if turnAccessoriesInvisibleActive then turnAccessoriesInvisible() end
@@ -211,7 +212,6 @@ local toggleKiller = KillerTab:AddToggle("KillerToggle", {
         
         if state then
             print("Killer Features Activated")
-            autoHitActive = true  -- Enable auto hit
             spawn(autoHit)  -- Start auto hit coroutine
         else
             restoreAccessories()  -- Restore accessories when toggled off
@@ -238,7 +238,7 @@ for rockName, rockData in pairs(rocks) do
 
             currentRockToggle = rockToggle
             isAutoHitEnabled = true
-            startTeleportLoop(rockData)
+            teleportAndAutoHit(rockData)
         else
             isAutoHitEnabled = false
             teleportLoopActive = false
@@ -279,7 +279,6 @@ end)
 
 -- Set Tool Properties
 setToolProperties()
-
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     backpack = player:WaitForChild("Backpack")
