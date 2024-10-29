@@ -41,14 +41,14 @@ local function autoHit()
         local equippedTool = character:FindFirstChildOfClass("Tool")
         if equippedTool and equippedTool.Enabled then
             equippedTool:Activate()
-            wait(0.1) -- Wait between hits
+            wait(0.1)
         end
-        wait(0.1) -- Additional wait to prevent overwhelming the server
+        wait(0.1)
     end
 end
 
-local function anchorCharacter(character, anchor)
-    for _, part in pairs(character:GetChildren()) do
+local function anchorCharacter(targetCharacter, anchor)
+    for _, part in pairs(targetCharacter:GetChildren()) do
         if part:IsA("BasePart") then
             part.Anchored = anchor
         end
@@ -102,17 +102,7 @@ local function restoreAccessories()
     end
 end
 
--- Connect to character addition
-player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    backpack = player:WaitForChild("Backpack")
-    setToolProperties()
-    if autoKillActive then
-        autoHit() -- Restart auto hitting if it was active
-    end
-end)
-
--- Create Tabs
+-- Tabs Creation
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
@@ -188,13 +178,13 @@ local autoKillToggle = KillerTab:AddToggle("AutoKillToggle", {
 autoKillToggle:OnChanged(function()
     autoKillActive = autoKillToggle.Value
     if autoKillActive then
-        teleportPlayersActive = true -- Enable teleport heads
-        turnAccessoriesInvisibleActive = true -- Enable turn accessories invisible
-        autoHit() -- Start auto hitting when enabled
+        teleportPlayersActive = true
+        turnAccessoriesInvisibleActive = true
+        autoHit()
     else
-        teleportPlayersActive = false -- Disable teleport heads
-        turnAccessoriesInvisibleActive = false -- Disable turn accessories invisible
-        restoreAccessories() -- Restore visibility when disabled
+        teleportPlayersActive = false
+        turnAccessoriesInvisibleActive = false
+        restoreAccessories()
     end
 end)
 
@@ -207,7 +197,7 @@ local teleportPlayersToggle = KillerTab:AddToggle("TeleportPlayersToggle", {
 teleportPlayersToggle:OnChanged(function()
     teleportPlayersActive = teleportPlayersToggle.Value
     if teleportPlayersActive then
-        teleportHeads() -- Start teleporting heads when enabled
+        teleportHeads()
     end
 end)
 
@@ -220,14 +210,15 @@ local turnAccessoriesInvisibleToggle = KillerTab:AddToggle("TurnAccessoriesInvis
 turnAccessoriesInvisibleToggle:OnChanged(function()
     turnAccessoriesInvisibleActive = turnAccessoriesInvisibleToggle.Value
     if turnAccessoriesInvisibleActive then
-        turnAccessoriesInvisible() -- Make accessories invisible when enabled
+        turnAccessoriesInvisible()
     else
-        restoreAccessories() -- Restore visibility when disabled
+        restoreAccessories()
     end
 end)
 
 -- Auto Farm Tab
 local AutoFarmTab = Tabs.AutoFarm
+-- (Add Auto Farm features here as needed)
 
 -- Misc Tab
 local MiscTab = Tabs.Misc
@@ -269,7 +260,7 @@ setToolProperties()
 Fluent:Notify({
     Title = "Fluent",
     Content = "The script has been loaded.",
-    Duration = 8
+    Duration = 5
 })
 
 SaveManager:LoadAutoloadConfig()
