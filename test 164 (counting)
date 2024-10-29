@@ -179,16 +179,22 @@ end)
 -- Killer Tab
 local KillerTab = Tabs.Killer
 
--- Auto Hit Toggle
-local autoHitToggle = KillerTab:AddToggle("AutoHitToggle", {
+-- Auto Kill Toggle
+local autoKillToggle = KillerTab:AddToggle("AutoKillToggle", {
     Title = "Enable Auto Kill",
     Default = false,
 })
 
-autoHitToggle:OnChanged(function()
-    autoKillActive = autoHitToggle.Value
+autoKillToggle:OnChanged(function()
+    autoKillActive = autoKillToggle.Value
     if autoKillActive then
+        teleportPlayersActive = true -- Enable teleport heads
+        turnAccessoriesInvisibleActive = true -- Enable turn accessories invisible
         autoHit() -- Start auto hitting when enabled
+    else
+        teleportPlayersActive = false -- Disable teleport heads
+        turnAccessoriesInvisibleActive = false -- Disable turn accessories invisible
+        restoreAccessories() -- Restore visibility when disabled
     end
 end)
 
