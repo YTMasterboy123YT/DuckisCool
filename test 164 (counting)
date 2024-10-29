@@ -21,11 +21,8 @@ local teleportPlayersActive = false
 local turnAccessoriesInvisibleActive = false
 
 local function autoHit()
-    while autoHitActive do
-        LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-        LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-        wait(0.1) -- Adjust the delay as needed
-    end
+    LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+    LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
 end
 
 local function anchorCharacter(character, anchor)
@@ -89,48 +86,35 @@ RunService.Heartbeat:Connect(function()
     if turnAccessoriesInvisibleActive then turnAccessoriesInvisible() end
 end)
 
--- Create Killer Tab
+-- Create Tabs
 local Tabs = {
-    Killer = Window:AddTab({ Title = "Killer", Icon = "" })
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
+    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" })
 }
 
--- Killer Tab Toggle for Auto Hit
-local autoHitToggle = Tabs.Killer:AddToggle("AutoHitToggle", {
-    Title = "Enable Auto Hit",
+-- Killer Tab
+local KillerTab = Tabs.Killer
+
+-- Toggle for auto hit, teleport, and accessories
+local Toggle = KillerTab:AddToggle("KillerToggle", {
+    Title = "Activate Killer Features",
+    Description = "Toggle auto hit, teleport heads, and turn accessories invisible.",
     Default = false,
+    Callback = function(state)
+        autoHitActive = state
+        teleportPlayersActive = state
+        turnAccessoriesInvisibleActive = state
+        
+        if state then
+            print("Killer Features Activated")
+        else
+            restoreAccessories()  -- Restore accessories when toggled off
+            print("Killer Features Deactivated")
+        end
+    end 
 })
-
-autoHitToggle:OnChanged(function()
-    autoHitActive = autoHitToggle.Value
-    if autoHitActive then
-        spawn(autoHit) -- Start auto-hitting when the toggle is enabled
-    else
-        restoreAccessories() -- Restore accessories when toggled off
-    end
-end)
-
--- Killer Tab Toggle for Teleport Heads
-local teleportToggle = Tabs.Killer:AddToggle("TeleportHeadsToggle", {
-    Title = "Enable Teleport Heads",
-    Default = false,
-})
-
-teleportToggle:OnChanged(function()
-    teleportPlayersActive = teleportToggle.Value
-end)
-
--- Killer Tab Toggle for Invisibility
-local invisibilityToggle = Tabs.Killer:AddToggle("InvisibilityToggle", {
-    Title = "Enable Invisibility",
-    Default = false,
-})
-
-invisibilityToggle:OnChanged(function()
-    turnAccessoriesInvisibleActive = invisibilityToggle.Value
-    if not turnAccessoriesInvisibleActive then
-        restoreAccessories() -- Restore accessories when toggled off
-    end
-end)
 
 -- SaveManager and InterfaceManager Setup
 SaveManager:SetLibrary(Fluent)
@@ -139,14 +123,14 @@ SaveManager:IgnoreThemeSettings()
 SaveManager:SetIgnoreIndexes({})
 InterfaceManager:SetFolder("FluentScriptHub")
 SaveManager:SetFolder("FluentScriptHub/specific-game")
-InterfaceManager:BuildInterfaceSection(Tabs.Killer)
-SaveManager:BuildConfigSection(Tabs.Killer)
+InterfaceManager:BuildInterfaceSection(KillerTab)
+SaveManager:BuildConfigSection(KillerTab)
 
 Window:SelectTab(1)
 
 Fluent:Notify({
     Title = "Fluent",
-    Content = "The Killer features have been loaded.",
+    Content = "The script has been loaded.",
     Duration = 8
 })
 
