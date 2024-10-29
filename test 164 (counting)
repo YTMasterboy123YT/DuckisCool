@@ -19,10 +19,27 @@ local RunService = game:GetService("RunService")
 local autoHitActive = false
 local teleportPlayersActive = false
 local turnAccessoriesInvisibleActive = false
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
 local function autoHit()
-    LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-    LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+    while autoHitActive do
+        local punchTool = character:FindFirstChild("Punch")
+        if punchTool and punchTool.Enabled then
+            punchTool:Activate()
+        end
+        wait(0.1)
+    end
+end
+
+local function startAutoHit()
+    if not autoHitActive then
+        autoHitActive = true
+        autoHit()
+    end
+end
+
+local function stopAutoHit()
+    autoHitActive = false
 end
 
 local function anchorCharacter(character, anchor)
@@ -97,7 +114,7 @@ local Tabs = {
 -- Killer Tab
 local KillerTab = Tabs.Killer
 
--- Toggle for auto hit, teleport, and accessories
+-- Toggle for activating killer features
 local Toggle = KillerTab:AddToggle("KillerToggle", {
     Title = "Activate Killer Features",
     Description = "Toggle auto hit, teleport heads, and turn accessories invisible.",
@@ -109,12 +126,22 @@ local Toggle = KillerTab:AddToggle("KillerToggle", {
         
         if state then
             print("Killer Features Activated")
+            startAutoHit()
         else
             restoreAccessories()  -- Restore accessories when toggled off
             print("Killer Features Deactivated")
+            stopAutoHit()
         end
     end 
 })
+
+-- Character change handling
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    if autoHitActive then
+        startAutoHit()  -- Restart auto-hit if it was active
+    end
+end)
 
 -- SaveManager and InterfaceManager Setup
 SaveManager:SetLibrary(Fluent)
