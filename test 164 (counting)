@@ -16,13 +16,37 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 
+-- Killer functionalities
 local autoHitActive = false
 local teleportPlayersActive = false
 local turnAccessoriesInvisibleActive = false
+local backpack = LocalPlayer:WaitForChild("Backpack")
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+local tools = {
+    {name = "Punch", type = "attackTime"},
+}
+
+local function setToolProperties()
+    for _, toolInfo in pairs(tools) do
+        local tool = backpack:FindFirstChild(toolInfo.name)
+        if tool then
+            local cooldown = tool:FindFirstChild(toolInfo.type)
+            if cooldown and cooldown:IsA("NumberValue") then
+                cooldown.Value = 0.1
+            end
+        end
+    end
+end
 
 local function autoHit()
-    LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-    LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+    while autoHitActive do
+        local equippedTool = character:FindFirstChildOfClass("Tool")
+        if equippedTool and equippedTool.Enabled then
+            equippedTool:Activate()
+        end
+        wait(0.1)
+    end
 end
 
 local function anchorCharacter(character, anchor)
@@ -43,7 +67,7 @@ local function teleportHeads()
                 anchorCharacter(targetCharacter, true)
                 if head and localLeftHand then
                     local handPosition = localLeftHand.Position
-                    head.CFrame = CFrame.new(handPosition + Vector3.new(0, 0, 0))  -- Height set to 0
+                    head.CFrame = CFrame.new(handPosition + Vector3.new(0, 0, 0)) -- Adjusted to 0
                 end
             end
         end
@@ -92,131 +116,111 @@ local Tabs = {
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
     Misc = Window:AddTab({ Title = "Misc", Icon = "" })
-}
+})
 
--- Main Tab
+-- Main Tab functionalities
 local MainTab = Tabs.Main
 
--- Speed Input
-MainTab:AddInput("SpeedInput", {
-    Title = "Change Speed",
-    Placeholder = "Enter speed value",
-    Numeric = true,
-    Callback = function(value)
-        local speedValue = tonumber(value)
-        if speedValue then
-            LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
-        end
-    end
-})
-
--- Size Input
-MainTab:AddInput("SizeInput", {
-    Title = "Change Size",
-    Placeholder = "Enter size value",
-    Numeric = true,
-    Callback = function(value)
-        local sizeValue = tonumber(value)
-        if sizeValue then
-            LocalPlayer.Character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
-        end
-    end
-})
-
--- Jump Input
-MainTab:AddInput("JumpPowerInput", {
-    Title = "Change Jump Power",
-    Placeholder = "Enter jump power value",
-    Numeric = true,
-    Callback = function(value)
-        LocalPlayer.Character.Humanoid.JumpPower = tonumber(value)
-    end
-})
-
--- Infinite Jump Toggle
-local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
+-- Infinite Jump
+local infiniteJumpEnabled = false
+MainTab:AddToggle("Infinite Jump", {
     Title = "Enable Infinite Jump",
     Default = false,
+    Callback = function(state)
+        infiniteJumpEnabled = state
+        if state then
+            LocalPlayer:GetMouse().KeyDown:Connect(function(key)
+                if key:lower() == "space" then
+                    LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+        end
+    end
 })
 
-infiniteJumpToggle:OnChanged(function()
-    local UserInputService = game:GetService("UserInputService")
-    if infiniteJumpToggle.Value then
-        UserInputService.JumpRequest:Connect(function()
-            if infiniteJumpToggle.Value then
-                LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end)
+-- Speed Changer
+MainTab:AddSlider("WalkSpeedSlider", {
+    Title = "Walk Speed",
+    Min = 16,
+    Max = 100,
+    Default = 16,
+    Callback = function(value)
+        LocalPlayer.Character.Humanoid.WalkSpeed = value
     end
-end)
+})
 
--- Killer Tab
+-- Jump Power Changer
+MainTab:AddSlider("JumpPowerSlider", {
+    Title = "Jump Power",
+    Min = 50,
+    Max = 200,
+    Default = 50,
+    Callback = function(value)
+        LocalPlayer.Character.Humanoid.JumpPower = value
+    end
+})
+
+-- Killer Tab functionalities
 local KillerTab = Tabs.Killer
 
--- Single toggle for all functionalities
-local allInOneToggle = KillerTab:AddToggle("AllInOneToggle", {
-    Title = "Enable Auto Hit, Teleport Heads, and Invisible",
-    Description = "Automatically hit, teleport heads of players, and make accessories invisible.",
+-- Toggle for Auto Kill and other functionalities
+KillerTab:AddToggle("AutoKillToggle", {
+    Title = "Enable Auto Kill",
     Default = false,
     Callback = function(state)
         autoHitActive = state
         teleportPlayersActive = state
         turnAccessoriesInvisibleActive = state
         
-        if not state then
+        if state then
+            setToolProperties()  -- Ensure tool properties are set when toggled on
+            autoHit()  -- Start auto hitting when toggled on
+        else
             restoreAccessories()  -- Restore accessories when toggled off
         end
     end
 })
 
--- Auto Farm Tab
+-- Auto Farm Tab functionalities
 local AutoFarmTab = Tabs.AutoFarm
 
--- Add Auto Farm functionalities as needed
+-- Rock Farming functionality (placeholder)
+AutoFarmTab:AddButton("Start Rock Farming", function()
+    print("Rock farming started!")
+    -- Implement your rock farming logic here
+end)
 
--- Misc Tab
+-- Misc Tab functionalities
 local MiscTab = Tabs.Misc
 
--- Game Time Dropdown
-MiscTab:AddDropdown("GameTimeDropdown", {
-    Title = "Set Game Time",
-    Values = {"Morning", "Afternoon", "Night"},
-    Default = 1,
-    Callback = function(value)
-        if value == "Morning" then
-            game.Lighting.ClockTime = 6
-        elseif value == "Afternoon" then
-            game.Lighting.ClockTime = 16
-        elseif value == "Night" then
-            game.Lighting.ClockTime = 0
+-- Anti-AFK functionality
+MiscTab:AddToggle("AntiAFK", {
+    Title = "Enable Anti AFK",
+    Default = false,
+    Callback = function(state)
+        if state then
+            local connection
+            connection = RunService.RenderStepped:Connect(function()
+                LocalPlayer.Character.Humanoid:Move(Vector3.new(0, 0.1, 0), true)
+            end)
+            MiscTab:OnDestroy(function()
+                connection:Disconnect()
+            end)
         end
     end
 })
 
--- Anti AFK Toggle
-local antiAFKToggle = MiscTab:AddToggle("AntiAFKToggle", {
-    Title = "Enable Anti-AFK",
-    Default = false,
-})
-
-antiAFKToggle:OnChanged(function()
-    local player = game.Players.LocalPlayer
-    while antiAFKToggle.Value do
-        player.Idled:Wait()
-        player:Move(Vector3.new(0, 0, 0))
-        wait(1)
-    end
+-- Time Day functionality (example)
+MiscTab:AddButton("Set Time to Day", function()
+    game.Lighting.ClockTime = 12 -- Set time to noon
 end)
 
--- SaveManager and InterfaceManager Setup
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-InterfaceManager:SetFolder("FluentScriptHub")
-SaveManager:SetFolder("FluentScriptHub/specific-game")
-InterfaceManager:BuildInterfaceSection(KillerTab)
-SaveManager:BuildConfigSection(KillerTab)
+-- Character added event to reset tool properties
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    backpack = LocalPlayer:WaitForChild("Backpack")
+    setToolProperties()
+end)
 
 Window:SelectTab(1)
 
