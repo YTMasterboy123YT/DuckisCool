@@ -1,51 +1,22 @@
-local player = game.Players.LocalPlayer
-local backpack = player:WaitForChild("Backpack")
-local replicatedStorage = game:GetService("ReplicatedStorage")
-local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+-- Create a ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
--- Create a button to teleport the rock and equip the tools
+-- Create a TextButton
 local button = Instance.new("TextButton")
 button.Size = UDim2.new(0, 200, 0, 50)
 button.Position = UDim2.new(0.5, -100, 0.5, -25)
-button.Text = "Equip Tools & Start Teleporting Rock"
+button.Text = "Teleport Rock"
 button.Parent = screenGui
+button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Green color
+button.TextColor3 = Color3.new(1, 1, 1) -- White text
 
-local function equipTool(toolName, cooldownType)
-    local tool = replicatedStorage:FindFirstChild(toolName)
-    if tool then
-        local newTool = tool:Clone() -- Clone the tool
-        newTool.Parent = backpack -- Equip the tool
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local teleporting = false
 
-        -- Set cooldown if applicable
-        local cooldown = newTool:FindFirstChild(cooldownType) 
-        if cooldown and cooldown:IsA("NumberValue") then
-            cooldown.Value = 0.1 -- Set the cooldown for the tool
-        end
-    else
-        warn(toolName .. " not found in ReplicatedStorage!")
-    end
-end
-
-local function autoLift()
-    while true do
-        local punchTool = backpack:FindFirstChild("Punch")
-        local pushupsTool = backpack:FindFirstChild("Pushups")
-
-        -- Activate the Punch tool if it's equipped
-        if punchTool and punchTool.Enabled then
-            punchTool:Activate()
-        end
-
-        -- Activate the Pushups tool if it's equipped
-        if pushupsTool and pushupsTool.Enabled then
-            pushupsTool:Activate()
-        end
-        
-        wait(0.1) -- Adjust this to control the frequency of activation
-    end
-end
-
-local function setupMuscleKingMountain()
+button.MouseButton1Click:Connect(function()
+    -- Navigate to the Rock part
     local machinesFolder = game.Workspace:FindFirstChild("machinesFolder")
     if not machinesFolder then
         warn("machinesFolder not found!")
@@ -63,38 +34,37 @@ local function setupMuscleKingMountain()
         warn("Rock not found!")
         return
     end
-    
-    local rockGui = rockPart:FindFirstChild("rockGui")
-    if not rockGui then
-        warn("rockGui not found!")
-        return
+
+    -- Delete all StatLabels
+    for _, child in ipairs(muscleKingMountain:GetChildren()) do
+        if child:IsA("TextLabel") and string.match(child.Name, "StatLabel") then
+            child:Destroy()
+        end
     end
 
-    -- Continuously teleport the rock to the player's right hand CFrame
-    while true do
-        rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
-        rockPart.Size = Vector3.new(2, 2, 2) -- Set size when activated
-        wait(0.1) -- Adjust this delay to control how often it updates
+    -- Delete rockName if it exists
+    local rockName = rockPart:FindFirstChild("rockName") -- Change this if it's a different name
+    if rockName then
+        rockName:Destroy()
     end
-end
 
-button.MouseButton1Click:Connect(function()
-    -- Ensure character is loaded before equipping tools
-    if player.Character then
-        equipTool("Punch", "attackTime")
-        equipTool("Pushups", "repTime")
-        setupMuscleKingMountain() -- Setup the Muscle King Mountain
-        autoLift() -- Start auto-hitting
+    -- Start or stop teleporting
+    teleporting = not teleporting
+
+    if teleporting then
+        button.Text = "Stop Teleporting"
+        button.BackgroundColor3 = Color3.new(1, 0.5, 0) -- Change to orange to indicate active teleporting
+        
+        -- Teleport the rock continuously
+        while teleporting do
+            if character and character:FindFirstChild("RightHand") then
+                rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
+                rockPart.Size = Vector3.new(2, 2, 2)  -- Set size when activated
+            end
+            wait(0.1) -- Adjust delay as needed
+        end
     else
-        warn("Character not found!")
+        button.Text = "Teleport Rock"
+        button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Change back to green
     end
-end)
-
--- Initial character setup
-local character = player.Character or player.CharacterAdded:Wait()
-
--- Reset for new characters
-player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    backpack = player:WaitForChild("Backpack")
 end)
