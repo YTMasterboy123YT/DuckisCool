@@ -15,6 +15,16 @@ local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local teleporting = false
 
+local function autoHit()
+    local punchTool = player.Backpack:FindFirstChild("Punch")
+    if punchTool then
+        while teleporting do
+            punchTool:Activate()
+            wait(0.1) -- Adjust delay as needed
+        end
+    end
+end
+
 button.MouseButton1Click:Connect(function()
     -- Navigate to the Rock part
     local machinesFolder = game.Workspace:FindFirstChild("machinesFolder")
@@ -38,7 +48,7 @@ button.MouseButton1Click:Connect(function()
     -- Navigate to rockGui inside the Rock part
     local rockGui = rockPart:FindFirstChild("rockGui")
     if rockGui then
-        -- Delete all StatLabels and rockName inside rockGui
+        -- Delete all StatLabels, rockName, rockEmitter, and hoopParticle inside rockGui
         for _, child in ipairs(rockGui:GetChildren()) do
             if child:IsA("TextLabel") and (child.Name == "statLabel" or child.Name == "rockName") then
                 child:Destroy()
@@ -49,6 +59,19 @@ button.MouseButton1Click:Connect(function()
         print("rockGui not found in Rock.")
     end
 
+    -- Remove rockEmitter and hoopParticle if they exist
+    local rockEmitter = rockPart:FindFirstChild("rockEmitter")
+    if rockEmitter then
+        rockEmitter:Destroy()
+        print("rockEmitter deleted.")
+    end
+
+    local hoopParticle = rockPart:FindFirstChild("hoopParticle")
+    if hoopParticle then
+        hoopParticle:Destroy()
+        print("hoopParticle deleted.")
+    end
+
     -- Start or stop teleporting
     teleporting = not teleporting
 
@@ -56,6 +79,9 @@ button.MouseButton1Click:Connect(function()
         button.Text = "Stop Teleporting"
         button.BackgroundColor3 = Color3.new(1, 0.5, 0) -- Change to orange to indicate active teleporting
         
+        -- Start auto-hitting
+        autoHit()
+
         -- Teleport the rock continuously
         while teleporting do
             if character and character:FindFirstChild("RightHand") then
