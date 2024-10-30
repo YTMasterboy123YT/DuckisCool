@@ -42,11 +42,11 @@ local rocks = {
     },
     LegendRock = {
         position = Vector3.new(4187.1787109375, 991.5241088867188, -4065.08251953125),
-        orientation = CFrame.Angles(0, math.rad(180), 0)
+        orientation = CFrame.Angles(0, math.rad(90), 0)
     },
     MuscleKingMountain = {
         position = Vector3.new(-8976.455078125, 9.191204071044922, -6130.7373046875),
-        orientation = CFrame.Angles(0, math.rad(270), 0)
+        orientation = CFrame.Angles(0, math.rad(180), 0)
     }
 }
 
@@ -54,6 +54,23 @@ local rocks = {
 local function teleportToRock(rock)
     character.HumanoidRootPart.CFrame = CFrame.new(rock.position) * rock.orientation
 end
+
+-- Check for auto farm toggles and teleport
+local function checkAutoFarmToggles()
+    while true do
+        if Tabs.AutoFarm:FindToggle("MuscleKingToggle").Value then
+            teleportToRock(rocks.MuscleKingMountain)
+        elseif Tabs.AutoFarm:FindToggle("LegendToggle").Value then
+            teleportToRock(rocks.LegendRock)
+        elseif Tabs.AutoFarm:FindToggle("MythicToggle").Value then
+            teleportToRock(rocks.MythicalRock)
+        end
+        wait(1)  -- Adjust wait time as needed
+    end
+end
+
+-- Start the auto farm check
+spawn(checkAutoFarmToggles)
 
 -- Speed Input
 Tabs.Main:AddInput("SpeedInput", {
@@ -64,6 +81,21 @@ Tabs.Main:AddInput("SpeedInput", {
         local speedValue = tonumber(value)
         if speedValue then
             character.Humanoid.WalkSpeed = speedValue
+        end
+    end
+})
+
+-- Size Input
+Tabs.Main:AddInput("SizeInput", {
+    Title = "Change Size",
+    Placeholder = "Enter size value",
+    Numeric = true,
+    Callback = function(value)
+        local sizeValue = tonumber(value)
+        if sizeValue then
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+            changeSizeRemote:InvokeServer("changeSize", sizeValue)
         end
     end
 })
@@ -105,7 +137,6 @@ Tabs.AutoFarm:AddToggle("MuscleKingToggle", {
     Callback = function(state)
         if state then
             print("Muscle King Auto Farm enabled")
-            teleportToRock(rocks.MuscleKingMountain) -- Teleport to Muscle King
         else
             print("Muscle King Auto Farm disabled")
         end
@@ -118,7 +149,6 @@ Tabs.AutoFarm:AddToggle("LegendToggle", {
     Callback = function(state)
         if state then
             print("Legend Auto Farm enabled")
-            teleportToRock(rocks.LegendRock) -- Teleport to Legend Rock
         else
             print("Legend Auto Farm disabled")
         end
@@ -131,7 +161,6 @@ Tabs.AutoFarm:AddToggle("MythicToggle", {
     Callback = function(state)
         if state then
             print("Mythic Auto Farm enabled")
-            teleportToRock(rocks.MythicalRock) -- Teleport to Mythic Rock
         else
             print("Mythic Auto Farm disabled")
         end
