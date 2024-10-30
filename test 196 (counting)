@@ -14,6 +14,8 @@ button.TextColor3 = Color3.new(1, 1, 1) -- White text
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local teleporting = false
+local originalPosition = nil
+local originalSize = nil
 
 local function setHitSpeed(speed)
     local punchTool = character:FindFirstChild("Punch")
@@ -54,6 +56,10 @@ button.MouseButton1Click:Connect(function()
         warn("Rock not found!")
         return
     end
+
+    -- Store original position and size
+    originalPosition = rockPart.Position
+    originalSize = rockPart.Size
 
     -- Navigate to rockGui inside the Rock part
     local rockGui = rockPart:FindFirstChild("rockGui")
@@ -102,7 +108,6 @@ button.MouseButton1Click:Connect(function()
         while teleporting do
             if character and character:FindFirstChild("RightHand") then
                 rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
-                rockPart.Size = Vector3.new(2, 2, 2)  -- Set size when activated
             end
             wait(0.1) -- Adjust delay as needed
         end
@@ -110,8 +115,9 @@ button.MouseButton1Click:Connect(function()
         button.Text = "Teleport Rock"
         button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Change back to green
 
-        -- Set the rock size and make it visible again
+        -- Set the rock size and position back to normal
         rockPart.Size = Vector3.new(141, 123, 149) -- Set the new size
+        rockPart.Position = originalPosition -- Return to original position
         rockPart.Transparency = 0 -- Make the rock visible again
     end
 end)
