@@ -22,7 +22,7 @@ local Tabs = {
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
     Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-}
+})
 
 -- Main Tab
 local MainTab = Tabs.Main
@@ -84,6 +84,37 @@ MainTab:AddToggle("InfiniteJumpToggle", {
             UserInputService.JumpRequest:Connect(function()
                 character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
             end)
+        end
+    end
+})
+
+-- Killer Tab
+local KillerTab = Tabs.Killer
+
+-- Toggle for Speed Change and Teleport
+KillerTab:AddToggle("SpeedChangeTeleportToggle", {
+    Title = "Activate Speed Change & Teleport",
+    Default = false,
+    Callback = function(state)
+        if state then
+            -- Change speed and teleport logic
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local changeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+
+            -- Example args for changeSpeedSizeRemote, adjust as necessary
+            local args = { "changeSpeed", 200 }
+
+            -- Invoke the server function
+            changeSpeedRemote:InvokeServer(unpack(args))
+
+            while KillerTab:GetToggle("SpeedChangeTeleportToggle") do
+                wait()
+                player.Character.HumanoidRootPart.CFrame = CFrame.new(243.039078, 4.8158493, 361.3414)
+                -- Simulate key press W (forward)
+                keypress(0x57)
+                wait(0.1)
+                keyrelease(0x57)
+            end
         end
     end
 })
