@@ -18,7 +18,7 @@ local teleporting = false
 local function setHitSpeed(speed)
     local punchTool = character:FindFirstChild("Punch")
     if punchTool then
-        local attackTime = punchTool:FindFirstChild("attackTime") -- Change this if the property is named differently
+        local attackTime = punchTool:FindFirstChild("attackTime") -- Ensure this matches the property name in your tool
         if attackTime and attackTime:IsA("NumberValue") then
             attackTime.Value = speed
         end
@@ -89,8 +89,11 @@ button.MouseButton1Click:Connect(function()
         button.Text = "Stop Teleporting"
         button.BackgroundColor3 = Color3.new(1, 0.5, 0) -- Change to orange to indicate active teleporting
 
-        -- Set the hit speed (e.g., to 0.1)
-        setHitSpeed(0.1) -- Adjust the hit speed value as needed
+        -- Set the hit speed to 0.1
+        setHitSpeed(0.1)
+
+        -- Make the rock invisible
+        rockPart.Transparency = 1 -- Make the rock invisible
 
         -- Start auto-hitting
         autoHit()
@@ -106,6 +109,7 @@ button.MouseButton1Click:Connect(function()
     else
         button.Text = "Teleport Rock"
         button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Change back to green
+        rockPart.Transparency = 0 -- Make the rock visible again if needed
     end
 end)
 
