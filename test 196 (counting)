@@ -6,7 +6,7 @@ screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 local button = Instance.new("TextButton")
 button.Size = UDim2.new(0, 200, 0, 50)
 button.Position = UDim2.new(0.5, -100, 0.5, -25)
-button.Text = "Teleport Mountain"
+button.Text = "Teleport Rock"
 button.Parent = screenGui
 button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Green color
 button.TextColor3 = Color3.new(1, 1, 1) -- White text
@@ -15,7 +15,7 @@ local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local teleporting = false
 local originalPosition = nil
-local originalSize = nil
+local rockPart = nil
 
 local function setHitSpeed(speed)
     local punchTool = character:FindFirstChild("Punch")
@@ -51,12 +51,18 @@ button.MouseButton1Click:Connect(function()
         return
     end
 
-    -- Store original position and size
-    originalPosition = muscleKingMountain.PrimaryPart.Position -- Make sure to set PrimaryPart in the model
-    originalSize = muscleKingMountain:GetModelSize() -- Get the overall size of the model
+    -- Navigate to the specific rock part inside Muscle King Mountain
+    rockPart = muscleKingMountain:FindFirstChild("Rock") -- Ensure it's named "Rock"
+    if not rockPart then
+        warn("Rock not found inside Muscle King Mountain!")
+        return
+    end
 
-    -- Navigate to rockGui inside the Muscle King Mountain part
-    local rockGui = muscleKingMountain:FindFirstChild("Rock") and muscleKingMountain.Rock:FindFirstChild("rockGui")
+    -- Store original position
+    originalPosition = rockPart.Position
+
+    -- Navigate to rockGui inside the Rock part
+    local rockGui = rockPart:FindFirstChild("rockGui")
     if rockGui then
         -- Delete all StatLabels, rockName, rockEmitter, and hoopParticle inside rockGui
         for _, child in ipairs(rockGui:GetChildren()) do
@@ -66,17 +72,17 @@ button.MouseButton1Click:Connect(function()
             end
         end
     else
-        print("rockGui not found in Muscle King Mountain.")
+        print("rockGui not found in Rock.")
     end
 
     -- Remove rockEmitter and hoopParticle if they exist
-    local rockEmitter = muscleKingMountain:FindFirstChild("rockEmitter")
+    local rockEmitter = rockPart:FindFirstChild("rockEmitter")
     if rockEmitter then
         rockEmitter:Destroy()
         print("rockEmitter deleted.")
     end
 
-    local hoopParticle = muscleKingMountain:FindFirstChild("hoopParticle")
+    local hoopParticle = rockPart:FindFirstChild("hoopParticle")
     if hoopParticle then
         hoopParticle:Destroy()
         print("hoopParticle deleted.")
@@ -92,26 +98,26 @@ button.MouseButton1Click:Connect(function()
         -- Set the hit speed to 0.1
         setHitSpeed(0.1)
 
-        -- Make the Muscle King Mountain invisible
-        muscleKingMountain.Transparency = 1 -- Make the mountain invisible
+        -- Make the rock invisible
+        rockPart.Transparency = 1 -- Make the rock invisible
 
         -- Start auto-hitting
         autoHit()
 
-        -- Loop to teleport the Muscle King Mountain to the right hand continuously
+        -- Loop to teleport the Rock to the right hand continuously
         while teleporting do
             if character and character:FindFirstChild("RightHand") then
-                muscleKingMountain:SetPrimaryPartCFrame(character.RightHand.CFrame * CFrame.new(0, 1, 0)) -- Position above the right hand
+                rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
             end
             wait(0.1) -- Adjust delay as needed
         end
     else
-        button.Text = "Teleport Mountain"
+        button.Text = "Teleport Rock"
         button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Change back to green
 
-        -- Set the Muscle King Mountain size and position back to normal
-        muscleKingMountain:SetPrimaryPartCFrame(originalPosition) -- Return to original position
-        muscleKingMountain.Transparency = 0 -- Make the mountain visible again
+        -- Set the rock position back to normal
+        rockPart.Position = originalPosition -- Return to original position
+        rockPart.Transparency = 0 -- Make the rock visible again
     end
 end)
 
