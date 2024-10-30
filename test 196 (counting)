@@ -25,20 +25,13 @@ local originalPosition = rockPart.Position
 local originalSize = rockPart.Size
 local isOn = false
 
-local function updateRockPosition()
-    while isOn do
-        rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position it above the right hand
-        wait(0.1) -- Adjust the wait time as needed
-    end
-end
-
 button.MouseButton1Click:Connect(function()
     isOn = not isOn
     if isOn then
+        rockPart.Position = character.RightHand.Position + Vector3.new(0, 1, 0) -- Set position above the right hand
         rockPart.Size = Vector3.new(2, 2, 2)  -- Set size when activated
         button.Text = "Return Rock"
         button.BackgroundColor3 = Color3.new(1, 0, 0) -- Change to red
-        updateRockPosition() -- Start updating position
     else
         rockPart.Position = originalPosition
         rockPart.Size = originalSize
