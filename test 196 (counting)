@@ -2,10 +2,9 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
--- Create the main window
 local Window = Fluent:CreateWindow({
-    Title = "Ducks Private Script" .. Fluent.Version, 
-    SubTitle = "by Duck", 
+    Title = "Ducks Private Script " .. Fluent.Version,
+    SubTitle = "by Duck",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
@@ -13,112 +12,23 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
--- Tabs
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+local character = player.Character or player.CharacterAdded:Wait()
+
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
-    misc = Window:AddTab({ Title = "Misc", Icon = "" }),
-    settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
--- Save and Interface Managers
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-
--- Build Settings Section
-InterfaceManager:BuildInterfaceSection(Tabs.settings)
-SaveManager:BuildConfigSection(Tabs.settings)
-
--- Local player
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-
--- Define rock positions and orientations
-local rocks = {
-    MythicalRock = {
-        position = Vector3.new(2220.0595703125, 7.321215629577637, 1228.5823974609375),
-        orientation = CFrame.Angles(0, math.rad(90), 0)
-    },
-    LegendRock = {
-        position = Vector3.new(4187.1787109375, 991.5241088867188, -4065.08251953125),
-        orientation = CFrame.Angles(0, math.rad(90), 0)
-    },
-    MuscleKingMountain = {
-        position = Vector3.new(-8976.455078125, 9.191204071044922, -6130.7373046875),
-        orientation = CFrame.Angles(0, math.rad(180), 0)
-    }
-}
-
--- Function to teleport to a rock
-local function teleportToRock(rock)
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        character.HumanoidRootPart.CFrame = CFrame.new(rock.position) * rock.orientation
-    end
-end
-
--- Function to continuously teleport to a rock when the toggle is enabled
-local function startTeleporting(rock)
-    while Tabs.AutoFarm:FindToggle(rock.toggleName).Value do
-        teleportToRock(rock)
-        wait(0.1)  -- Adjust the wait time as needed
-    end
-end
-
--- Auto Farm Toggles in Auto Farm Tab
-Tabs.AutoFarm:AddToggle("MuscleKingToggle", {
-    Title = "Enable Muscle King Auto Farm", 
-    Default = false,
-    Callback = function(state)
-        if state then
-            print("Muscle King Auto Farm enabled")
-            startTeleporting({
-                position = rocks.MuscleKingMountain.position,
-                orientation = rocks.MuscleKingMountain.orientation,
-                toggleName = "MuscleKingToggle"
-            })
-        else
-            print("Muscle King Auto Farm disabled")
-        end
-    end
-})
-
-Tabs.AutoFarm:AddToggle("LegendToggle", {
-    Title = "Enable Legend Auto Farm", 
-    Default = false,
-    Callback = function(state)
-        if state then
-            print("Legend Auto Farm enabled")
-            startTeleporting({
-                position = rocks.LegendRock.position,
-                orientation = rocks.LegendRock.orientation,
-                toggleName = "LegendToggle"
-            })
-        else
-            print("Legend Auto Farm disabled")
-        end
-    end
-})
-
-Tabs.AutoFarm:AddToggle("MythicToggle", {
-    Title = "Enable Mythic Auto Farm", 
-    Default = false,
-    Callback = function(state)
-        if state then
-            print("Mythic Auto Farm enabled")
-            startTeleporting({
-                position = rocks.MythicalRock.position,
-                orientation = rocks.MythicalRock.orientation,
-                toggleName = "MythicToggle"
-            })
-        else
-            print("Mythic Auto Farm disabled")
-        end
-    end
-})
+-- Main Tab
+local MainTab = Tabs.Main
 
 -- Speed Input
-Tabs.Main:AddInput("SpeedInput", {
+MainTab:AddInput("SpeedInput", {
     Title = "Change Speed",
     Placeholder = "Enter speed value",
     Numeric = true,
@@ -131,7 +41,7 @@ Tabs.Main:AddInput("SpeedInput", {
 })
 
 -- Size Input
-Tabs.Main:AddInput("SizeInput", {
+MainTab:AddInput("SizeInput", {
     Title = "Change Size",
     Placeholder = "Enter size value",
     Numeric = true,
@@ -146,23 +56,26 @@ Tabs.Main:AddInput("SizeInput", {
 })
 
 -- Jump Power Input
-Tabs.Main:AddInput("JumpPowerInput", {
+MainTab:AddInput("JumpPowerInput", {
     Title = "Change Jump Power",
     Placeholder = "Enter jump power value",
     Numeric = true,
     Callback = function(value)
         local jumpPowerValue = tonumber(value)
         if jumpPowerValue then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.JumpPower = jumpPowerValue
+            local Players = game:GetService("Players")
+            for _, player in ipairs(Players:GetPlayers()) do
+                local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.JumpPower = jumpPowerValue
+                end
             end
         end
     end
 })
 
 -- Infinite Jump Toggle
-Tabs.Main:AddToggle("InfiniteJumpToggle", {
+MainTab:AddToggle("InfiniteJumpToggle", {
     Title = "Enable Infinite Jump",
     Default = false,
     Callback = function(state)
@@ -175,9 +88,90 @@ Tabs.Main:AddToggle("InfiniteJumpToggle", {
     end
 })
 
--- Notify that the GUI has been loaded
-Fluent:Notify({
-    Title = "Fluent",
-    Content = "The GUI has been loaded successfully.",
-    Duration = 5
+-- Auto Farm Tab
+local AutoFarmTab = Tabs.AutoFarm
+
+-- Define rock positions and orientations
+local rocks = {
+    MuscleKingMountain = {
+        position = Vector3.new(-8976.455078125, 9.191204071044922, -6130.7373046875),
+        orientation = CFrame.Angles(0, math.rad(180), 0)
+    },
+    LegendRock = {
+        position = Vector3.new(4187.1787109375, 991.5241088867188, -4065.08251953125),
+        orientation = CFrame.Angles(0, math.rad(90), 0)
+    },
+    MythicalRock = {
+        position = Vector3.new(2220.0595703125, 7.321215629577637, 1228.5823974609375),
+        orientation = CFrame.Angles(0, math.rad(90), 0)
+    }
+}
+
+-- Function to teleport to a rock
+local function teleportToRock(rock)
+    character.HumanoidRootPart.CFrame = CFrame.new(rock.position) * rock.orientation
+end
+
+-- Toggle for Muscle King Mountain
+local muscleKingToggle = AutoFarmTab:AddToggle("MuscleKingToggle", {
+    Title = "Teleport to Muscle King Mountain",
+    Default = false,
 })
+
+muscleKingToggle:OnChanged(function()
+    if muscleKingToggle.Value then
+        while muscleKingToggle.Value do
+            teleportToRock(rocks.MuscleKingMountain)
+            wait(0.5)
+        end
+    end
+end)
+
+-- Toggle for Legend Rock
+local legendToggle = AutoFarmTab:AddToggle("LegendToggle", {
+    Title = "Teleport to Legend Rock",
+    Default = false,
+})
+
+legendToggle:OnChanged(function()
+    if legendToggle.Value then
+        while legendToggle.Value do
+            teleportToRock(rocks.LegendRock)
+            wait(0.5)
+        end
+    end
+end)
+
+-- Toggle for Mythical Rock
+local mythicalToggle = AutoFarmTab:AddToggle("MythicalToggle", {
+    Title = "Teleport to Mythical Rock",
+    Default = false,
+})
+
+mythicalToggle:OnChanged(function()
+    if mythicalToggle.Value then
+        while mythicalToggle.Value do
+            teleportToRock(rocks.MythicalRock)
+            wait(0.5)
+        end
+    end
+end)
+
+-- Settings Tab
+local SettingsTab = Tabs.Settings
+
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+
+InterfaceManager:BuildInterfaceSection(SettingsTab)
+SaveManager:BuildConfigSection(SettingsTab)
+
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "Ducks Private Script",
+    Content = "The script has been loaded.",
+    Duration = 8
+})
+
+SaveManager:LoadAutoloadConfig()
