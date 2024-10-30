@@ -19,14 +19,14 @@ local rockPart = muscleKingMountain:FindFirstChild("Rock")
 local originalPosition = rockPart.Position
 local originalSize = rockPart.Size
 local isOn = false
+local runService = game:GetService("RunService")
 
 button.MouseButton1Click:Connect(function()
     isOn = not isOn
     if isOn then
-        -- Ensure the rock part is in the workspace before teleporting
+        -- Teleport the rock to the right hand CFrame
         if character and character:FindFirstChild("RightHand") and rockPart then
-            -- Teleport the rock to the right hand CFrame
-            rockPart.CFrame = character.RightHand.CFrame -- Teleport to the right hand
+            rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
             rockPart.Transparency = 1 -- Make the rock invisible
 
             -- Remove StatLabels and other objects inside rockGui
@@ -54,6 +54,16 @@ button.MouseButton1Click:Connect(function()
             end
 
             button.Text = "Return Rock"
+
+            -- Loop to anchor the rock to the right hand
+            local connection
+            connection = runService.RenderStepped:Connect(function()
+                if isOn and character and character:FindFirstChild("RightHand") then
+                    rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Keep it above the right hand
+                else
+                    connection:Disconnect() -- Stop the loop when turned off
+                end
+            end)
         end
     else
         rockPart.Position = originalPosition
