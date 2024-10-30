@@ -8,25 +8,41 @@ button.Size = UDim2.new(0, 200, 0, 50)
 button.Position = UDim2.new(0.5, -100, 0.5, -25)
 button.Text = "Teleport Rock"
 button.Parent = screenGui
+button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Green color
+button.TextColor3 = Color3.new(1, 1, 1) -- White text
 
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
-local muscleKingMountain = game.Workspace.machinesFolder:FindFirstChild("Muscle King Mountain")
-local rockPart = muscleKingMountain:FindFirstChild("Rock")
+local muscleKingMountain = game.Workspace:FindFirstChild("machinesFolder") and game.Workspace.machinesFolder:FindFirstChild("Muscle King Mountain")
+local rockPart = muscleKingMountain and muscleKingMountain:FindFirstChild("Rock")
+
+if not rockPart then
+    warn("Rock not found! Please check the workspace structure.")
+    return
+end
 
 local originalPosition = rockPart.Position
 local originalSize = rockPart.Size
 local isOn = false
 
+local function updateRockPosition()
+    while isOn do
+        rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position it above the right hand
+        wait(0.1) -- Adjust the wait time as needed
+    end
+end
+
 button.MouseButton1Click:Connect(function()
     isOn = not isOn
     if isOn then
-        rockPart.Position = character.RightHand.Position  -- Adjusted positioning
-        rockPart.Size = Vector3.new(0.1, 0, 0.1)
+        rockPart.Size = Vector3.new(2, 2, 2)  -- Set size when activated
         button.Text = "Return Rock"
+        button.BackgroundColor3 = Color3.new(1, 0, 0) -- Change to red
+        updateRockPosition() -- Start updating position
     else
         rockPart.Position = originalPosition
         rockPart.Size = originalSize
         button.Text = "Teleport Rock"
+        button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Change back to green
     end
 end)
