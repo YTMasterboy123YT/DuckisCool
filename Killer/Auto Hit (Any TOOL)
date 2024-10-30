@@ -4,13 +4,18 @@ local character = player.Character or player.CharacterAdded:Wait()
 
 local tools = {
     {name = "Punch", type = "attackTime"},
-    {name = "Ground Slam", type = "attackTime"},
-    {name = "Stomp", type = "attackTime"},
-    {name = "Handstands", type = "repTime"},
     {name = "Pushups", type = "repTime"},
-    {name = "Weight", type = "repTime"},
-    {name = "Situps", type = "repTime"}
 }
+
+local function equipTool(toolName)
+    local tool = backpack:FindFirstChild(toolName)
+    if tool then
+        tool.Parent = character -- Equip the tool by moving it to the character
+        return tool
+    else
+        warn(toolName .. " not found in backpack!")
+    end
+end
 
 local function setToolProperties()
     for _, toolInfo in pairs(tools) do
@@ -24,22 +29,36 @@ local function setToolProperties()
     end
 end
 
-local function autoHit()
+local function autoUse()
     while true do
-        local equippedTool = character:FindFirstChildOfClass("Tool")
-        if equippedTool and equippedTool.Enabled then
-            equippedTool:Activate()
+        for _, toolInfo in pairs(tools) do
+            local equippedTool = character:FindFirstChild(toolInfo.name)
+            if equippedTool and equippedTool.Enabled then
+                equippedTool:Activate()
+                wait(0.1) -- Short delay between uses
+            end
         end
-        wait(0.1)
+        wait(0.1) -- Delay before the next round of checks
     end
 end
 
+-- Equip tools on start
+for _, toolInfo in pairs(tools) do
+    equipTool(toolInfo.name)
+end
+
 setToolProperties()
-autoHit()
+autoUse()
 
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     backpack = player:WaitForChild("Backpack")
+    
+    -- Re-equip tools for the new character
+    for _, toolInfo in pairs(tools) do
+        equipTool(toolInfo.name)
+    end
+
     setToolProperties()
-    autoHit()
+    autoUse()
 end)
