@@ -7,7 +7,7 @@ local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 local button = Instance.new("TextButton")
 button.Size = UDim2.new(0, 200, 0, 50)
 button.Position = UDim2.new(0.5, -100, 0.5, -25)
-button.Text = "Teleport Rock & Equip Tools"
+button.Text = "Equip Tools & Start Teleporting Rock"
 button.Parent = screenGui
 
 local function equipTool(toolName, cooldownType)
@@ -70,9 +70,12 @@ local function setupMuscleKingMountain()
         return
     end
 
-    -- Teleport the rock to the player's right hand CFrame
-    rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
-    rockPart.Size = Vector3.new(2, 2, 2) -- Set size when activated
+    -- Continuously teleport the rock to the player's right hand CFrame
+    while true do
+        rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
+        rockPart.Size = Vector3.new(2, 2, 2) -- Set size when activated
+        wait(0.1) -- Adjust this delay to control how often it updates
+    end
 end
 
 button.MouseButton1Click:Connect(function()
