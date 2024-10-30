@@ -1,116 +1,39 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
-
-local player = game.Players.LocalPlayer
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
 
-local Window = Fluent:CreateWindow({
-    Title = "Ducks Private Script " .. Fluent.Version,
-    SubTitle = "by Duck",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
+local function performBackflip()
+    if humanoid then
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)  -- Start the jump
 
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-}
-
--- Main Tab
-local MainTab = Tabs.Main
-
--- Speed Input
-MainTab:AddInput("SpeedInput", {
-    Title = "Change Speed",
-    Placeholder = "Enter speed value",
-    Numeric = true,
-    Callback = function(value)
-        local speedValue = tonumber(value)
-        if speedValue then
-            character.Humanoid.WalkSpeed = speedValue
+        -- Rotate the character slowly for the backflip
+        for i = 1, 180, 5 do
+            character:SetPrimaryPartCFrame(character.PrimaryPart.CFrame * CFrame.Angles(0, math.rad(5), 0))
+            wait(0.05)  -- Adjust for speed of rotation
         end
-    end
-})
 
--- Infinite Jump Toggle
-MainTab:AddToggle("InfiniteJumpToggle", {
-    Title = "Enable Infinite Jump",
-    Default = false,
-    Callback = function(state)
-        local UserInputService = game:GetService("UserInputService")
-        if state then
-            UserInputService.JumpRequest:Connect(function()
-                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end)
-        end
-    end
-})
+        -- Simulate landing
+        humanoid:ChangeState(Enum.HumanoidStateType.Freefall)  -- Reset state to allow landing
+        wait(0.2)  -- Wait briefly before landing effect
 
--- Blackflip Toggle
-MainTab:AddToggle("BlackflipToggle", {
-    Title = "Perform Blackflip",
+        -- Adjust the character's orientation to land on feet
+        character:SetPrimaryPartCFrame(character.PrimaryPart.CFrame * CFrame.Angles(math.rad(-90), 0, 0))
+        humanoid:ChangeState(Enum.HumanoidStateType.Physics)  -- Set the character to physics state
+        wait(0.1)  -- Delay before returning to normal
+
+        -- Reset character orientation to normal standing position
+        character:SetPrimaryPartCFrame(character.PrimaryPart.CFrame * CFrame.Angles(math.rad(90), 0, 0))
+    end
+end
+
+-- Toggle to perform the backflip
+MainTab:AddToggle("BackflipToggle", {
+    Title = "Perform Backflip",
     Default = false,
     Callback = function(state)
         if state then
-            while MainTab:GetToggle("BlackflipToggle").Value do
-                wait(1)
-                character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-            end
+            performBackflip()
         end
     end
 })
-
--- Auto Farm Tab
-local AutoFarmTab = Tabs.AutoFarm
-
--- Auto Pushups and Weights
-AutoFarmTab:AddToggle("PushupsToggle", {
-    Title = "Auto Pushups",
-    Default = false,
-    Callback = function(state)
-        while state do
-            local args = { [1] = "rep" }
-            game.Players.LocalPlayer.muscleEvent:FireServer(unpack(args))
-            wait(0.1)
-        end
-    end
-})
-
-AutoFarmTab:AddToggle("WeightsToggle", {
-    Title = "Auto Weights",
-    Default = false,
-    Callback = function(state)
-        while state do
-            for _, tool in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                if tool.Name == "Weight" then
-                    tool.Parent = game.Players.LocalPlayer.Character
-                end
-            end
-            wait(0.1)
-        end
-    end
-})
-
--- Settings Tab
-local SettingsTab = Tabs.Settings
-
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-
-InterfaceManager:BuildInterfaceSection(SettingsTab)
-SaveManager:BuildConfigSection(SettingsTab)
-
-Window:SelectTab(1)
-
-Fluent:Notify({
-    Title = "Ducks Private Script",
-    Content = "The script has been loaded.",
-    Duration = 8
-})
-
-SaveManager:LoadAutoloadConfig()
