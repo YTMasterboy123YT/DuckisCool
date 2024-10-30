@@ -32,18 +32,22 @@ MainTab:AddToggle("BackflipToggle", {
     Default = false,
     Callback = function(state)
         if state then
-            local humanoid = character:WaitForChild("Humanoid")
-            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            local function backflip()
+                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                wait(0.1)  -- Small wait to ensure jumping state is registered
+                character.Humanoid.Sit = true
 
-            -- Perform the backflip by rotating and moving up slightly
-            for i = 1, 10 do
-                character:SetPrimaryPartCFrame(character.PrimaryPart.CFrame * CFrame.Angles(math.rad(18), 0, 0) * CFrame.new(0, 0.2, 0))
-                wait(0.05)
+                for i = 1, 360 do
+                    wait(0.01)  -- Adjust wait for speed of rotation
+                    character.HumanoidRootPart.CFrame = character.HumanoidRootPart.CFrame * CFrame.Angles(math.rad(1), 0, 0)  -- Rotate slowly
+                end
+
+                wait(0.5)  -- Simulate landing
+                character.Humanoid.Sit = false
             end
-            
-            humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
-            wait(0.5) -- Wait to simulate falling
-            humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+
+            -- Start backflip in a new thread to avoid blocking
+            spawn(backflip)
         end
     end
 })
