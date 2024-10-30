@@ -13,108 +13,61 @@ button.TextColor3 = Color3.new(1, 1, 1) -- White text
 
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
-local teleporting = false
-local originalPosition = nil
-local rockPart = nil
+local muscleKingMountain = game.Workspace:FindFirstChild("machinesFolder"):FindFirstChild("Muscle King Mountain")
+local rockPart = muscleKingMountain:FindFirstChild("Rock")
 
-local function setHitSpeed(speed)
-    local punchTool = character:FindFirstChild("Punch")
-    if punchTool then
-        local attackTime = punchTool:FindFirstChild("attackTime")
-        if attackTime and attackTime:IsA("NumberValue") then
-            attackTime.Value = speed
-        end
-    end
-end
-
-local function autoHit()
-    while teleporting do
-        local punchTool = character:FindFirstChild("Punch")
-        if punchTool and punchTool.Enabled then
-            punchTool:Activate()
-        end
-        wait(0.1)
-    end
-end
+local originalPosition = rockPart.Position
+local originalSize = rockPart.Size
+local isOn = false
+local runService = game:GetService("RunService")
 
 button.MouseButton1Click:Connect(function()
-    -- Navigate to the Muscle King Mountain part
-    local machinesFolder = game.Workspace:FindFirstChild("machinesFolder")
-    if not machinesFolder then
-        warn("machinesFolder not found!")
-        return
-    end
+    isOn = not isOn
+    if isOn then
+        -- Teleport the rock to the right hand CFrame
+        if character and character:FindFirstChild("RightHand") and rockPart then
+            rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
+            rockPart.Transparency = 1 -- Make the rock invisible
 
-    local muscleKingMountain = machinesFolder:FindFirstChild("Muscle King Mountain")
-    if not muscleKingMountain then
-        warn("Muscle King Mountain not found!")
-        return
-    end
-
-    -- Find the Rock part inside Muscle King Mountain
-    rockPart = muscleKingMountain:FindFirstChild("Rock")
-    if not rockPart then
-        warn("Rock not found inside Muscle King Mountain!")
-        return
-    end
-
-    -- Store original position
-    originalPosition = rockPart.Position
-
-    -- Delete StatLabels and other objects inside rockGui
-    local rockGui = rockPart:FindFirstChild("rockGui")
-    if rockGui then
-        for _, child in ipairs(rockGui:GetChildren()) do
-            if child:IsA("TextLabel") and (child.Name == "statLabel" or child.Name == "rockName") then
-                child:Destroy()
-                print(child.Name .. " deleted from rockGui.")
+            -- Remove StatLabels and other objects inside rockGui
+            local rockGui = rockPart:FindFirstChild("rockGui")
+            if rockGui then
+                for _, child in ipairs(rockGui:GetChildren()) do
+                    if child:IsA("TextLabel") and (child.Name == "statLabel" or child.Name == "rockName") then
+                        child:Destroy()
+                        print(child.Name .. " deleted from rockGui.")
+                    end
+                end
             end
-        end
-    end
 
-    -- Remove rockEmitter and hoopParticle if they exist
-    local rockEmitter = rockPart:FindFirstChild("rockEmitter")
-    if rockEmitter then
-        rockEmitter:Destroy()
-        print("rockEmitter deleted.")
-    end
-
-    local hoopParticle = rockPart:FindFirstChild("hoopParticle")
-    if hoopParticle then
-        hoopParticle:Destroy()
-        print("hoopParticle deleted.")
-    end
-
-    -- Start or stop teleporting
-    teleporting = not teleporting
-
-    if teleporting then
-        button.Text = "Stop Teleporting"
-        button.BackgroundColor3 = Color3.new(1, 0.5, 0) -- Change to orange to indicate active teleporting
-
-        -- Set the hit speed to 0.1
-        setHitSpeed(0.1)
-
-        -- Make the rock invisible
-        rockPart.Transparency = 1
-
-        -- Start auto-hitting
-        autoHit()
-
-        -- Loop to teleport the Rock to the right hand continuously
-        while teleporting do
-            if character and character:FindFirstChild("RightHand") then
-                rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
+            -- Remove rockEmitter and hoopParticle if they exist
+            local rockEmitter = rockPart:FindFirstChild("rockEmitter")
+            if rockEmitter then
+                rockEmitter:Destroy()
+                print("rockEmitter deleted.")
             end
-            wait(0.1) -- Adjust delay as needed
+
+            local hoopParticle = rockPart:FindFirstChild("hoopParticle")
+            if hoopParticle then
+                hoopParticle:Destroy()
+                print("hoopParticle deleted.")
+            end
+
+            button.Text = "Return Rock"
+
+            -- Loop to teleport the rock to the right hand every 0.2 seconds
+            while isOn do
+                wait(0.2)
+                if character and character:FindFirstChild("RightHand") then
+                    rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Keep it above the right hand
+                end
+            end
         end
     else
-        button.Text = "Teleport Rock"
-        button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Change back to green
-
-        -- Set the rock position back to normal
         rockPart.Position = originalPosition
+        rockPart.Size = originalSize
         rockPart.Transparency = 0 -- Make the rock visible again
+        button.Text = "Teleport Rock"
     end
 end)
 
