@@ -33,17 +33,20 @@ MainTab:AddToggle("BackflipToggle", {
     Callback = function(state)
         if state then
             local function backflip()
+                -- Jump higher
                 character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                character.Humanoid.JumpPower = 80  -- Adjust jump power for a higher jump
                 wait(0.1)  -- Small wait to ensure jumping state is registered
                 character.Humanoid.Sit = true
 
                 for i = 1, 360 do
-                    wait(0.01)  -- Adjust wait for speed of rotation
-                    character.HumanoidRootPart.CFrame = character.HumanoidRootPart.CFrame * CFrame.Angles(math.rad(1), 0, 0)  -- Rotate slowly
+                    wait(0.005)  -- Faster rotation
+                    character.HumanoidRootPart.CFrame = character.HumanoidRootPart.CFrame * CFrame.Angles(math.rad(3), 0, 0)  -- Rotate faster
                 end
 
-                wait(0.5)  -- Simulate landing
-                character.Humanoid.Sit = false
+                wait(0.2)  -- Wait before unsitting
+                character.Humanoid.Sit = false  -- Unsit before landing
+                wait(0.3)  -- Slight delay before landing animation ends
             end
 
             -- Start backflip in a new thread to avoid blocking
