@@ -17,10 +17,6 @@ local character = player.Character or player.CharacterAdded:Wait()
 
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
-    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
-    Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
 -- Main Tab
@@ -32,9 +28,9 @@ local function performBackflip()
     character.Humanoid.JumpPower = 80
     wait(0.1)
     character.Humanoid.Sit = true
-    
-    wait(0.1) -- Wait a moment to ensure sitting state is applied
-    character.Humanoid.Sit = false -- Unsit immediately after
+
+    wait(0.8) -- Wait 0.8 seconds before unsitting
+    character.Humanoid.Sit = false
 
     for i = 1, 360 do
         wait(0.005)
@@ -44,33 +40,12 @@ local function performBackflip()
     wait(0.2)
 end
 
--- Backflip Toggle
-MainTab:AddToggle("BackflipToggle", {
-    Title = "Perform Backflip",
-    Default = false,
-    Callback = function(state)
-        if state then
-            spawn(performBackflip)
-        end
+-- Backflip Button
+MainTab:AddButton("Perform Backflip", {
+    Callback = function()
+        performBackflip()
     end
 })
-
--- Add additional toggles for different actions (adjust the functions as needed)
-for i = 1, 8 do
-    MainTab:AddToggle("ActionToggle" .. i, {
-        Title = "Action " .. i,
-        Default = false,
-        Callback = function(state)
-            if state then
-                print("Action " .. i .. " activated.")
-                -- Implement your action here
-                -- For example, you could perform a jump, spin, etc.
-            end
-        end
-    })
-end
-
--- Additional UI elements can be added here...
 
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
