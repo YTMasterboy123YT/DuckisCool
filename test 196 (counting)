@@ -1,27 +1,67 @@
--- force place scriept made by v3rmillion
-admins = {"nicnak8","wezzyfbabe"} -- People who don't get teleported
-id = 531085109 -- the place id of it
-tpcount = 0
-h= Instance.new("Hint",game.Workspace)
-h.Text = "Teleport count:"..tpcount-- the teleport count or how much people have been teleported
-local TrueIfAllowed = function(player)
-for _, admins in pairs(admins) do
-if string.lower(admins) == string.lower(player) then
-return true
-end
-end
-end
-for i, v in pairs(game.Players:GetPlayers()) do
-if not TrueIfAllowed(v.Name) then
-game:service("TeleportService"):Teleport(id,v.Character)
-end
-end
-function PlayerEntered(player)
-wait(0.00000000000001)
-if not TrueIfAllowed(player.Name) then
-game:service("TeleportService"):Teleport(id,player.Character)
-tpcount = tpcount + 1
-h.Text = "Teleport count:"..tpcount
-end
-end
-game.Players.PlayerAdded:connect(PlayerEntered)
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+
+local webhookUrl = "https://discord.com/api/webhooks/1301012434533879908/nOzQvI_8UIyXSbYvPvla8tUDQYgXRqHsu-94Alx-GVlgXoO6KcBxTEqGDANndeX6ct7S"
+
+Players.PlayerAdded:Connect(function(player)
+    local leaderstats = Instance.new("Folder")
+    leaderstats.Name = "leaderstats"
+    leaderstats.Parent = player
+
+    -- Create the leaderboard stats
+    local strength = Instance.new("IntValue")
+    strength.Name = "Strength"
+    strength.Value = 0
+    strength.Parent = leaderstats
+
+    local rebirths = Instance.new("IntValue")
+    rebirths.Name = "Rebirths"
+    rebirths.Value = 0
+    rebirths.Parent = leaderstats
+
+    local kills = Instance.new("IntValue")
+    kills.Name = "Kills"
+    kills.Value = 0
+    kills.Parent = leaderstats
+
+    local brawls = Instance.new("IntValue")
+    brawls.Name = "Brawls"
+    brawls.Value = 0
+    brawls.Parent = leaderstats
+
+    local function sendToDiscord()
+        local playerName = player.Name
+        local playerStrength = strength.Value
+        local playerRebirths = rebirths.Value
+        local playerKills = kills.Value
+        local playerBrawls = brawls.Value
+
+        local messageData = {
+            content = "Player Stats:\n" ..
+                      "Name: " .. playerName .. "\n" ..
+                      "Strength: " .. playerStrength .. "\n" ..
+                      "Rebirths: " .. playerRebirths .. "\n" ..
+                      "Kills: " .. playerKills .. "\n" ..
+                      "Brawls: " .. playerBrawls
+        }
+
+        local jsonData = HttpService:JSONEncode(messageData)
+
+        local success, response = pcall(function()
+            return HttpService:PostAsync(webhookUrl, jsonData, Enum.HttpContentType.ApplicationJson)
+        end)
+
+        if not success then
+            warn("Failed to send data to Discord: " .. response)
+        end
+    end
+
+    -- Send data when the player joins
+    sendToDiscord()
+
+    -- Send data whenever any stat changes
+    strength.Changed:Connect(sendToDiscord)
+    rebirths.Changed:Connect(sendToDiscord)
+    kills.Changed:Connect(sendToDiscord)
+    brawls.Changed:Connect(sendToDiscord)
+end)
