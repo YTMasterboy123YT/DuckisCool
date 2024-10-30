@@ -35,23 +35,18 @@ button.MouseButton1Click:Connect(function()
         return
     end
 
-    -- Delete all StatLabels
-    for _, child in ipairs(muscleKingMountain:GetChildren()) do
-        if child:IsA("TextLabel") and string.match(child.Name, "StatLabel") then
-            child:Destroy()
+    -- Navigate to rockGui inside the Rock part
+    local rockGui = rockPart:FindFirstChild("rockGui")
+    if rockGui then
+        -- Delete all StatLabels and rockName inside rockGui
+        for _, child in ipairs(rockGui:GetChildren()) do
+            if child:IsA("TextLabel") and (child.Name == "statLabel" or child.Name == "rockName") then
+                child:Destroy()
+                print(child.Name .. " deleted from rockGui.")
+            end
         end
-    end
-
-    -- Delete rockName if it exists
-    local rockName = rockPart:FindFirstChild("rockName") -- Change this if it's a different name
-    if rockName then
-        rockName:Destroy()
-    end
-
-    -- Delete nameLabel if it exists
-    local nameLabel = muscleKingMountain:FindFirstChild("nameLabel") -- Change if it's named differently
-    if nameLabel then
-        nameLabel:Destroy()
+    else
+        print("rockGui not found in Rock.")
     end
 
     -- Start or stop teleporting
