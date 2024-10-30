@@ -2,15 +2,20 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
-local Window = Fluent:CreateWindow({
+local Window, err = Fluent:CreateWindow({
     Title = "Ducks Private Script" .. Fluent.Version, 
     SubTitle = "by Duck", 
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
-    Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
+    Acrylic = true,
     Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl -- Used when there's no MinimizeKeybind
+    MinimizeKey = Enum.KeyCode.LeftControl
 })
+
+if err then
+    print("Error creating window:", err)
+    return
+end
 
 -- Tabs
 local Tabs = {
@@ -18,7 +23,7 @@ local Tabs = {
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
     Misc = Window:AddTab({ Title = "Misc", Icon = "" })
-})
+}
 
 -- Save and Interface Managers
 SaveManager:SetLibrary(Fluent)
@@ -36,11 +41,11 @@ MainTab:AddInput("SpeedInput", {
     Default = "200",
     Placeholder = "Enter speed value",
     Numeric = true,
-    Finished = true, -- Calls callback when you press enter
+    Finished = true,
     Callback = function(Value)
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
         local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-        changeSizeSpeedRemote:InvokeServer("changeSpeed", tonumber(Value))
+        changeSizeSpeedSpeedRemote:InvokeServer("changeSpeed", tonumber(Value))
         print("Speed changed to:", Value)
     end
 })
@@ -51,7 +56,7 @@ MainTab:AddInput("SizeInput", {
     Default = "2",
     Placeholder = "Enter size value",
     Numeric = true,
-    Finished = true, -- Calls callback when you press enter
+    Finished = true,
     Callback = function(Value)
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
         local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
@@ -66,7 +71,7 @@ MainTab:AddInput("JumpPowerInput", {
     Default = "100",
     Placeholder = "Enter jump power value",
     Numeric = true,
-    Finished = true, -- Calls callback when you press enter
+    Finished = true,
     Callback = function(Value)
         local Players = game:GetService("Players")
         local jumpPowerValue = tonumber(Value)
@@ -81,4 +86,11 @@ MainTab:AddInput("JumpPowerInput", {
         end
         print("Jump power changed to:", Value)
     end
+})
+
+-- Notify that the GUI has been loaded
+Fluent:Notify({
+    Title = "Fluent",
+    Content = "The GUI has been loaded successfully.",
+    Duration = 5
 })
