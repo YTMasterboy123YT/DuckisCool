@@ -25,9 +25,9 @@ button.MouseButton1Click:Connect(function()
     if isOn then
         -- Ensure the rock part is in the workspace before teleporting
         if character and character:FindFirstChild("RightHand") and rockPart then
-            rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
+            -- Teleport the rock to the right hand CFrame
+            rockPart.CFrame = character.RightHand.CFrame -- Teleport to the right hand
             rockPart.Transparency = 1 -- Make the rock invisible
-            rockPart.Size = Vector3.new(2, 2, 2) -- Adjust size when activated
 
             -- Remove StatLabels and other objects inside rockGui
             local rockGui = rockPart:FindFirstChild("rockGui")
