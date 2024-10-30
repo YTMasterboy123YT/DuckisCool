@@ -26,34 +26,47 @@ local Tabs = {
 -- Main Tab
 local MainTab = Tabs.Main
 
+-- Function to perform a backflip
+local function performBackflip()
+    character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    character.Humanoid.JumpPower = 80
+    wait(0.1)
+    character.Humanoid.Sit = true
+
+    for i = 1, 360 do
+        wait(0.005)
+        character.HumanoidRootPart.CFrame = character.HumanoidRootPart.CFrame * CFrame.Angles(math.rad(9), 0, 0)
+    end
+
+    wait(0.2)
+    character.Humanoid.Sit = false
+end
+
 -- Backflip Toggle
 MainTab:AddToggle("BackflipToggle", {
     Title = "Perform Backflip",
     Default = false,
     Callback = function(state)
         if state then
-            local function backflip()
-                -- Jump higher
-                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                character.Humanoid.JumpPower = 80  -- Adjust jump power for a higher jump
-                wait(0.1)  -- Small wait to ensure jumping state is registered
-                character.Humanoid.Sit = true
-
-                for i = 1, 360 do
-                    wait(0.005)  -- Faster rotation
-                    character.HumanoidRootPart.CFrame = character.HumanoidRootPart.CFrame * CFrame.Angles(math.rad(3), 0, 0)  -- Rotate faster
-                end
-
-                wait(0.2)  -- Wait before unsitting
-                character.Humanoid.Sit = false  -- Unsit before landing
-                wait(0.3)  -- Slight delay before landing animation ends
-            end
-
-            -- Start backflip in a new thread to avoid blocking
-            spawn(backflip)
+            spawn(performBackflip)
         end
     end
 })
+
+-- Add additional toggles for different actions (adjust the functions as needed)
+for i = 1, 8 do
+    MainTab:AddToggle("ActionToggle" .. i, {
+        Title = "Action " .. i,
+        Default = false,
+        Callback = function(state)
+            if state then
+                print("Action " .. i .. " activated.")
+                -- Implement your action here
+                -- For example, you could perform a jump, spin, etc.
+            end
+        end
+    })
+end
 
 -- Additional UI elements can be added here...
 
