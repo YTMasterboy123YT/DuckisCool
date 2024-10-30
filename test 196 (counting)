@@ -1,34 +1,28 @@
 local player = game.Players.LocalPlayer
 local backpack = player:WaitForChild("Backpack")
 local replicatedStorage = game:GetService("ReplicatedStorage")
-local character = player.Character or player.CharacterAdded:Wait()
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 
-local tools = {
-    {name = "Punch", type = "attackTime"},
-    {name = "Pushups", type = "repTime"},
-}
+-- Create a button to teleport the rock
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 200, 0, 50)
+button.Position = UDim2.new(0.5, -100, 0.5, -25)
+button.Text = "Teleport Rock & Equip Tools"
+button.Parent = screenGui
 
-local function equipTools()
-    for _, toolInfo in pairs(tools) do
-        local tool = replicatedStorage:FindFirstChild(toolInfo.name)
-        if tool then
-            local newTool = tool:Clone() -- Clone the tool
-            newTool.Parent = backpack -- Equip the tool
-        else
-            warn(toolInfo.name .. " not found in ReplicatedStorage!")
+local function equipTool(toolName, cooldownType)
+    local tool = replicatedStorage:FindFirstChild(toolName)
+    if tool then
+        local newTool = tool:Clone() -- Clone the tool
+        newTool.Parent = backpack -- Equip the tool
+        
+        -- Set cooldown if applicable
+        local cooldown = newTool:FindFirstChild(cooldownType) 
+        if cooldown and cooldown:IsA("NumberValue") then
+            cooldown.Value = 0.1 -- Set the cooldown for the tool
         end
-    end
-end
-
-local function setToolProperties()
-    for _, toolInfo in pairs(tools) do
-        local tool = backpack:FindFirstChild(toolInfo.name)
-        if tool then
-            local cooldown = tool:FindFirstChild(toolInfo.type) 
-            if cooldown and cooldown:IsA("NumberValue") then
-                cooldown.Value = 0.1 -- Set the cooldown for the tool
-            end
-        end
+    else
+        warn(toolName .. " not found in ReplicatedStorage!")
     end
 end
 
@@ -51,7 +45,6 @@ local function autoLift()
     end
 end
 
--- Muscle King Mountain integration
 local function setupMuscleKingMountain()
     local machinesFolder = game.Workspace:FindFirstChild("machinesFolder")
     if not machinesFolder then
@@ -70,37 +63,31 @@ local function setupMuscleKingMountain()
         warn("Rock not found!")
         return
     end
-
-    -- Delete all StatLabels
-    for _, child in ipairs(muscleKingMountain:GetChildren()) do
-        if child:IsA("TextLabel") and string.match(child.Name, "StatLabel") then
-            child:Destroy()
-        end
+    
+    local rockGui = rockPart:FindFirstChild("rockGui")
+    if not rockGui then
+        warn("rockGui not found!")
+        return
     end
 
-    -- Delete rockName if it exists
-    local rockName = rockPart:FindFirstChild("rockName")
-    if rockName then
-        rockName:Destroy()
-    end
-
-    -- Teleport the rock to the player's character CFrame
-    rockPart.CFrame = character.HumanoidRootPart.CFrame * CFrame.new(0, 1, 0) -- Position above the character
+    -- Teleport the rock to the player's right hand CFrame
+    rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
     rockPart.Size = Vector3.new(2, 2, 2) -- Set size when activated
 end
 
--- Equip both tools when the script starts
-equipTools()
-setToolProperties()
-setupMuscleKingMountain() -- Setup the Muscle King Mountain
-autoLift()
+button.MouseButton1Click:Connect(function()
+    -- Equip both tools when the button is clicked
+    equipTool("Punch", "attackTime")
+    equipTool("Pushups", "repTime")
+    setupMuscleKingMountain() -- Setup the Muscle King Mountain
+    autoLift() -- Start auto-hitting
+end)
+
+-- Initial character setup
+local character = player.Character or player.CharacterAdded:Wait()
 
 -- Reset for new characters
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     backpack = player:WaitForChild("Backpack")
-    equipTools() -- Re-equip tools on respawn
-    setToolProperties()
-    setupMuscleKingMountain() -- Setup for the new character
-    autoLift()
 end)
