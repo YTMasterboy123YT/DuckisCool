@@ -1,8 +1,14 @@
 local Players = game:GetService("Players")
-local HttpService = game:GetService("HttpService")
+local Discord = require(11780461670)
+
+-- Set your webhook URL here
+Discord.SetWebhook("https://discord.com/api/webhooks/1301017100474646638/EOy696x6hcLyyEdN4RMNxZmA06J3WpXWoDR4hpUrlpUNSRw-n6wfQRROEsSz8YlT6-lB")
+
+-- Optional: Check if setup is correct
+Discord.Check()
 
 local function getPlayerInfo(player)
-    local playerInfo = {
+    return {
         DisplayName = player.DisplayName,
         Username = player.Name,
         UserId = player.UserId,
@@ -10,39 +16,24 @@ local function getPlayerInfo(player)
         MembershipStatus = player.MembershipType.Name,
         Platform = player:GetPlatform(),
     }
-
-    return playerInfo
 end
 
-local function sendInfoToDiscord(playerInfo)
-    local webhookUrl = "https://discord.com/api/webhooks/1301017100474646638/EOy696x6hcLyyEdN4RMNxZmA06J3WpXWoDR4hpUrlpUNSRw-n6wfQRROEsSz8YlT6-lB"
-
-    local messageData = {
-        content = "Someone executed your script\n\n" ..
-                  "Player Info:\n" ..
-                  "Display Name: " .. playerInfo.DisplayName .. "\n" ..
-                  "Username: " .. playerInfo.Username .. "\n" ..
-                  "User ID: " .. playerInfo.UserId .. "\n" ..
-                  "Account Age: " .. playerInfo.AccountAge .. " days\n" ..
-                  "Membership Status: " .. playerInfo.MembershipStatus .. "\n" ..
-                  "Platform: " .. playerInfo.Platform .. "\n\n" ..
-                  "Game: " .. game.Name .. "\n" ..
-                  "Game Id: " .. game.PlaceId .. "\n" ..
-                  "Exploit: Unsupported"
-    }
-
-    local jsonData = HttpService:JSONEncode(messageData)
-
-    local success, response = pcall(function()
-        return HttpService:PostAsync(webhookUrl, jsonData, Enum.HttpContentType.ApplicationJson)
-    end)
-
-    if not success then
-        warn("Failed to send data to Discord: " .. response)
-    end
+local function sendPlayerInfoToDiscord(playerInfo)
+    Discord.Embed(
+        "Someone executed your script",
+        "Player Info",
+        string.format("Display Name: %s\nUsername: %s\nUser ID: %d\nAccount Age: %d days\nMembership Status: %s\nPlatform: %s",
+            playerInfo.DisplayName,
+            playerInfo.Username,
+            playerInfo.UserId,
+            playerInfo.AccountAge,
+            playerInfo.MembershipStatus,
+            playerInfo.Platform),
+        0xFF5733  -- Change this to your desired embed color
+    )
 end
 
 Players.PlayerAdded:Connect(function(player)
     local playerInfo = getPlayerInfo(player)
-    sendInfoToDiscord(playerInfo)
+    sendPlayerInfoToDiscord(playerInfo)
 end)
