@@ -1,214 +1,48 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+-- Create a ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
-local Window = Fluent:CreateWindow({
-    Title = "Ducks Private Script " .. Fluent.Version,
-    SubTitle = "by Duck",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
+-- Create a TextButton
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 200, 0, 50)
+button.Position = UDim2.new(0.5, -100, 0.5, -25)
+button.Text = "Teleport Rock"
+button.Parent = screenGui
+button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Green color
+button.TextColor3 = Color3.new(1, 1, 1) -- White text
 
 local player = game.Players.LocalPlayer
-local backpack = player:WaitForChild("Backpack")
 local character = player.Character or player.CharacterAdded:Wait()
+local muscleKingMountain = game.Workspace:FindFirstChild("machinesFolder") and game.Workspace.machinesFolder:FindFirstChild("Muscle King Mountain")
+local rockPart = muscleKingMountain and muscleKingMountain:FindFirstChild("Rock")
 
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-}
-
--- Main Tab
-local MainTab = Tabs.Main
-
--- Speed Input
-MainTab:AddInput("SpeedInput", {
-    Title = "Change Speed",
-    Placeholder = "Enter speed value",
-    Numeric = true,
-    Callback = function(value)
-        local speedValue = tonumber(value)
-        if speedValue then
-            character.Humanoid.WalkSpeed = speedValue
-        end
-    end
-})
-
--- Size Input
-MainTab:AddInput("SizeInput", {
-    Title = "Change Size",
-    Placeholder = "Enter size value",
-    Numeric = true,
-    Callback = function(value)
-        local sizeValue = tonumber(value)
-        if sizeValue then
-            local ReplicatedStorage = game:GetService("ReplicatedStorage")
-            local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-            changeSizeRemote:InvokeServer("changeSize", sizeValue)
-        end
-    end
-})
-
--- Jump Power Input
-MainTab:AddInput("JumpPowerInput", {
-    Title = "Change Jump Power",
-    Placeholder = "Enter jump power value",
-    Numeric = true,
-    Callback = function(value)
-        local jumpPowerValue = tonumber(value)
-        if jumpPowerValue then
-            local Players = game:GetService("Players")
-            for _, player in ipairs(Players:GetPlayers()) do
-                local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid.JumpPower = jumpPowerValue
-                end
-            end
-        end
-    end
-})
-
--- Infinite Jump Toggle
-MainTab:AddToggle("InfiniteJumpToggle", {
-    Title = "Enable Infinite Jump",
-    Default = false,
-    Callback = function(state)
-        local UserInputService = game:GetService("UserInputService")
-        if state then
-            UserInputService.JumpRequest:Connect(function()
-                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end)
-        end
-    end
-})
-
--- Auto Farm Tab
-local AutoFarmTab = Tabs.AutoFarm
-
--- Define rock positions and orientations
-local rocks = {
-    MuscleKingMountain = {
-        position = Vector3.new(-8976.455078125, 9.191204071044922, -6130.7373046875),
-        orientation = CFrame.Angles(0, math.rad(180), 0)
-    },
-    LegendRock = {
-        position = Vector3.new(4187.1787109375, 991.5241088867188, -4065.08251953125),
-        orientation = CFrame.Angles(0, math.rad(90), 0)
-    },
-    MythicalRock = {
-        position = Vector3.new(2220.0595703125, 7.321215629577637, 1228.5823974609375),
-        orientation = CFrame.Angles(0, math.rad(90), 0)
-    }
-}
-
--- Function to teleport to a rock
-local function teleportToRock(rock)
-    character.HumanoidRootPart.CFrame = CFrame.new(rock.position) * rock.orientation
+if not rockPart then
+    warn("Rock not found! Please check the workspace structure.")
+    return
 end
 
--- Toggle for Muscle King Mountain
-local muscleKingToggle = AutoFarmTab:AddToggle("MuscleKingToggle", {
-    Title = "Teleport to Muscle King Mountain",
-    Default = false,
-})
+local originalPosition = rockPart.Position
+local originalSize = rockPart.Size
+local isOn = false
 
-muscleKingToggle:OnChanged(function()
-    if muscleKingToggle.Value then
-        while muscleKingToggle.Value do
-            teleportToRock(rocks.MuscleKingMountain)
-            wait(0.5)
-        end
-    end
-end)
-
--- Toggle for Legend Rock
-local legendToggle = AutoFarmTab:AddToggle("LegendToggle", {
-    Title = "Teleport to Legend Rock",
-    Default = false,
-})
-
-legendToggle:OnChanged(function()
-    if legendToggle.Value then
-        while legendToggle.Value do
-            teleportToRock(rocks.LegendRock)
-            wait(0.5)
-        end
-    end
-end)
-
--- Toggle for Mythical Rock
-local mythicalToggle = AutoFarmTab:AddToggle("MythicalToggle", {
-    Title = "Teleport to Mythical Rock",
-    Default = false,
-})
-
-mythicalToggle:OnChanged(function()
-    if mythicalToggle.Value then
-        while mythicalToggle.Value do
-            teleportToRock(rocks.MythicalRock)
-            wait(0.5)
-        end
-    end
-end)
-
--- Auto Pushups and Weights
-AutoFarmTab:AddToggle("AutoPushups", {
-    Title = "Auto Pushups",
-    Default = false,
-})
-
-AutoFarmTab:AddToggle("AutoWeights", {
-    Title = "Auto Weights",
-    Default = false,
-})
-
--- Function to handle auto pushups and weights
-local function autoFarmTools()
-    while true do
-        if AutoFarmTab:GetToggle("AutoPushups").Value then
-            for i,v in pairs(backpack:GetChildren()) do 
-                if v.ClassName == "Tool" and v.Name == "Pushups" then 
-                    v.Parent = character
-                end
-            end
-            wait(1) -- Adjust wait as needed
-        end
-
-        if AutoFarmTab:GetToggle("AutoWeights").Value then
-            for i,v in pairs(backpack:GetChildren()) do 
-                if v.ClassName == "Tool" and v.Name == "Weight" then 
-                    v.Parent = character
-                end
-            end
-            wait(1) -- Adjust wait as needed
-        end
-
-        wait(0.1) -- Prevent script from freezing
+local function updateRockPosition()
+    while isOn do
+        rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position it above the right hand
+        wait(0.1) -- Adjust the wait time as needed
     end
 end
 
--- Start the auto farming
-spawn(autoFarmTools)
-
--- Settings Tab
-local SettingsTab = Tabs.Settings
-
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-
-InterfaceManager:BuildInterfaceSection(SettingsTab)
-SaveManager:BuildConfigSection(SettingsTab)
-
-Window:SelectTab(1)
-
-Fluent:Notify({
-    Title = "Ducks Private Script",
-    Content = "The script has been loaded.",
-    Duration = 8
-})
-
-SaveManager:LoadAutoloadConfig()
+button.MouseButton1Click:Connect(function()
+    isOn = not isOn
+    if isOn then
+        rockPart.Size = Vector3.new(2, 2, 2)  -- Set size when activated
+        button.Text = "Return Rock"
+        button.BackgroundColor3 = Color3.new(1, 0, 0) -- Change to red
+        updateRockPosition() -- Start updating position
+    else
+        rockPart.Position = originalPosition
+        rockPart.Size = originalSize
+        button.Text = "Teleport Rock"
+        button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Change back to green
+    end
+end)
