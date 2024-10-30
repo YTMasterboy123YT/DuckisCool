@@ -8,10 +8,12 @@ button.Size = UDim2.new(0, 200, 0, 50)
 button.Position = UDim2.new(0.5, -100, 0.5, -25)
 button.Text = "Teleport Rock"
 button.Parent = screenGui
+button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Green color
+button.TextColor3 = Color3.new(1, 1, 1) -- White text
 
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
-local muscleKingMountain = game.Workspace.machinesFolder:FindFirstChild("Muscle King Mountain")
+local muscleKingMountain = game.Workspace:FindFirstChild("machinesFolder"):FindFirstChild("Muscle King Mountain")
 local rockPart = muscleKingMountain:FindFirstChild("Rock")
 
 local originalPosition = rockPart.Position
@@ -21,12 +23,47 @@ local isOn = false
 button.MouseButton1Click:Connect(function()
     isOn = not isOn
     if isOn then
-        rockPart.Position = character.RightHand.Position  -- Adjusted positioning
-        rockPart.Size = Vector3.new(0.1, 0, 0.1)
+        -- Teleport the rock to the right hand CFrame
+        if character and character:FindFirstChild("RightHand") then
+            rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
+        end
+
+        rockPart.Size = Vector3.new(2, 2, 2) -- Adjust size when activated
+        rockPart.Transparency = 1 -- Make the rock invisible
+
+        -- Remove StatLabels and other objects inside rockGui
+        local rockGui = rockPart:FindFirstChild("rockGui")
+        if rockGui then
+            for _, child in ipairs(rockGui:GetChildren()) do
+                if child:IsA("TextLabel") and (child.Name == "statLabel" or child.Name == "rockName") then
+                    child:Destroy()
+                    print(child.Name .. " deleted from rockGui.")
+                end
+            end
+        end
+
+        -- Remove rockEmitter and hoopParticle if they exist
+        local rockEmitter = rockPart:FindFirstChild("rockEmitter")
+        if rockEmitter then
+            rockEmitter:Destroy()
+            print("rockEmitter deleted.")
+        end
+
+        local hoopParticle = rockPart:FindFirstChild("hoopParticle")
+        if hoopParticle then
+            hoopParticle:Destroy()
+            print("hoopParticle deleted.")
+        end
+
         button.Text = "Return Rock"
     else
         rockPart.Position = originalPosition
         rockPart.Size = originalSize
+        rockPart.Transparency = 0 -- Make the rock visible again
         button.Text = "Teleport Rock"
     end
+end)
+
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
 end)
