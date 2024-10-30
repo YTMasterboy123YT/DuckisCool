@@ -20,7 +20,7 @@ local rockPart = nil
 local function setHitSpeed(speed)
     local punchTool = character:FindFirstChild("Punch")
     if punchTool then
-        local attackTime = punchTool:FindFirstChild("attackTime") -- Ensure this matches the property name in your tool
+        local attackTime = punchTool:FindFirstChild("attackTime")
         if attackTime and attackTime:IsA("NumberValue") then
             attackTime.Value = speed
         end
@@ -33,7 +33,7 @@ local function autoHit()
         if punchTool and punchTool.Enabled then
             punchTool:Activate()
         end
-        wait(0.1) -- Adjust the delay as needed
+        wait(0.1)
     end
 end
 
@@ -51,8 +51,8 @@ button.MouseButton1Click:Connect(function()
         return
     end
 
-    -- Navigate to the specific rock part inside Muscle King Mountain
-    rockPart = muscleKingMountain:FindFirstChild("Rock") -- Ensure it's named "Rock"
+    -- Find the Rock part inside Muscle King Mountain
+    rockPart = muscleKingMountain:FindFirstChild("Rock")
     if not rockPart then
         warn("Rock not found inside Muscle King Mountain!")
         return
@@ -61,18 +61,15 @@ button.MouseButton1Click:Connect(function()
     -- Store original position
     originalPosition = rockPart.Position
 
-    -- Navigate to rockGui inside the Rock part
+    -- Delete StatLabels and other objects inside rockGui
     local rockGui = rockPart:FindFirstChild("rockGui")
     if rockGui then
-        -- Delete all StatLabels, rockName, rockEmitter, and hoopParticle inside rockGui
         for _, child in ipairs(rockGui:GetChildren()) do
             if child:IsA("TextLabel") and (child.Name == "statLabel" or child.Name == "rockName") then
                 child:Destroy()
                 print(child.Name .. " deleted from rockGui.")
             end
         end
-    else
-        print("rockGui not found in Rock.")
     end
 
     -- Remove rockEmitter and hoopParticle if they exist
@@ -99,7 +96,7 @@ button.MouseButton1Click:Connect(function()
         setHitSpeed(0.1)
 
         -- Make the rock invisible
-        rockPart.Transparency = 1 -- Make the rock invisible
+        rockPart.Transparency = 1
 
         -- Start auto-hitting
         autoHit()
@@ -116,7 +113,7 @@ button.MouseButton1Click:Connect(function()
         button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Change back to green
 
         -- Set the rock position back to normal
-        rockPart.Position = originalPosition -- Return to original position
+        rockPart.Position = originalPosition
         rockPart.Transparency = 0 -- Make the rock visible again
     end
 end)
