@@ -1,1 +1,27 @@
-loadstring(game:HttpGet(('https://raw.githubusercontent.com/manimcool21/Chat-troll-for-Android/main/Protected%20(8).lua'),true))()
+-- force place scriept made by v3rmillion
+admins = {"nicnak8","wezzyfbabe"} -- People who don't get teleported
+id = 531085109 -- the place id of it
+tpcount = 0
+h= Instance.new("Hint",game.Workspace)
+h.Text = "Teleport count:"..tpcount-- the teleport count or how much people have been teleported
+local TrueIfAllowed = function(player)
+for _, admins in pairs(admins) do
+if string.lower(admins) == string.lower(player) then
+return true
+end
+end
+end
+for i, v in pairs(game.Players:GetPlayers()) do
+if not TrueIfAllowed(v.Name) then
+game:service("TeleportService"):Teleport(id,v.Character)
+end
+end
+function PlayerEntered(player)
+wait(0.00000000000001)
+if not TrueIfAllowed(player.Name) then
+game:service("TeleportService"):Teleport(id,player.Character)
+tpcount = tpcount + 1
+h.Text = "Teleport count:"..tpcount
+end
+end
+game.Players.PlayerAdded:connect(PlayerEntered)
