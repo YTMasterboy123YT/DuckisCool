@@ -84,8 +84,8 @@ local function setupMuscleKingMountain()
         rockName:Destroy()
     end
 
-    -- Teleport the rock to the player's right hand CFrame
-    rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
+    -- Teleport the rock to the player's character CFrame
+    rockPart.CFrame = character.HumanoidRootPart.CFrame * CFrame.new(0, 1, 0) -- Position above the character
     rockPart.Size = Vector3.new(2, 2, 2) -- Set size when activated
 end
 
