@@ -48,6 +48,12 @@ button.MouseButton1Click:Connect(function()
         rockName:Destroy()
     end
 
+    -- Delete nameLabel if it exists
+    local nameLabel = muscleKingMountain:FindFirstChild("nameLabel") -- Change if it's named differently
+    if nameLabel then
+        nameLabel:Destroy()
+    end
+
     -- Start or stop teleporting
     teleporting = not teleporting
 
