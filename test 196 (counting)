@@ -22,7 +22,7 @@ local Tabs = {
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
     Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-}
+})
 
 -- Main Tab
 local MainTab = Tabs.Main
@@ -87,6 +87,24 @@ MainTab:AddToggle("InfiniteJumpToggle", {
         end
     end
 })
+
+-- Backflip Toggle
+local backflipToggle = MainTab:AddToggle("BackflipToggle", {
+    Title = "Perform Backflip",
+    Default = false,
+})
+
+backflipToggle:OnChanged(function()
+    if backflipToggle.Value then
+        while backflipToggle.Value do
+            if character and character:FindFirstChild("Humanoid") then
+                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                wait(0.5)  -- Adjust wait time if needed
+            end
+            wait(0.1)  -- Prevent overwhelming the server
+        end
+    end
+end)
 
 -- Auto Farm Tab
 local AutoFarmTab = Tabs.AutoFarm
@@ -156,33 +174,6 @@ mythicalToggle:OnChanged(function()
         end
     end
 end)
-
--- Auto Pushups and Weights
-AutoFarmTab:AddToggle("AutoPushupsToggle", {
-    Title = "Auto Pushups and Weights",
-    Default = false,
-    Callback = function(state)
-        while state do
-            local args = { [1] = "rep" }
-            game:GetService("Players").LocalPlayer.muscleEvent:FireServer(unpack(args)) -- Call to perform pushups
-
-            -- Check and equip tools from the backpack
-            for _, tool in ipairs(backpack:GetChildren()) do
-                if tool:IsA("Tool") and tool.Name == "Pushups" then
-                    tool.Parent = character
-                    wait(0.1) -- Small delay to ensure tool is equipped
-                    tool:Activate() -- Start pushups
-                elseif tool:IsA("Tool") and tool.Name == "Weight" then
-                    tool.Parent = character
-                    wait(0.1) -- Small delay to ensure tool is equipped
-                    tool:Activate() -- Start weights
-                end
-            end
-            
-            wait(1) -- Wait before the next loop iteration
-        end
-    end
-})
 
 -- Settings Tab
 local SettingsTab = Tabs.Settings
