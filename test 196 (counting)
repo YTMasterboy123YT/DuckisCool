@@ -1,39 +1,70 @@
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Ducks Private Script " .. Fluent.Version,
+    SubTitle = "by Duck",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
 
-local function performBackflip()
-    if humanoid then
-        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)  -- Start the jump
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
+    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
 
-        -- Rotate the character slowly for the backflip
-        for i = 1, 180, 5 do
-            character:SetPrimaryPartCFrame(character.PrimaryPart.CFrame * CFrame.Angles(0, math.rad(5), 0))
-            wait(0.05)  -- Adjust for speed of rotation
-        end
+-- Main Tab
+local MainTab = Tabs.Main
 
-        -- Simulate landing
-        humanoid:ChangeState(Enum.HumanoidStateType.Freefall)  -- Reset state to allow landing
-        wait(0.2)  -- Wait briefly before landing effect
-
-        -- Adjust the character's orientation to land on feet
-        character:SetPrimaryPartCFrame(character.PrimaryPart.CFrame * CFrame.Angles(math.rad(-90), 0, 0))
-        humanoid:ChangeState(Enum.HumanoidStateType.Physics)  -- Set the character to physics state
-        wait(0.1)  -- Delay before returning to normal
-
-        -- Reset character orientation to normal standing position
-        character:SetPrimaryPartCFrame(character.PrimaryPart.CFrame * CFrame.Angles(math.rad(90), 0, 0))
-    end
-end
-
--- Toggle to perform the backflip
+-- Backflip Toggle
 MainTab:AddToggle("BackflipToggle", {
     Title = "Perform Backflip",
     Default = false,
     Callback = function(state)
         if state then
-            performBackflip()
+            local humanoid = character:WaitForChild("Humanoid")
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+
+            -- Rotate the character slowly for the backflip
+            for i = 1, 180, 5 do
+                character:SetPrimaryPartCFrame(character.PrimaryPart.CFrame * CFrame.Angles(0, math.rad(5), 0))
+                wait(0.05)
+            end
+
+            humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+            wait(0.2)
+            character:SetPrimaryPartCFrame(character.PrimaryPart.CFrame * CFrame.Angles(math.rad(-90), 0, 0))
+            humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+            wait(0.1)
+            character:SetPrimaryPartCFrame(character.PrimaryPart.CFrame * CFrame.Angles(math.rad(90), 0, 0))
         end
     end
 })
+
+-- Additional UI elements can be added here...
+
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "Ducks Private Script",
+    Content = "The script has been loaded.",
+    Duration = 8
+})
+
+SaveManager:LoadAutoloadConfig()
