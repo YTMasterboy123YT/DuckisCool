@@ -104,7 +104,7 @@ button.MouseButton1Click:Connect(function()
         -- Start auto-hitting
         autoHit()
 
-        -- Teleport the rock continuously
+        -- Loop to teleport the rock to the right hand continuously
         while teleporting do
             if character and character:FindFirstChild("RightHand") then
                 rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
