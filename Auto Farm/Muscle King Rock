@@ -55,15 +55,13 @@ button.MouseButton1Click:Connect(function()
 
             button.Text = "Return Rock"
 
-            -- Loop to anchor the rock to the right hand
-            local connection
-            connection = runService.RenderStepped:Connect(function()
-                if isOn and character and character:FindFirstChild("RightHand") then
+            -- Loop to teleport the rock to the right hand every 0.2 seconds
+            while isOn do
+                wait(0.2)
+                if character and character:FindFirstChild("RightHand") then
                     rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Keep it above the right hand
-                else
-                    connection:Disconnect() -- Stop the loop when turned off
                 end
-            end)
+            end
         end
     else
         rockPart.Position = originalPosition
