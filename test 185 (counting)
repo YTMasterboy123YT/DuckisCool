@@ -18,7 +18,8 @@ local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
-    Misc = Window:AddTab({ Title = "Misc", Icon = "" })
+    misc = Window:AddTab({ Title = "Misc", Icon = "" }),
+    settings = Window:AddTab({ Title = "Settings", Icon = "settings" })  -- Added settings tab
 }
 
 -- Save and Interface Managers
@@ -26,62 +27,68 @@ SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
 
 -- Build Settings Section
-InterfaceManager:BuildInterfaceSection(Tabs.Settings)
-SaveManager:BuildConfigSection(Tabs.Settings)
+InterfaceManager:BuildInterfaceSection(Tabs.settings)
+SaveManager:BuildConfigSection(Tabs.settings)
 
--- Input Fields in Main Tab
-local MainTab = Tabs.Main
+-- Local player and character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
 
-MainTab:AddInput("SpeedInput", {
+-- Speed Input
+Tabs.Main:AddInput("SpeedInput", {
     Title = "Change Speed",
-    Description = "Set the player's speed.",
-    Default = "200",
     Placeholder = "Enter speed value",
     Numeric = true,
-    Finished = true,
-    Callback = function(Value)
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local changeSizeSpeedRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("changeSpeedSizeRemote")
-        changeSizeSpeedRemote:InvokeServer("changeSpeed", tonumber(Value))
-        print("Speed changed to:", Value)
+    Callback = function(value)
+        local speedValue = tonumber(value)
+        if speedValue then
+            character.Humanoid.WalkSpeed = speedValue
+            print("Speed changed to:", speedValue)
+        else
+            print("Invalid speed value.")
+        end
     end
 })
 
-MainTab:AddInput("SizeInput", {
+-- Size Input
+Tabs.Main:AddInput("SizeInput", {
     Title = "Change Size",
-    Description = "Set the player's size.",
-    Default = "2",
     Placeholder = "Enter size value",
     Numeric = true,
-    Finished = true,
-    Callback = function(Value)
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local changeSizeRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("changeSpeedSizeRemote")
-        changeSizeRemote:InvokeServer("changeSize", tonumber(Value))
-        print("Size changed to:", Value)
+    Callback = function(value)
+        local sizeValue = tonumber(value)
+        if sizeValue then
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local changeSizeRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("changeSpeedSizeRemote")
+            changeSizeRemote:InvokeServer("changeSize", sizeValue)
+            print("Size changed to:", sizeValue)
+        else
+            print("Invalid size value.")
+        end
     end
 })
 
-MainTab:AddInput("JumpPowerInput", {
+-- Jump Power Input
+Tabs.Main:AddInput("JumpPowerInput", {
     Title = "Change Jump Power",
-    Description = "Set the jump power for all players.",
-    Default = "100",
     Placeholder = "Enter jump power value",
     Numeric = true,
-    Finished = true,
-    Callback = function(Value)
-        local Players = game:GetService("Players")
-        local jumpPowerValue = tonumber(Value)
-        for _, player in ipairs(Players:GetPlayers()) do
-            local character = player.Character
-            if character then
-                local humanoid = character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid.JumpPower = jumpPowerValue
+    Callback = function(value)
+        local jumpPowerValue = tonumber(value)
+        if jumpPowerValue then
+            for _, player in ipairs(game.Players:GetPlayers()) do
+                local character = player.Character
+                if character then
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid.JumpPower = jumpPowerValue
+                    end
                 end
             end
+            print("Jump power changed to:", jumpPowerValue)
+        else
+            print("Invalid jump power value.")
         end
-        print("Jump power changed to:", Value)
     end
 })
 
