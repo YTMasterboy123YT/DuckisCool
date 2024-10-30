@@ -52,25 +52,70 @@ local rocks = {
 
 -- Function to teleport to a rock
 local function teleportToRock(rock)
-    character.HumanoidRootPart.CFrame = CFrame.new(rock.position) * rock.orientation
-end
-
--- Check for auto farm toggles and teleport
-local function checkAutoFarmToggles()
-    while true do
-        if Tabs.AutoFarm:FindToggle("MuscleKingToggle").Value then
-            teleportToRock(rocks.MuscleKingMountain)
-        elseif Tabs.AutoFarm:FindToggle("LegendToggle").Value then
-            teleportToRock(rocks.LegendRock)
-        elseif Tabs.AutoFarm:FindToggle("MythicToggle").Value then
-            teleportToRock(rocks.MythicalRock)
-        end
-        wait(1)  -- Adjust wait time as needed
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        character.HumanoidRootPart.CFrame = CFrame.new(rock.position) * rock.orientation
     end
 end
 
--- Start the auto farm check
-spawn(checkAutoFarmToggles)
+-- Function to continuously teleport to a rock when the toggle is enabled
+local function startTeleporting(rock)
+    while Tabs.AutoFarm:FindToggle(rock.toggleName).Value do
+        teleportToRock(rock)
+        wait(0.1)  -- Adjust the wait time as needed
+    end
+end
+
+-- Auto Farm Toggles in Auto Farm Tab
+Tabs.AutoFarm:AddToggle("MuscleKingToggle", {
+    Title = "Enable Muscle King Auto Farm", 
+    Default = false,
+    Callback = function(state)
+        if state then
+            print("Muscle King Auto Farm enabled")
+            startTeleporting({
+                position = rocks.MuscleKingMountain.position,
+                orientation = rocks.MuscleKingMountain.orientation,
+                toggleName = "MuscleKingToggle"
+            })
+        else
+            print("Muscle King Auto Farm disabled")
+        end
+    end
+})
+
+Tabs.AutoFarm:AddToggle("LegendToggle", {
+    Title = "Enable Legend Auto Farm", 
+    Default = false,
+    Callback = function(state)
+        if state then
+            print("Legend Auto Farm enabled")
+            startTeleporting({
+                position = rocks.LegendRock.position,
+                orientation = rocks.LegendRock.orientation,
+                toggleName = "LegendToggle"
+            })
+        else
+            print("Legend Auto Farm disabled")
+        end
+    end
+})
+
+Tabs.AutoFarm:AddToggle("MythicToggle", {
+    Title = "Enable Mythic Auto Farm", 
+    Default = false,
+    Callback = function(state)
+        if state then
+            print("Mythic Auto Farm enabled")
+            startTeleporting({
+                position = rocks.MythicalRock.position,
+                orientation = rocks.MythicalRock.orientation,
+                toggleName = "MythicToggle"
+            })
+        else
+            print("Mythic Auto Farm disabled")
+        end
+    end
+})
 
 -- Speed Input
 Tabs.Main:AddInput("SpeedInput", {
@@ -126,43 +171,6 @@ Tabs.Main:AddToggle("InfiniteJumpToggle", {
             UserInputService.JumpRequest:Connect(function()
                 character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
             end)
-        end
-    end
-})
-
--- Auto Farm Toggles in Auto Farm Tab
-Tabs.AutoFarm:AddToggle("MuscleKingToggle", {
-    Title = "Enable Muscle King Auto Farm", 
-    Default = false,
-    Callback = function(state)
-        if state then
-            print("Muscle King Auto Farm enabled")
-        else
-            print("Muscle King Auto Farm disabled")
-        end
-    end
-})
-
-Tabs.AutoFarm:AddToggle("LegendToggle", {
-    Title = "Enable Legend Auto Farm", 
-    Default = false,
-    Callback = function(state)
-        if state then
-            print("Legend Auto Farm enabled")
-        else
-            print("Legend Auto Farm disabled")
-        end
-    end
-})
-
-Tabs.AutoFarm:AddToggle("MythicToggle", {
-    Title = "Enable Mythic Auto Farm", 
-    Default = false,
-    Callback = function(state)
-        if state then
-            print("Mythic Auto Farm enabled")
-        else
-            print("Mythic Auto Farm disabled")
         end
     end
 })
