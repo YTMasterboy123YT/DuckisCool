@@ -23,39 +23,38 @@ local isOn = false
 button.MouseButton1Click:Connect(function()
     isOn = not isOn
     if isOn then
-        -- Teleport the rock to the right hand CFrame
-        if character and character:FindFirstChild("RightHand") then
+        -- Ensure the rock part is in the workspace before teleporting
+        if character and character:FindFirstChild("RightHand") and rockPart then
             rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
-        end
+            rockPart.Transparency = 1 -- Make the rock invisible
+            rockPart.Size = Vector3.new(2, 2, 2) -- Adjust size when activated
 
-        rockPart.Size = Vector3.new(2, 2, 2) -- Adjust size when activated
-        rockPart.Transparency = 1 -- Make the rock invisible
-
-        -- Remove StatLabels and other objects inside rockGui
-        local rockGui = rockPart:FindFirstChild("rockGui")
-        if rockGui then
-            for _, child in ipairs(rockGui:GetChildren()) do
-                if child:IsA("TextLabel") and (child.Name == "statLabel" or child.Name == "rockName") then
-                    child:Destroy()
-                    print(child.Name .. " deleted from rockGui.")
+            -- Remove StatLabels and other objects inside rockGui
+            local rockGui = rockPart:FindFirstChild("rockGui")
+            if rockGui then
+                for _, child in ipairs(rockGui:GetChildren()) do
+                    if child:IsA("TextLabel") and (child.Name == "statLabel" or child.Name == "rockName") then
+                        child:Destroy()
+                        print(child.Name .. " deleted from rockGui.")
+                    end
                 end
             end
-        end
 
-        -- Remove rockEmitter and hoopParticle if they exist
-        local rockEmitter = rockPart:FindFirstChild("rockEmitter")
-        if rockEmitter then
-            rockEmitter:Destroy()
-            print("rockEmitter deleted.")
-        end
+            -- Remove rockEmitter and hoopParticle if they exist
+            local rockEmitter = rockPart:FindFirstChild("rockEmitter")
+            if rockEmitter then
+                rockEmitter:Destroy()
+                print("rockEmitter deleted.")
+            end
 
-        local hoopParticle = rockPart:FindFirstChild("hoopParticle")
-        if hoopParticle then
-            hoopParticle:Destroy()
-            print("hoopParticle deleted.")
-        end
+            local hoopParticle = rockPart:FindFirstChild("hoopParticle")
+            if hoopParticle then
+                hoopParticle:Destroy()
+                print("hoopParticle deleted.")
+            end
 
-        button.Text = "Return Rock"
+            button.Text = "Return Rock"
+        end
     else
         rockPart.Position = originalPosition
         rockPart.Size = originalSize
