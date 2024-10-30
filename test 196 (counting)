@@ -16,12 +16,12 @@ local character = player.Character or player.CharacterAdded:Wait()
 local teleporting = false
 
 local function autoHit()
-    local punchTool = player.Backpack:FindFirstChild("Punch")
-    if punchTool then
-        while teleporting do
+    while teleporting do
+        local punchTool = character:FindFirstChild("Punch")
+        if punchTool and punchTool.Enabled then
             punchTool:Activate()
-            wait(0.1) -- Adjust delay as needed
         end
+        wait(0.1) -- Adjust the delay as needed
     end
 end
 
@@ -78,7 +78,7 @@ button.MouseButton1Click:Connect(function()
     if teleporting then
         button.Text = "Stop Teleporting"
         button.BackgroundColor3 = Color3.new(1, 0.5, 0) -- Change to orange to indicate active teleporting
-        
+
         -- Start auto-hitting
         autoHit()
 
@@ -94,4 +94,8 @@ button.MouseButton1Click:Connect(function()
         button.Text = "Teleport Rock"
         button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Change back to green
     end
+end)
+
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
 end)
