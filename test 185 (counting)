@@ -2,7 +2,8 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
-local Window, err = Fluent:CreateWindow({
+-- Create the main window
+local Window = Fluent:CreateWindow({
     Title = "Ducks Private Script" .. Fluent.Version, 
     SubTitle = "by Duck", 
     TabWidth = 160,
@@ -11,11 +12,6 @@ local Window, err = Fluent:CreateWindow({
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.LeftControl
 })
-
-if err then
-    print("Error creating window:", err)
-    return
-end
 
 -- Tabs
 local Tabs = {
@@ -29,6 +25,7 @@ local Tabs = {
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
 
+-- Build Settings Section
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 SaveManager:BuildConfigSection(Tabs.Settings)
 
@@ -44,8 +41,8 @@ MainTab:AddInput("SpeedInput", {
     Finished = true,
     Callback = function(Value)
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local changeSizeSpeedRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-        changeSizeSpeedSpeedRemote:InvokeServer("changeSpeed", tonumber(Value))
+        local changeSizeSpeedRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("changeSpeedSizeRemote")
+        changeSizeSpeedRemote:InvokeServer("changeSpeed", tonumber(Value))
         print("Speed changed to:", Value)
     end
 })
@@ -59,7 +56,7 @@ MainTab:AddInput("SizeInput", {
     Finished = true,
     Callback = function(Value)
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+        local changeSizeRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("changeSpeedSizeRemote")
         changeSizeRemote:InvokeServer("changeSize", tonumber(Value))
         print("Size changed to:", Value)
     end
