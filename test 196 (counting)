@@ -2,6 +2,9 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
 local Window = Fluent:CreateWindow({
     Title = "Ducks Private Script " .. Fluent.Version,
     SubTitle = "by Duck",
@@ -12,17 +15,11 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
-local player = game.Players.LocalPlayer
-local backpack = player:WaitForChild("Backpack")
-local character = player.Character or player.CharacterAdded:Wait()
-
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
-    Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-})
+}
 
 -- Main Tab
 local MainTab = Tabs.Main
@@ -36,40 +33,6 @@ MainTab:AddInput("SpeedInput", {
         local speedValue = tonumber(value)
         if speedValue then
             character.Humanoid.WalkSpeed = speedValue
-        end
-    end
-})
-
--- Size Input
-MainTab:AddInput("SizeInput", {
-    Title = "Change Size",
-    Placeholder = "Enter size value",
-    Numeric = true,
-    Callback = function(value)
-        local sizeValue = tonumber(value)
-        if sizeValue then
-            local ReplicatedStorage = game:GetService("ReplicatedStorage")
-            local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-            changeSizeRemote:InvokeServer("changeSize", sizeValue)
-        end
-    end
-})
-
--- Jump Power Input
-MainTab:AddInput("JumpPowerInput", {
-    Title = "Change Jump Power",
-    Placeholder = "Enter jump power value",
-    Numeric = true,
-    Callback = function(value)
-        local jumpPowerValue = tonumber(value)
-        if jumpPowerValue then
-            local Players = game:GetService("Players")
-            for _, player in ipairs(Players:GetPlayers()) do
-                local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-                if humanoid then
-                    humanoid.JumpPower = jumpPowerValue
-                end
-            end
         end
     end
 })
@@ -88,92 +51,50 @@ MainTab:AddToggle("InfiniteJumpToggle", {
     end
 })
 
--- Backflip Toggle
-local backflipToggle = MainTab:AddToggle("BackflipToggle", {
-    Title = "Perform Backflip",
+-- Blackflip Toggle
+MainTab:AddToggle("BlackflipToggle", {
+    Title = "Perform Blackflip",
     Default = false,
-})
-
-backflipToggle:OnChanged(function()
-    if backflipToggle.Value then
-        while backflipToggle.Value do
-            if character and character:FindFirstChild("Humanoid") then
-                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                wait(0.5)  -- Adjust wait time if needed
+    Callback = function(state)
+        if state then
+            while MainTab:GetToggle("BlackflipToggle").Value do
+                wait(1)
+                character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
             end
-            wait(0.1)  -- Prevent overwhelming the server
         end
     end
-end)
+})
 
 -- Auto Farm Tab
 local AutoFarmTab = Tabs.AutoFarm
 
--- Define rock positions and orientations
-local rocks = {
-    MuscleKingMountain = {
-        position = Vector3.new(-8976.455078125, 9.191204071044922, -6130.7373046875),
-        orientation = CFrame.Angles(0, math.rad(180), 0)
-    },
-    LegendRock = {
-        position = Vector3.new(4187.1787109375, 991.5241088867188, -4065.08251953125),
-        orientation = CFrame.Angles(0, math.rad(90), 0)
-    },
-    MythicalRock = {
-        position = Vector3.new(2220.0595703125, 7.321215629577637, 1228.5823974609375),
-        orientation = CFrame.Angles(0, math.rad(90), 0)
-    }
-}
-
--- Function to teleport to a rock
-local function teleportToRock(rock)
-    character.HumanoidRootPart.CFrame = CFrame.new(rock.position) * rock.orientation
-end
-
--- Toggle for Muscle King Mountain
-local muscleKingToggle = AutoFarmTab:AddToggle("MuscleKingToggle", {
-    Title = "Teleport to Muscle King Mountain",
+-- Auto Pushups and Weights
+AutoFarmTab:AddToggle("PushupsToggle", {
+    Title = "Auto Pushups",
     Default = false,
-})
-
-muscleKingToggle:OnChanged(function()
-    if muscleKingToggle.Value then
-        while muscleKingToggle.Value do
-            teleportToRock(rocks.MuscleKingMountain)
-            wait(0.5)
+    Callback = function(state)
+        while state do
+            local args = { [1] = "rep" }
+            game.Players.LocalPlayer.muscleEvent:FireServer(unpack(args))
+            wait(0.1)
         end
     end
-end)
-
--- Toggle for Legend Rock
-local legendToggle = AutoFarmTab:AddToggle("LegendToggle", {
-    Title = "Teleport to Legend Rock",
-    Default = false,
 })
 
-legendToggle:OnChanged(function()
-    if legendToggle.Value then
-        while legendToggle.Value do
-            teleportToRock(rocks.LegendRock)
-            wait(0.5)
-        end
-    end
-end)
-
--- Toggle for Mythical Rock
-local mythicalToggle = AutoFarmTab:AddToggle("MythicalToggle", {
-    Title = "Teleport to Mythical Rock",
+AutoFarmTab:AddToggle("WeightsToggle", {
+    Title = "Auto Weights",
     Default = false,
-})
-
-mythicalToggle:OnChanged(function()
-    if mythicalToggle.Value then
-        while mythicalToggle.Value do
-            teleportToRock(rocks.MythicalRock)
-            wait(0.5)
+    Callback = function(state)
+        while state do
+            for _, tool in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                if tool.Name == "Weight" then
+                    tool.Parent = game.Players.LocalPlayer.Character
+                end
+            end
+            wait(0.1)
         end
     end
-end)
+})
 
 -- Settings Tab
 local SettingsTab = Tabs.Settings
