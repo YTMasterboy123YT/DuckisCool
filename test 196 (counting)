@@ -3,7 +3,7 @@ local backpack = player:WaitForChild("Backpack")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 
--- Create a button to teleport the rock
+-- Create a button to teleport the rock and equip the tools
 local button = Instance.new("TextButton")
 button.Size = UDim2.new(0, 200, 0, 50)
 button.Position = UDim2.new(0.5, -100, 0.5, -25)
@@ -15,7 +15,7 @@ local function equipTool(toolName, cooldownType)
     if tool then
         local newTool = tool:Clone() -- Clone the tool
         newTool.Parent = backpack -- Equip the tool
-        
+
         -- Set cooldown if applicable
         local cooldown = newTool:FindFirstChild(cooldownType) 
         if cooldown and cooldown:IsA("NumberValue") then
@@ -76,11 +76,15 @@ local function setupMuscleKingMountain()
 end
 
 button.MouseButton1Click:Connect(function()
-    -- Equip both tools when the button is clicked
-    equipTool("Punch", "attackTime")
-    equipTool("Pushups", "repTime")
-    setupMuscleKingMountain() -- Setup the Muscle King Mountain
-    autoLift() -- Start auto-hitting
+    -- Ensure character is loaded before equipping tools
+    if player.Character then
+        equipTool("Punch", "attackTime")
+        equipTool("Pushups", "repTime")
+        setupMuscleKingMountain() -- Setup the Muscle King Mountain
+        autoLift() -- Start auto-hitting
+    else
+        warn("Character not found!")
+    end
 end)
 
 -- Initial character setup
