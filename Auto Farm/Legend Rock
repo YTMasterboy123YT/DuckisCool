@@ -1,1 +1,13 @@
-
+-- Define rock positions and orientations
+local rocks = {
+    MythicalRock = {
+        position = Vector3.new(2220.0595703125, 7.321215629577637, 1228.5823974609375),
+        orientation = CFrame.Angles(0, math.rad(90), 0) -- Adjust orientation as needed
+    },
+    LegendRock = {
+        position = Vector3.new(4187.1787109375, 991.5241088867188, -4065.08251953125),
+        orientation = CFrame.Angles(0, math.rad(180), 0) -- Adjust orientation as needed
+    },
+    MuscleKingMountain = {
+        position = Vector3.new(-8976.455078125, 9.191204071044922, -6130.7373046875),
+        orientation = CFrame.Angles(0, math.rad(270), 0) -- Adjust orientation as 
