@@ -1,89 +1,286 @@
--- Create a ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
--- Create a TextButton
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 200, 0, 50)
-button.Position = UDim2.new(0.5, -100, 0.5, -25)
-button.Text = "Teleport Rock"
-button.Parent = screenGui
-button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Green color
-button.TextColor3 = Color3.new(1, 1, 1) -- White text
+local Window = Fluent:CreateWindow({
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
 
 local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
 local character = player.Character or player.CharacterAdded:Wait()
-local muscleKingMountain = game.Workspace:FindFirstChild("machinesFolder") and game.Workspace.machinesFolder:FindFirstChild("Muscle King Mountain")
-local rockPart = muscleKingMountain and muscleKingMountain:FindFirstChild("Rock")
 
-if not rockPart then
-    warn("Rock not found! Please check the workspace structure.")
-    return
-end
+local tools = {
+    {name = "Punch", type = "attackTime"},
+    {name = "Ground Slam", type = "attackTime"},
+    {name = "Stomp", type = "attackTime"},
+    {name = "Handstands", type = "repTime"},
+    {name = "Pushups", type = "repTime"},
+    {name = "Weight", type = "repTime"},
+    {name = "Situps", type = "repTime"}
+}
 
-local originalPosition = rockPart.Position
-local originalSize = rockPart.Size
-local isOn = false
-local runService = game:GetService("RunService")
-local connection
+local isAutoHitEnabled = false
+local currentRockToggle = nil
+local teleportLoopActive = false
 
--- Function to remove specific elements
-local function removeRockElements()
-    local rockGui = rockPart:FindFirstChild("rockGui")
-    if rockGui then
-        for _, child in ipairs(rockGui:GetChildren()) do
-            if child:IsA("TextLabel") and (child.Name == "statLabel" or child.Name == "rockName") then
-                child:Destroy()
-                print(child.Name .. " deleted from rockGui.")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
+
+-- Define rock positions and orientations
+local rocks = {
+    MythicalRock = {
+        position = Vector3.new(2220.0595703125, 7.321215629577637, 1228.5823974609375),
+        orientation = CFrame.Angles(0, math.rad(90), 0)
+    },
+    LegendRock = {
+        position = Vector3.new(4187.1787109375, 991.5241088867188, -4065.08251953125),
+        orientation = CFrame.Angles(0, math.rad(180), 0)
+    },
+    MuscleKingMountain = {
+        position = Vector3.new(-8976.455078125, 9.191204071044922, -6130.7373046875),
+        orientation = CFrame.Angles(0, math.rad(270), 0)
+    }
+}
+
+local function setToolProperties()
+    for _, toolInfo in pairs(tools) do
+        local tool = backpack:FindFirstChild(toolInfo.name)
+        if tool then
+            local cooldown = tool:FindFirstChild(toolInfo.type)
+            if cooldown and cooldown:IsA("NumberValue") then
+                cooldown.Value = 0.1
             end
         end
     end
+end
 
-    -- Remove rockEmitter and hoopParticle if they exist
-    local rockEmitter = rockPart:FindFirstChild("rockEmitter")
-    if rockEmitter then
-        rockEmitter:Destroy()
-        print("rockEmitter deleted.")
-    end
-
-    local hoopParticle = rockPart:FindFirstChild("hoopParticle")
-    if hoopParticle then
-        hoopParticle:Destroy()
-        print("hoopParticle deleted.")
+local function autoHit()
+    while isAutoHitEnabled do
+        local equippedTool = character:FindFirstChildOfClass("Tool")
+        if equippedTool and equippedTool.Enabled then
+            equippedTool:Activate()
+        end
+        wait(0.1)
     end
 end
 
-local function updateRockPosition()
-    connection = runService.RenderStepped:Connect(function()
-        if isOn and character and character:FindFirstChild("RightHand") then
-            rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position it above the right hand
-        end
-    end)
+local function teleportAndAutoHit(rock)
+    character.HumanoidRootPart.CFrame = CFrame.new(rock.position) * rock.orientation
+    wait(0.5)
 end
 
-button.MouseButton1Click:Connect(function()
-    isOn = not isOn
-    if isOn then
-        rockPart.Size = Vector3.new(2, 2, 2)  -- Set size when activated
-        rockPart.Transparency = 1 -- Make the rock transparent
-        rockPart.CanCollide = false -- Make the rock non-collidable
-        removeRockElements() -- Remove unwanted elements from the rock
-        button.Text = "Return Rock"
-        button.BackgroundColor3 = Color3.new(1, 0, 0) -- Change to red
-        updateRockPosition() -- Start updating position
-    else
-        if connection then
-            connection:Disconnect() -- Stop updating position
+local function startTeleportLoop(rock)
+    teleportLoopActive = true
+    while teleportLoopActive do
+        teleportAndAutoHit(rock)
+        wait(0.1)
+    end
+end
+
+-- Create Tabs
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
+    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
+}
+
+-- Main Tab
+local MainTab = Tabs.Main
+
+-- Speed Input
+MainTab:AddInput("SpeedInput", {
+    Title = "Change Speed",
+    Placeholder = "Enter speed value",
+    Numeric = true,
+    Callback = function(value)
+        local speedValue = tonumber(value)
+        if speedValue then
+            character.Humanoid.WalkSpeed = speedValue
         end
-        rockPart.Position = originalPosition
-        rockPart.Size = originalSize
-        rockPart.Transparency = 0 -- Make the rock visible again
-        rockPart.CanCollide = true -- Restore collidable property
-        button.Text = "Teleport Rock"
-        button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Change back to green
+    end
+})
+
+-- Size Input
+MainTab:AddInput("SizeInput", {
+    Title = "Change Size",
+    Placeholder = "Enter size value",
+    Numeric = true,
+    Callback = function(value)
+        local sizeValue = tonumber(value)
+        if sizeValue then
+            changeSizeRemote:InvokeServer("changeSize", sizeValue)
+            character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
+        end
+    end
+})
+
+-- Jump Input
+MainTab:AddInput("JumpPowerInput", {
+    Title = "Change Jump Power",
+    Placeholder = "Enter jump power value",
+    Numeric = true,
+    Callback = function(value)
+        character.Humanoid.JumpPower = tonumber(value)
+    end
+})
+
+-- Infinite Jump Toggle
+local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
+    Title = "Enable Infinite Jump",
+    Default = false,
+})
+
+infiniteJumpToggle:OnChanged(function()
+    local UserInputService = game:GetService("UserInputService")
+    if infiniteJumpToggle.Value then
+        UserInputService.JumpRequest:Connect(function()
+            if infiniteJumpToggle.Value then
+                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
     end
 end)
+
+-- Killer Tab
+local KillerTab = Tabs.Killer
+
+-- Auto Hit Toggle
+local autoHitToggle = KillerTab:AddToggle("AutoHitToggle", {
+    Title = "Enable Auto Hit",
+    Default = false,
+})
+
+autoHitToggle:OnChanged(function()
+    isAutoHitEnabled = autoHitToggle.Value
+    if isAutoHitEnabled then
+        autoHit()
+    end
+end)
+
+-- Head Features Toggle
+local headFeaturesToggle = KillerTab:AddToggle("HeadFeaturesToggle", {
+    Title = "Enable Head Features",
+    Description = "Auto hit and teleport heads",
+    Default = false,
+    Callback = function(state)
+        if state then
+            autoHitActive = true
+            teleportPlayersActive = true
+            turnHeadsInvisibleActive = true
+        else
+            restoreHeads()
+            autoHitActive = false
+            teleportPlayersActive = false
+            turnHeadsInvisibleActive = false
+        end
+    end
+})
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+local autoHitActive = false
+local teleportPlayersActive = false
+local turnHeadsInvisibleActive = false
+
+local function autoHit()
+    LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+    LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+end
+
+local function anchorCharacter(character, anchor)
+    for _, part in pairs(character:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.Anchored = anchor
+        end
+    end
+end
+
+local function teleportHeads()
+    local localLeftHand = LocalPlayer.Character:FindFirstChild("LeftHand")
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                local head = targetCharacter:FindFirstChild("Head")
+                anchorCharacter(targetCharacter, true)
+                if head and localLeftHand then
+                    local handPosition = localLeftHand.Position
+                    head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0))
+                end
+            end
+        end
+    end
+end
+
+local function turnHeadsInvisible()
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                local head = targetCharacter:FindFirstChild("Head")
+                if head then
+                    head.Transparency = 1
+                end
+            end
+        end
+    end
+end
+
+local function restoreHeads()
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                local head = targetCharacter:FindFirstChild("Head")
+                if head then
+                    head.Transparency = 0
+                end
+            end
+        end
+    end
+end
+
+RunService.Heartbeat:Connect(function()
+    if autoHitActive then autoHit() end
+    if teleportPlayersActive then teleportHeads() end
+    if turnHeadsInvisibleActive then turnHeadsInvisible() end
+end)
+
+-- Set Tool Properties
+setToolProperties()
 
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
+    backpack = player:WaitForChild("Backpack")
+    setToolProperties()
 end)
+
+-- SaveManager and InterfaceManager Setup
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+InterfaceManager:BuildInterfaceSection(MiscTab)
+SaveManager:BuildConfigSection(MiscTab)
+
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "Fluent",
+    Content = "The script has been loaded.",
+    Duration = 8
+})
+
+SaveManager:LoadAutoloadConfig()
