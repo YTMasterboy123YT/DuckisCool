@@ -66,6 +66,7 @@ button.MouseButton1Click:Connect(function()
     if isOn then
         rockPart.Size = Vector3.new(2, 2, 2)  -- Set size when activated
         rockPart.Transparency = 1 -- Make the rock transparent
+        rockPart.CanCollide = false -- Make the rock non-collidable
         removeRockElements() -- Remove unwanted elements from the rock
         button.Text = "Return Rock"
         button.BackgroundColor3 = Color3.new(1, 0, 0) -- Change to red
@@ -77,6 +78,7 @@ button.MouseButton1Click:Connect(function()
         rockPart.Position = originalPosition
         rockPart.Size = originalSize
         rockPart.Transparency = 0 -- Make the rock visible again
+        rockPart.CanCollide = true -- Restore collidable property
         button.Text = "Teleport Rock"
         button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Change back to green
     end
