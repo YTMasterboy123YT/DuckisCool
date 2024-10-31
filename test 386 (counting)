@@ -29,6 +29,9 @@ local tools = {
 local isAutoHitEnabled = false
 local currentRockToggle = nil
 local teleportLoopActive = false
+local autoHitActive = false
+local teleportPlayersActive = false
+local turnHeadsInvisibleActive = false
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
@@ -80,6 +83,60 @@ local function startTeleportLoop(rock)
     while teleportLoopActive do
         teleportAndAutoHit(rock)
         wait(0.1)
+    end
+end
+
+-- Teleport Heads Functionality
+local function anchorCharacter(character, anchor)
+    for _, part in pairs(character:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.Anchored = anchor
+        end
+    end
+end
+
+local function teleportHeads()
+    local localLeftHand = player.Character:FindFirstChild("LeftHand")
+    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+        if otherPlayer ~= player then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                local head = targetCharacter:FindFirstChild("Head")
+                anchorCharacter(targetCharacter, true)
+                if head and localLeftHand then
+                    local handPosition = player.Character.LeftHand.Position
+                    head.CFrame = CFrame.new(handPosition + Vector3.new(-1, 1, 2))
+                end
+            end
+        end
+    end
+end
+
+local function turnHeadsInvisible()
+    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+        if otherPlayer ~= player then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                local head = targetCharacter:FindFirstChild("Head")
+                if head then
+                    head.Transparency = 1
+                end
+            end
+        end
+    end
+end
+
+local function restoreHeads()
+    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+        if otherPlayer ~= player then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                local head = targetCharacter:FindFirstChild("Head")
+                if head then
+                    head.Transparency = 0
+                end
+            end
+        end
     end
 end
 
@@ -164,101 +221,38 @@ autoHitToggle:OnChanged(function()
     end
 end)
 
--- Teleport and Head Functions
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
+-- Teleport Heads Toggle
+local teleportHeadsToggle = KillerTab:AddToggle("TeleportHeadsToggle", {
+    Title = "Teleport Heads to Hand",
+    Default = false,
+})
 
-local autoHitActive = false
-local teleportPlayersActive = false
-local turnHeadsInvisibleActive = false
-
-local function autoHit()
-    LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-    LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-end
-
-local function anchorCharacter(character, anchor)
-    for _, part in pairs(character:GetChildren()) do
-        if part:IsA("BasePart") then
-            part.Anchored = anchor
-        end
+teleportHeadsToggle:OnChanged(function()
+    teleportPlayersActive = teleportHeadsToggle.Value
+    if teleportPlayersActive then
+        teleportHeads()
     end
-end
-
-local function teleportHeads()
-    local localLeftHand = LocalPlayer.Character:FindFirstChild("LeftHand")
-    for _, otherPlayer in pairs(Players:GetPlayers()) do
-        if otherPlayer ~= LocalPlayer then
-            local targetCharacter = otherPlayer.Character
-            if targetCharacter then
-                local head = targetCharacter:FindFirstChild("Head")
-                anchorCharacter(targetCharacter, true)
-                if head and localLeftHand then
-                    local handPosition = LocalPlayer.Character.LeftHand.Position
-                    head.CFrame = CFrame.new(handPosition + Vector3.new(0, 1, 2)) 
-                end
-            end
-        end
-    end
-end
-
-local function turnHeadsInvisible()
-    for _, otherPlayer in pairs(Players:GetPlayers()) do
-        if otherPlayer ~= LocalPlayer then
-            local targetCharacter = otherPlayer.Character
-            if targetCharacter then
-                local head = targetCharacter:FindFirstChild("Head")
-                if head then
-                    head.Transparency = 1
-                end
-            end
-        end
-    end
-end
-
-local function restoreHeads()
-    for _, otherPlayer in pairs(Players:GetPlayers()) do
-        if otherPlayer ~= LocalPlayer then
-            local targetCharacter = otherPlayer.Character
-            if targetCharacter then
-                local head = targetCharacter:FindFirstChild("Head")
-                if head then
-                    head.Transparency = 0
-                end
-            end
-        end
-    end
-end
-
-RunService.Heartbeat:Connect(function()
-    if autoHitActive then autoHit() end
-    if teleportPlayersActive then teleportHeads() end
-    if turnHeadsInvisibleActive then turnHeadsInvisible() end
 end)
 
--- Toggle for Teleport Heads
-KillerTab:AddToggle("TeleportHeadsToggle", {
-    Title = "Enable Teleport Heads",
+-- Turn Heads Invisible Toggle
+local turnHeadsInvisibleToggle = KillerTab:AddToggle("TurnHeadsInvisibleToggle", {
+    Title = "Turn Heads Invisible",
     Default = false,
-    Callback = function(state)
-        teleportPlayersActive = state
-    end
 })
 
--- Toggle for Turn Heads Invisible
-KillerTab:AddToggle("TurnHeadsInvisibleToggle", {
-    Title = "Enable Turn Heads Invisible",
-    Default = false,
-    Callback = function(state)
-        turnHeadsInvisibleActive = state
-        if not state then restoreHeads() end
+turnHeadsInvisibleToggle:OnChanged(function()
+    turnHeadsInvisibleActive = turnHeadsInvisibleToggle.Value
+    if turnHeadsInvisibleActive then
+        turnHeadsInvisible()
+    else
+        restoreHeads()
     end
-})
+end)
 
 -- Auto Farm Tab
 local AutoFarmTab = Tabs.AutoFarm
 
+-- Toggle for each rock
 for rockName, rockData in pairs(rocks) do
     local rockToggle = AutoFarmTab:AddToggle(rockName .. "Toggle", {
         Title = "Teleport to " .. rockName,
@@ -309,7 +303,7 @@ local antiAFKToggle = MiscTab:AddToggle("AntiAFKToggle", {
 })
 
 antiAFKToggle:OnChanged(function()
-    local player = Players.LocalPlayer
+    local player = game.Players.LocalPlayer
     while antiAFKToggle.Value do
         player.Idled:Wait()
         player:Move(Vector3.new(0, 0, 0))
