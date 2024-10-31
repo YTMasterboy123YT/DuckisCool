@@ -256,6 +256,68 @@ RunService.Heartbeat:Connect(function()
     if turnHeadsInvisibleActive then turnHeadsInvisible() end
 end)
 
+-- Auto Farm Tab
+local AutoFarmTab = Tabs.AutoFarm
+
+-- Toggle for each rock
+for rockName, rockData in pairs(rocks) do
+    local rockToggle = AutoFarmTab:AddToggle(rockName .. "Toggle", {
+        Title = "Teleport to " .. rockName,
+        Default = false,
+    })
+
+    rockToggle:OnChanged(function()
+        if rockToggle.Value then
+            if currentRockToggle and currentRockToggle ~= rockToggle then
+                currentRockToggle.Value = false
+                teleportLoopActive = false
+            end
+
+            currentRockToggle = rockToggle
+            isAutoHitEnabled = true
+            startTeleportLoop(rockData)
+        else
+            isAutoHitEnabled = false  
+            teleportLoopActive = false
+            currentRockToggle = nil
+        end
+    end)
+end
+
+-- Misc Tab
+local MiscTab = Tabs.Misc
+
+-- Game Time Dropdown
+MiscTab:AddDropdown("GameTimeDropdown", {
+    Title = "Set Game Time",
+    Values = {"Morning", "Afternoon", "Night"},
+    Default = 1,
+    Callback = function(value)
+        if value == "Morning" then
+            game.Lighting.ClockTime = 6
+        elseif value == "Afternoon" then
+            game.Lighting.ClockTime = 16
+        elseif value == "Night" then
+            game.Lighting.ClockTime = 0
+        end
+    end
+})
+
+-- Anti AFK Toggle
+local antiAFKToggle = MiscTab:AddToggle("AntiAFKToggle", {
+    Title = "Enable Anti-AFK",
+    Default = false,
+})
+
+antiAFKToggle:OnChanged(function()
+    local player = Players.LocalPlayer
+    while antiAFKToggle.Value do
+        player.Idled:Wait()
+        player:Move(Vector3.new(0, 0, 0))
+        wait(1)
+    end
+end)
+
 -- Set Tool Properties
 setToolProperties()
 
