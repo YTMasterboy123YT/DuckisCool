@@ -16,56 +16,16 @@ local player = game.Players.LocalPlayer
 local backpack = player:WaitForChild("Backpack")
 local character = player.Character or player.CharacterAdded:Wait()
 
-local tools = {
-    {name = "Punch", type = "attackTime"},
-    {name = "Ground Slam", type = "attackTime"},
-    {name = "Stomp", type = "attackTime"},
-    {name = "Handstands", type = "repTime"},
-    {name = "Pushups", type = "repTime"},
-    {name = "Weight", type = "repTime"},
-    {name = "Situps", type = "repTime"}
-}
-
-local isAutoHitEnabled = false
-local teleportLoopActive = false
+local autoHitActive = false
+local teleportPlayersActive = false
 local turnHeadsInvisibleActive = false
-local teleportHeadsActive = false
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
-
-local rocks = {
-    MythicalRock = {
-        position = Vector3.new(2220, 7, 1228),
-        orientation = CFrame.Angles(0, math.rad(90), 0)
-    },
-    LegendRock = {
-        position = Vector3.new(4187, 991, -4065),
-        orientation = CFrame.Angles(0, math.rad(180), 0)
-    },
-    MuscleKingMountain = {
-        position = Vector3.new(-8976, 9, -6130),
-        orientation = CFrame.Angles(0, math.rad(270), 0)
-    }
-}
-
-local function setToolProperties()
-    for _, toolInfo in pairs(tools) do
-        local tool = backpack:FindFirstChild(toolInfo.name)
-        if tool then
-            local cooldown = tool:FindFirstChild(toolInfo.type) 
-            if cooldown and cooldown:IsA("NumberValue") then
-                cooldown.Value = 0.1
-            end
-        end
-    end
-end
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local function autoHit()
-    if character then
-        player.muscleEvent:FireServer("punch", "leftHand")
-        player.muscleEvent:FireServer("punch", "rightHand")
-    end
+    player.muscleEvent:FireServer("punch", "leftHand")
+    player.muscleEvent:FireServer("punch", "rightHand")
 end
 
 local function anchorCharacter(character, anchor)
@@ -78,7 +38,7 @@ end
 
 local function teleportHeads()
     local localLeftHand = player.Character:FindFirstChild("LeftHand")
-    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= player then
             local targetCharacter = otherPlayer.Character
             if targetCharacter then
@@ -86,27 +46,8 @@ local function teleportHeads()
                 anchorCharacter(targetCharacter, true)
                 if head and localLeftHand then
                     local handPosition = localLeftHand.Position
-                    head.CFrame = CFrame.new(handPosition + Vector3.new(2, 0, 0))  -- Adjusted position
-                end
-            end
-        end
-    end
-end
-
-local function turnHeadsInvisible()
-    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-        if otherPlayer ~= player then
-            local targetCharacter = otherPlayer.Character
-            if targetCharacter then
-                local head = targetCharacter:FindFirstChild("Head")
-                if head then
-                    head.Transparency = 1
-                end
-                
-                for _, accessory in pairs(targetCharacter:GetChildren()) do
-                    if accessory:IsA("Accessory") and accessory.Name:lower():find("hair") then
-                        accessory.Handle.Transparency = 1
-                    end
+                    head.CFrame = CFrame.new(handPosition + Vector3.new(2, 1, 0)) -- Adjusting position
+                    head.Transparency = 1 -- Make the head invisible
                 end
             end
         end
@@ -114,32 +55,23 @@ local function turnHeadsInvisible()
 end
 
 local function restoreHeads()
-    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= player then
             local targetCharacter = otherPlayer.Character
             if targetCharacter then
                 local head = targetCharacter:FindFirstChild("Head")
                 if head then
-                    head.Transparency = 0
-                end
-                
-                for _, accessory in pairs(targetCharacter:GetChildren()) do
-                    if accessory:IsA("Accessory") and accessory.Name:lower():find("hair") then
-                        accessory.Handle.Transparency = 0
-                    end
+                    head.Transparency = 0 -- Restore visibility
                 end
             end
         end
     end
 end
 
-local function onHeartbeat()
-    if isAutoHitEnabled then autoHit() end
-    if teleportHeadsActive then teleportHeads() end
-    if turnHeadsInvisibleActive then turnHeadsInvisible() end
-end
-
-game:GetService("RunService").Heartbeat:Connect(onHeartbeat)
+RunService.Heartbeat:Connect(function()
+    if autoHitActive then autoHit() end
+    if teleportPlayersActive then teleportHeads() end
+end)
 
 -- Create Tabs
 local Tabs = {
@@ -173,7 +105,6 @@ MainTab:AddInput("SizeInput", {
     Callback = function(value)
         local sizeValue = tonumber(value)
         if sizeValue then
-            changeSizeRemote:InvokeServer("changeSize", sizeValue)
             character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
         end
     end
@@ -209,57 +140,36 @@ end)
 -- Killer Tab
 local KillerTab = Tabs.Killer
 
--- Auto Hit Toggle
-local autoHitToggle = KillerTab:AddToggle("AutoHitToggle", {
-    Title = "Enable Auto Hit",
+-- Combined Toggle for Auto Hit and Teleport Heads
+local combinedToggle = KillerTab:AddToggle("AutoHitAndTeleportToggle", {
+    Title = "Enable Auto Hit & Teleport Heads",
     Default = false,
 })
 
-autoHitToggle:OnChanged(function()
-    isAutoHitEnabled = autoHitToggle.Value
-    if isAutoHitEnabled then
-        turnHeadsInvisibleActive = true  -- Automatically turn heads invisible
-        teleportHeadsActive = true  -- Automatically teleport heads
-    else
-        restoreHeads()  -- Restore heads when auto-hit is turned off
-        turnHeadsInvisibleActive = false
-        teleportHeadsActive = false
-    end
-end)
-
--- Invisibility Toggle
-local invisibilityToggle = KillerTab:AddToggle("TurnHeadsInvisibleToggle", {
-    Title = "Turn Heads Invisible",
-    Default = false,
-})
-
-invisibilityToggle:OnChanged(function()
-    turnHeadsInvisibleActive = invisibilityToggle.Value
-    if not turnHeadsInvisibleActive then
-        restoreHeads()  -- Restore heads when invisibility is turned off
+combinedToggle:OnChanged(function()
+    autoHitActive = combinedToggle.Value
+    teleportPlayersActive = combinedToggle.Value
+    if not combinedToggle.Value then
+        restoreHeads()  -- Restore heads when turned off
     end
 end)
 
 -- Auto Farm Tab
 local AutoFarmTab = Tabs.AutoFarm
 
--- Toggle for each rock
-for rockName, rockData in pairs(rocks) do
-    local rockToggle = AutoFarmTab:AddToggle(rockName .. "Toggle", {
-        Title = "Teleport to " .. rockName,
-        Default = false,
-    })
-
-    rockToggle:OnChanged(function()
-        if rockToggle.Value then
-            character.HumanoidRootPart.CFrame = CFrame.new(rockData.position) * rockData.orientation
-            wait(0.5)  -- Wait to ensure teleportation completes
-            isAutoHitEnabled = true  -- Enable auto hitting
+-- Toggle for Auto Farm
+AutoFarmTab:AddToggle("AutoFarmToggle", {
+    Title = "Enable Auto Farm",
+    Default = false,
+    Callback = function(state)
+        if state then
+            print("Auto Farming Enabled")
+            -- Your auto farming logic here
         else
-            isAutoHitEnabled = false  -- Disable auto hitting
+            print("Auto Farming Disabled")
         end
-    end)
-end
+    end
+})
 
 -- Misc Tab
 local MiscTab = Tabs.Misc
@@ -287,21 +197,12 @@ local antiAFKToggle = MiscTab:AddToggle("AntiAFKToggle", {
 })
 
 antiAFKToggle:OnChanged(function()
-    local player = game.Players.LocalPlayer
+    local player = Players.LocalPlayer
     while antiAFKToggle.Value do
         player.Idled:Wait()
         player:Move(Vector3.new(0, 0, 0))
         wait(1)
     end
-end)
-
--- Set Tool Properties
-setToolProperties()
-
-player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    backpack = player:WaitForChild("Backpack")
-    setToolProperties()
 end)
 
 -- SaveManager and InterfaceManager Setup
