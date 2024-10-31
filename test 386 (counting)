@@ -105,7 +105,7 @@ local function teleportHeads()
                 anchorCharacter(targetCharacter, true)
                 if head and localLeftHand then
                     local handPosition = player.Character.LeftHand.Position
-                    head.CFrame = CFrame.new(handPosition + Vector3.new(-1, 1, 2))
+                    head.CFrame = CFrame.new(handPosition + Vector3.new(1, 1, 2))  -- Move to the right
                 end
             end
         end
@@ -230,7 +230,12 @@ local teleportHeadsToggle = KillerTab:AddToggle("TeleportHeadsToggle", {
 teleportHeadsToggle:OnChanged(function()
     teleportPlayersActive = teleportHeadsToggle.Value
     if teleportPlayersActive then
-        teleportHeads()
+        while teleportPlayersActive do
+            teleportHeads()
+            wait(0.1) -- Continuously teleport heads until turned off
+        end
+    else
+        restoreHeads()
     end
 end)
 
