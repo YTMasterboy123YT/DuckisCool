@@ -33,7 +33,6 @@ local teleportLoopActive = false
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
 
--- Define rock positions and orientations
 local rocks = {
     MythicalRock = {
         position = Vector3.new(2220.0595703125, 7.321215629577637, 1228.5823974609375),
@@ -136,17 +135,18 @@ MainTab:AddInput("JumpPowerInput", {
 local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
     Title = "Enable Infinite Jump",
     Default = false,
-    Callback = function(state)
-        local UserInputService = game:GetService("UserInputService")
-        if state then
-            UserInputService.JumpRequest:Connect(function()
-                if state then
-                    character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-            end)
-        end
-    end
 })
+
+infiniteJumpToggle:OnChanged(function()
+    local UserInputService = game:GetService("UserInputService")
+    if infiniteJumpToggle.Value then
+        UserInputService.JumpRequest:Connect(function()
+            if infiniteJumpToggle.Value then
+                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    end
+end)
 
 -- Killer Tab
 local KillerTab = Tabs.Killer
@@ -155,15 +155,16 @@ local KillerTab = Tabs.Killer
 local autoHitToggle = KillerTab:AddToggle("AutoHitToggle", {
     Title = "Enable Auto Hit",
     Default = false,
-    Callback = function(state)
-        isAutoHitEnabled = state
-        if isAutoHitEnabled then
-            autoHit()
-        end
-    end
 })
 
--- Teleport and Turn Heads Toggle
+autoHitToggle:OnChanged(function()
+    isAutoHitEnabled = autoHitToggle.Value
+    if isAutoHitEnabled then
+        autoHit()
+    end
+end)
+
+-- Teleport and Head Functions
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -194,8 +195,8 @@ local function teleportHeads()
                 local head = targetCharacter:FindFirstChild("Head")
                 anchorCharacter(targetCharacter, true)
                 if head and localLeftHand then
-                    local handPosition = localLeftHand.Position
-                    head.CFrame = CFrame.new(handPosition + Vector3.new(-1, -1, -1))
+                    local handPosition = LocalPlayer.Character.LeftHand.Position
+                    head.CFrame = CFrame.new(handPosition + Vector3.new(0, 1, 2)) 
                 end
             end
         end
@@ -236,24 +237,28 @@ RunService.Heartbeat:Connect(function()
     if turnHeadsInvisibleActive then turnHeadsInvisible() end
 end)
 
--- Toggle for teleporting heads
-local teleportToggle = KillerTab:AddToggle("TeleportHeadsToggle", {
-    Title = "Teleport Heads to Hand",
+-- Toggle for Teleport Heads
+KillerTab:AddToggle("TeleportHeadsToggle", {
+    Title = "Enable Teleport Heads",
     Default = false,
     Callback = function(state)
         teleportPlayersActive = state
-        if teleportPlayersActive then
-            teleportHeads()
-        else
-            restoreHeads()
-        end
+    end
+})
+
+-- Toggle for Turn Heads Invisible
+KillerTab:AddToggle("TurnHeadsInvisibleToggle", {
+    Title = "Enable Turn Heads Invisible",
+    Default = false,
+    Callback = function(state)
+        turnHeadsInvisibleActive = state
+        if not state then restoreHeads() end
     end
 })
 
 -- Auto Farm Tab
 local AutoFarmTab = Tabs.AutoFarm
 
--- Toggle for each rock
 for rockName, rockData in pairs(rocks) do
     local rockToggle = AutoFarmTab:AddToggle(rockName .. "Toggle", {
         Title = "Teleport to " .. rockName,
