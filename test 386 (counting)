@@ -33,6 +33,7 @@ local teleportLoopActive = false
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local changeSizeRemote = ReplicatedStorage.rEvents.changeSpeedSizeRemote
 
+-- Define rock positions and orientations
 local rocks = {
     MythicalRock = {
         position = Vector3.new(2220.0595703125, 7.321215629577637, 1228.5823974609375),
@@ -52,7 +53,7 @@ local function setToolProperties()
     for _, toolInfo in pairs(tools) do
         local tool = backpack:FindFirstChild(toolInfo.name)
         if tool then
-            local cooldown = tool:FindFirstChild(toolInfo.type)
+            local cooldown = tool:FindFirstChild(toolInfo.type) 
             if cooldown and cooldown:IsA("NumberValue") then
                 cooldown.Value = 0.1
             end
@@ -135,18 +136,17 @@ MainTab:AddInput("JumpPowerInput", {
 local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
     Title = "Enable Infinite Jump",
     Default = false,
-})
-
-infiniteJumpToggle:OnChanged(function()
-    local UserInputService = game:GetService("UserInputService")
-    if infiniteJumpToggle.Value then
-        UserInputService.JumpRequest:Connect(function()
-            if infiniteJumpToggle.Value then
-                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end)
+    Callback = function(state)
+        local UserInputService = game:GetService("UserInputService")
+        if state then
+            UserInputService.JumpRequest:Connect(function()
+                if state then
+                    character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+        end
     end
-end)
+})
 
 -- Killer Tab
 local KillerTab = Tabs.Killer
@@ -155,58 +155,98 @@ local KillerTab = Tabs.Killer
 local autoHitToggle = KillerTab:AddToggle("AutoHitToggle", {
     Title = "Enable Auto Hit",
     Default = false,
+    Callback = function(state)
+        isAutoHitEnabled = state
+        if isAutoHitEnabled then
+            autoHit()
+        end
+    end
 })
 
-autoHitToggle:OnChanged(function()
-    isAutoHitEnabled = autoHitToggle.Value
-    if isAutoHitEnabled then
-        autoHit()
+-- Teleport and Turn Heads Toggle
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+local autoHitActive = false
+local teleportPlayersActive = false
+local turnHeadsInvisibleActive = false
+
+local function autoHit()
+    LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+    LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+end
+
+local function anchorCharacter(character, anchor)
+    for _, part in pairs(character:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.Anchored = anchor
+        end
     end
+end
+
+local function teleportHeads()
+    local localLeftHand = LocalPlayer.Character:FindFirstChild("LeftHand")
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                local head = targetCharacter:FindFirstChild("Head")
+                anchorCharacter(targetCharacter, true)
+                if head and localLeftHand then
+                    local handPosition = localLeftHand.Position
+                    head.CFrame = CFrame.new(handPosition + Vector3.new(-1, -1, -1))
+                end
+            end
+        end
+    end
+end
+
+local function turnHeadsInvisible()
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                local head = targetCharacter:FindFirstChild("Head")
+                if head then
+                    head.Transparency = 1
+                end
+            end
+        end
+    end
+end
+
+local function restoreHeads()
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                local head = targetCharacter:FindFirstChild("Head")
+                if head then
+                    head.Transparency = 0
+                end
+            end
+        end
+    end
+end
+
+RunService.Heartbeat:Connect(function()
+    if autoHitActive then autoHit() end
+    if teleportPlayersActive then teleportHeads() end
+    if turnHeadsInvisibleActive then turnHeadsInvisible() end
 end)
 
--- Teleport Heads Toggle
-local teleportHeadsToggle = KillerTab:AddToggle("TeleportHeadsToggle", {
+-- Toggle for teleporting heads
+local teleportToggle = KillerTab:AddToggle("TeleportHeadsToggle", {
     Title = "Teleport Heads to Hand",
     Default = false,
     Callback = function(state)
-        local Players = game:GetService("Players")
-        local LocalPlayer = Players.LocalPlayer
-        local RunService = game:GetService("RunService")
-
-        local autoHitActive = false
-        local teleportPlayersActive = false
-        local turnHeadsInvisibleActive = false
-
-        local function anchorCharacter(character, anchor)
-            for _, part in pairs(character:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.Anchored = anchor
-                end
-            end
-        end
-
-        local function teleportHeads()
-            local localLeftHand = LocalPlayer.Character:FindFirstChild("LeftHand")
-            for _, otherPlayer in pairs(Players:GetPlayers()) do
-                if otherPlayer ~= LocalPlayer then
-                    local targetCharacter = otherPlayer.Character
-                    if targetCharacter then
-                        local head = targetCharacter:FindFirstChild("Head")
-                        anchorCharacter(targetCharacter, true)
-                        if head and localLeftHand then
-                            local handPosition = localLeftHand.Position
-                            head.CFrame = CFrame.new(handPosition + Vector3.new(0, 2, 0))
-                        end
-                    end
-                end
-            end
-        end
-
-        RunService.Heartbeat:Connect(function()
-            if teleportPlayersActive then teleportHeads() end
-        end)
-
         teleportPlayersActive = state
+        if teleportPlayersActive then
+            teleportHeads()
+        else
+            restoreHeads()
+        end
     end
 })
 
@@ -272,6 +312,7 @@ antiAFKToggle:OnChanged(function()
     end
 end)
 
+-- Set Tool Properties
 setToolProperties()
 
 player.CharacterAdded:Connect(function(newCharacter)
@@ -280,6 +321,7 @@ player.CharacterAdded:Connect(function(newCharacter)
     setToolProperties()
 end)
 
+-- SaveManager and InterfaceManager Setup
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
 SaveManager:IgnoreThemeSettings()
