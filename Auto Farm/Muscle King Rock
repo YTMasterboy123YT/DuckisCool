@@ -13,61 +13,74 @@ button.TextColor3 = Color3.new(1, 1, 1) -- White text
 
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
-local muscleKingMountain = game.Workspace:FindFirstChild("machinesFolder"):FindFirstChild("Muscle King Mountain")
-local rockPart = muscleKingMountain:FindFirstChild("Rock")
+local muscleKingMountain = game.Workspace:FindFirstChild("machinesFolder") and game.Workspace.machinesFolder:FindFirstChild("Muscle King Mountain")
+local rockPart = muscleKingMountain and muscleKingMountain:FindFirstChild("Rock")
+
+if not rockPart then
+    warn("Rock not found! Please check the workspace structure.")
+    return
+end
 
 local originalPosition = rockPart.Position
 local originalSize = rockPart.Size
 local isOn = false
 local runService = game:GetService("RunService")
+local connection
+
+-- Function to remove specific elements
+local function removeRockElements()
+    local rockGui = rockPart:FindFirstChild("rockGui")
+    if rockGui then
+        for _, child in ipairs(rockGui:GetChildren()) do
+            if child:IsA("TextLabel") and (child.Name == "statLabel" or child.Name == "rockName") then
+                child:Destroy()
+                print(child.Name .. " deleted from rockGui.")
+            end
+        end
+    end
+
+    -- Remove rockEmitter and hoopParticle if they exist
+    local rockEmitter = rockPart:FindFirstChild("rockEmitter")
+    if rockEmitter then
+        rockEmitter:Destroy()
+        print("rockEmitter deleted.")
+    end
+
+    local hoopParticle = rockPart:FindFirstChild("hoopParticle")
+    if hoopParticle then
+        hoopParticle:Destroy()
+        print("hoopParticle deleted.")
+    end
+end
+
+local function updateRockPosition()
+    connection = runService.RenderStepped:Connect(function()
+        if isOn and character and character:FindFirstChild("RightHand") then
+            rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position it above the right hand
+        end
+    end)
+end
 
 button.MouseButton1Click:Connect(function()
     isOn = not isOn
     if isOn then
-        -- Teleport the rock to the right hand CFrame
-        if character and character:FindFirstChild("RightHand") and rockPart then
-            rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Position above the right hand
-            rockPart.Transparency = 1 -- Make the rock invisible
-
-            -- Remove StatLabels and other objects inside rockGui
-            local rockGui = rockPart:FindFirstChild("rockGui")
-            if rockGui then
-                for _, child in ipairs(rockGui:GetChildren()) do
-                    if child:IsA("TextLabel") and (child.Name == "statLabel" or child.Name == "rockName") then
-                        child:Destroy()
-                        print(child.Name .. " deleted from rockGui.")
-                    end
-                end
-            end
-
-            -- Remove rockEmitter and hoopParticle if they exist
-            local rockEmitter = rockPart:FindFirstChild("rockEmitter")
-            if rockEmitter then
-                rockEmitter:Destroy()
-                print("rockEmitter deleted.")
-            end
-
-            local hoopParticle = rockPart:FindFirstChild("hoopParticle")
-            if hoopParticle then
-                hoopParticle:Destroy()
-                print("hoopParticle deleted.")
-            end
-
-            button.Text = "Return Rock"
-
-            -- Loop to teleport the rock to the right hand every 0.2 seconds
-            while isOn do
-                wait(0.2)
-                if character and character:FindFirstChild("RightHand") then
-                    rockPart.CFrame = character.RightHand.CFrame * CFrame.new(0, 1, 0) -- Keep it above the right hand
-                end
-            end
-        end
+        rockPart.Size = Vector3.new(2, 2, 2)  -- Set size when activated
+        rockPart.Transparency = 1 -- Make the rock transparent
+        rockPart.CanCollide = false -- Make the rock non-collidable
+        removeRockElements() -- Remove unwanted elements from the rock
+        button.Text = "Return Rock"
+        button.BackgroundColor3 = Color3.new(1, 0, 0) -- Change to red
+        updateRockPosition() -- Start updating position
     else
+        if connection then
+            connection:Disconnect() -- Stop updating position
+        end
         rockPart.Position = originalPosition
         rockPart.Size = originalSize
         rockPart.Transparency = 0 -- Make the rock visible again
+        rockPart.CanCollide = true -- Restore collidable property
         button.Text = "Teleport Rock"
+        button.BackgroundColor3 = Color3.new(0, 0.5, 0) -- Change back to green
     end
 end)
 
