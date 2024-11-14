@@ -1,1 +1,291 @@
-https://www.youtube.com/redirect?event=video_description&redir_token=QUFFLUhqbS1SSFFFNjd4Z2VrNnVlS3ZmU0ZSSzgtV3dnZ3xBQ3Jtc0tsX0hILXFrQ2J2V05MdWRmY01oUENmV0E3VVMyRGFrZlF6and1YlpuckI0ZXM5UE9yQVB5U0xfRndxT0ZPSHhZLS1XbEVGMGdETFZMTDNZMEpLNW1Vd3BPc2pkeVdDeGN4b1Z1UjktM1kwS0I4di1nbw&q=https%3A%2F%2Fdiscord.gg%2Froblox-scripts-942431667807735888&v=SXPUdfMe_UM
+Sure thing! Let's add your new code to the "Killer" tab. Here's the combined code:
+
+```lua
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local player = game.Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+local character = player.Character or player.CharacterAdded:Wait()
+
+local autoHitActive = false
+local teleportPlayersActive = false
+local turnHeadsInvisibleActive = false
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local function autoHit()
+    player.muscleEvent:FireServer("punch", "leftHand")
+    player.muscleEvent:FireServer("punch", "rightHand")
+end
+
+local function anchorCharacter(character, anchor)
+    for _, part in pairs(character:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.Anchored = anchor
+        end
+    end
+end
+
+local function teleportHeads()
+    local localLeftHand = player.Character:FindFirstChild("LeftHand")
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= player then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                local head = targetCharacter:FindFirstChild("Head")
+                anchorCharacter(targetCharacter, true)
+                if head and localLeftHand then
+                    local handPosition = localLeftHand.Position
+                    head.CFrame = CFrame.new(handPosition + Vector3.new(2, 1, 0)) -- Adjusting position
+                    head.Transparency = 1 -- Make the head invisible
+                end
+            end
+        end
+    end
+end
+
+local function restoreHeads()
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= player then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                local head = targetCharacter:FindFirstChild("Head")
+                if head then
+                    head.Transparency = 0 -- Restore visibility
+                end
+            end
+        end
+    end
+end
+
+RunService.Heartbeat:Connect(function()
+    if autoHitActive then autoHit() end
+    if teleportPlayersActive then teleportHeads() end
+end)
+
+-- Create Tabs
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Killer = Window:AddTab({ Title = "Killer", Icon = "" }),
+    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" })
+}
+
+-- Main Tab
+local MainTab = Tabs.Main
+
+-- Speed Input
+MainTab:AddInput("SpeedInput", {
+    Title = "Change Speed",
+    Placeholder = "Enter speed value",
+    Numeric = true,
+    Callback = function(value)
+        local speedValue = tonumber(value)
+        if speedValue then
+            character.Humanoid.WalkSpeed = speedValue
+        end
+    end
+})
+
+-- Size Input
+MainTab:AddInput("SizeInput", {
+    Title = "Change Size",
+    Placeholder = "Enter size value",
+    Numeric = true,
+    Callback = function(value)
+        local sizeValue = tonumber(value)
+        if sizeValue then
+            character.HumanoidRootPart.Size = Vector3.new(sizeValue, sizeValue, sizeValue)
+        end
+    end
+})
+
+-- Jump Input
+MainTab:AddInput("JumpPowerInput", {
+    Title = "Change Jump Power",
+    Placeholder = "Enter jump power value",
+    Numeric = true,
+    Callback = function(value)
+        character.Humanoid.JumpPower = tonumber(value)
+    end
+})
+
+-- Infinite Jump Toggle
+local infiniteJumpToggle = MainTab:AddToggle("InfiniteJumpToggle", {
+    Title = "Enable Infinite Jump",
+    Default = false,
+})
+
+infiniteJumpToggle:OnChanged(function()
+    local UserInputService = game:GetService("UserInputService")
+    if infiniteJumpToggle.Value then
+        UserInputService.JumpRequest:Connect(function()
+            if infiniteJumpToggle.Value then
+                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    end
+end)
+
+-- Killer Tab
+local KillerTab = Tabs.Killer
+
+-- Combined Toggle for Auto Hit and Teleport Heads
+local combinedToggle = KillerTab:AddToggle("AutoHitAndTeleportToggle", {
+    Title = "Enable Auto Hit & Teleport Heads",
+    Default = false,
+})
+
+combinedToggle:OnChanged(function()
+    autoHitActive = combinedToggle.Value
+    teleportPlayersActive = combinedToggle.Value
+    if not combinedToggle.Value then
+        restoreHeads()  -- Restore heads when turned off
+    end
+end)
+
+-- New Code Addition for Killer Tab
+local tools = {
+    {name = "Punch", type = "attackTime"},
+    {name = "Pushups", type = "repTime"},
+}
+
+local function equipTool(toolName)
+    local tool = backpack:FindFirstChild(toolName)
+    if tool then
+        tool.Parent = character -- Equip the tool by moving it to the character
+        return tool
+    else
+        warn(toolName .. " not found in backpack!")
+    end
+end
+
+local function setToolProperties()
+    for _, toolInfo in pairs(tools) do
+        local tool = backpack:FindFirstChild(toolInfo.name)
+        if tool then
+            local cooldown = tool:FindFirstChild(toolInfo.type) 
+            if cooldown and cooldown:IsA("NumberValue") then
+                cooldown.Value = 0.1
+            end
+        end
+    end
+end
+
+local function autoUse()
+    while true do
+        for _, toolInfo in pairs(tools) do
+            local equippedTool = character:FindFirstChild(toolInfo.name)
+            if equippedTool and equippedTool.Enabled then
+                equippedTool:Activate()
+                wait(0.1) -- Short delay between uses
+            end
+        end
+        wait(0.1) -- Delay before the next round of checks
+    end
+end
+
+-- Equip tools on start
+for _, toolInfo in pairs(tools) do
+    equipTool(toolInfo.name)
+end
+
+setToolProperties()
+autoUse()
+
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    backpack = player:WaitForChild("Backpack")
+    
+    -- Re-equip tools for the new character
+    for _, toolInfo in pairs(tools) do
+        equipTool(toolInfo.name)
+    end
+
+    setToolProperties()
+    autoUse()
+end)
+
+-- Auto Farm Tab
+local AutoFarmTab = Tabs.AutoFarm
+
+-- Toggle for Auto Farm
+AutoFarmTab:AddToggle("AutoFarmToggle", {
+    Title = "Enable Auto Farm",
+    Default = false,
+    Callback = function(state)
+        if state then
+            print("Auto Farming Enabled")
+            -- Your auto farming logic here
+        else
+            print("Auto Farming Disabled")
+        end
+    end
+})
+
+-- Misc Tab
+local MiscTab = Tabs.Misc
+
+-- Game Time Dropdown
+MiscTab:AddDropdown("GameTimeDropdown", {
+    Title = "Set Game Time",
+    Values = {"Morning", "Afternoon", "Night"},
+    Default = 1,
+    Callback = function(value)
+        if value == "Morning" then
+            game.Lighting.ClockTime = 6
+        elseif value == "Afternoon" then
+            game.Lighting.ClockTime = 16
+        elseif value == "Night" then
+            game.Lighting.ClockTime = 0
+        end
+    end
+})
+
+-- Anti AFK Toggle
+local antiAFKToggle = MiscTab:AddToggle("AntiAFKToggle", {
+    Title = "Enable Anti-AFK",
+    Default = false,
+})
+
+antiAFKToggle:OnChanged(function()
+    local player = Players.LocalPlayer
+    while antiAFKToggle.Value do
+        player.Idled:Wait()
+        player:Move(Vector3.new(0, 0, 0))
+        wait(1)
+    end
+end)
+
+-- SaveManager and InterfaceManager Setup
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+InterfaceManager:BuildInterfaceSection(MiscTab)
+SaveManager:BuildConfigSection(MiscTab)
+
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "Fluent",
+    Content = "The script has been loaded.",
+    Duration = 8
+})
+
+SaveManager:LoadAutoloadConfig()
