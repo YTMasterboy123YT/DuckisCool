@@ -1,21 +1,11 @@
 local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
-local function teleportHeadsToHand()
-    local function updateHeadPosition(player)
-        if player.Character and player.Character:FindFirstChild("Head") and player.Character:FindFirstChild("RightHand") then
-            local head = player.Character.Head
-            local hand = player.Character.RightHand
-            
-            head.CFrame = hand.CFrame
+-- Main teleport loop
+while task.wait(0.1) do
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("Head") then
+            player.Character.Head.CFrame = LocalPlayer.Character.RightHand.CFrame
         end
-    end
-    
-    while true do
-        for _, player in ipairs(Players:GetPlayers()) do
-            updateHeadPosition(player)
-        end
-        wait(0.1)
     end
 end
-
-teleportHeadsToHand()
