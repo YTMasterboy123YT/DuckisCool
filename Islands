@@ -1,140 +1,181 @@
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Muscle Legends Ultimate", "Ocean")
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local backpack = LocalPlayer:WaitForChild("Backpack")
 
--- Main Training Tab
-local Training = Window:NewTab("Training")
-local TrainingSection = Training:NewSection("Auto Train")
+-- Whitelist table
+local whitelistedPlayers = {}
 
-TrainingSection:NewToggle("Auto Strength", "Auto clicks strength training", function(state)
-    getgenv().autoStrength = state
-    while getgenv().autoStrength do
-        local args = {
-            [1] = "rep"
-        }
-        game:GetService("ReplicatedStorage").RSPackage.Events.StatFunction:InvokeServer(unpack(args))
-        wait()
+-- Set fast attack speed
+local function setToolAttributes(toolName, attributeType, value)
+    local tool = backpack:FindFirstChild(toolName)
+    if tool then
+        tool[attributeType].Value = value
     end
-end)
+end
 
-TrainingSection:NewToggle("Auto Durability", "Auto trains durability", function(state)
-    getgenv().autoDurability = state
-    while getgenv().autoDurability do
-        game:GetService("ReplicatedStorage").RSPackage.Events.Train:FireServer()
-        wait()
-    end
-end)
-
--- Rock Training Section
-local RockSection = Training:NewSection("Rock Training")
-
-local rockLocations = {
-    ["Small Rock"] = CFrame.new(-269, 281, 1005),
-    ["Medium Rock"] = CFrame.new(-369, 281, 1005),
-    ["Large Rock"] = CFrame.new(-469, 281, 1005),
-    ["Giant Rock"] = CFrame.new(-569, 281, 1005),
-    ["Massive Rock"] = CFrame.new(-669, 281, 1005),
-    ["Legendary Rock"] = CFrame.new(-769, 281, 1005),
-    ["Mythical Rock"] = CFrame.new(2220.0595703125, 7.321215629577637, 1228.5823974609375),
-    ["Legend Rock"] = CFrame.new(4187.1787109375, 991.5241088867188, -4065.08251953125),
-    ["Muscle King Mountain"] = CFrame.new(-8976.455078125, 9.191204071044922, -6130.7373046875)
+local toolsToSet = {
+    {"Punch", "attackTime", 0.1},
 }
 
-RockSection:NewDropdown("Teleport to Rock", "Select rock to teleport to", {"Small Rock", "Medium Rock", "Large Rock", "Giant Rock", "Massive Rock", "Legendary Rock", "Mythical Rock", "Legend Rock", "Muscle King Mountain"}, function(selected)
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = rockLocations[selected]
-end)
+for _, toolData in ipairs(toolsToSet) do
+    setToolAttributes(unpack(toolData))
+end
 
-RockSection:NewToggle("Auto Rock Lift", "Automatically lifts selected rock", function(state)
-    getgenv().autoRock = state
-    while getgenv().autoRock do
-        game:GetService("ReplicatedStorage").RSPackage.Events.RockLift:FireServer()
-        wait()
-    end
-end)
+-- Auto hit function
+local function autoHit()
+    LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+    LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+end
 
--- Farming Tab
-local Farm = Window:NewTab("Farming")
-local FarmSection = Farm:NewSection("Auto Farm")
+-- Friend check function
+local function isFriend(player)
+    return player:IsFriendsWith(LocalPlayer.UserId)
+end
 
-FarmSection:NewToggle("Auto Collect Chests", "Collects all available chests", function(state)
-    getgenv().autoChests = state
-    while getgenv().autoChests do
-        for _,v in pairs(game:GetService("Workspace").ChestFolder:GetDescendants()) do
-            if v.Name == "TouchInterest" and v.Parent then
-                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v.Parent, 0)
-                wait(0.1)
-                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v.Parent, 1)
+-- Create window
+local Window = Fluent:CreateWindow({
+    Title = "Head Controller",
+    SubTitle = "by Cody",
+    TabWidth = 160,
+    Size = UDim2.new(0, 400, 0, 300),
+    Acrylic = true,
+    Theme = "Dark"
+})
+
+local Tab = Window:AddTab({ Title = "Main", Icon = "rbxassetid://12345678" })
+local isRunning = false
+
+-- Add whitelist input
+local Input = Tab:AddInput("WhitelistInput", {
+    Title = "Whitelist Player",
+    Default = "",
+    Placeholder = "Enter player name",
+    Callback = function(text)
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player.Name:lower() == text:lower() then
+                table.insert(whitelistedPlayers, player.Name)
+                Fluent:Notify({
+                    Title = "Success",
+                    Content = player.Name .. " has been whitelisted",
+                    Duration = 3
+                })
+                return
             end
         end
-        wait(1)
     end
-end)
+})
 
-FarmSection:NewToggle("Auto Rebirth", "Automatically rebirths when possible", function(state)
-    getgenv().autoRebirth = state
-    while getgenv().autoRebirth do
-        game:GetService("ReplicatedStorage").RSPackage.Events.Rebirth:FireServer()
-        wait(1)
-    end
-end)
-
--- Teleports Tab
-local Teleport = Window:NewTab("Teleports")
-local TeleportSection = Teleport:NewSection("Training Areas")
-
-local locations = {
-    ["Muscle Island"] = CFrame.new(4, 3, 0),
-    ["Legends Gym"] = CFrame.new(-6970, 3, -1378),
-    ["Mythical Gym"] = CFrame.new(-8070, 3, -1378),
-    ["Eternal Gym"] = CFrame.new(-9070, 3, -1378),
-    ["Legend Arena"] = CFrame.new(-7070, 3, -1378)
-}
-
-TeleportSection:NewDropdown("Training Areas", "Teleport to training areas", {"Muscle Island", "Legends Gym", "Mythical Gym", "Eternal Gym", "Legend Arena"}, function(selected)
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = locations[selected]
-end)
-
--- Misc Tab
-local Misc = Window:NewTab("Misc")
-local MiscSection = Misc:NewSection("Other Features")
-
-MiscSection:NewSlider("WalkSpeed", "Changes walk speed", 500, 16, function(s)
-    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = s
-end)
-
-MiscSection:NewSlider("JumpPower", "Changes jump power", 500, 50, function(s)
-    game.Players.LocalPlayer.Character.Humanoid.JumpPower = s
-end)
-
-MiscSection:NewToggle("Infinite Jump", "Enables infinite jump", function(state)
-    getgenv().infiniteJump = state
-    game:GetService("UserInputService").JumpRequest:connect(function()
-        if getgenv().infiniteJump then
-            game:GetService"Players".LocalPlayer.Character:FindFirstChildOfClass'Humanoid':ChangeState("Jumping")
-        end
-    end)
-end)
-
--- Special Features
-local SpecialSection = Misc:NewSection("Special Features")
-
-SpecialSection:NewButton("Remove Kill Parts", "Removes all kill parts", function()
-    for i,v in pairs(game:GetService("Workspace"):GetDescendants()) do
-        if v.Name == "KillPart" then
-            v:Destroy()
-        end
-    end
-end)
-
-SpecialSection:NewToggle("Auto Collect Protein", "Automatically collects protein", function(state)
-    getgenv().autoProtein = state
-    while getgenv().autoProtein do
-        for i,v in pairs(game:GetService("Workspace"):GetDescendants()) do
-            if v.Name == "Protein" then
-                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v, 0)
-                wait(0.1)
-                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v, 1)
+-- Add unwhitelist input
+local UnwhitelistInput = Tab:AddInput("UnwhitelistInput", {
+    Title = "Unwhitelist Player",
+    Default = "",
+    Placeholder = "Enter player name to unwhitelist",
+    Callback = function(text)
+        for i, name in ipairs(whitelistedPlayers) do
+            if name:lower() == text:lower() then
+                table.remove(whitelistedPlayers, i)
+                Fluent:Notify({
+                    Title = "Success",
+                    Content = name .. " has been unwhitelisted",
+                    Duration = 3
+                })
+                return
             end
         end
-        wait(1)
     end
-end)
+})
+
+-- Toggle button with enhanced functionality
+local Toggle = Tab:AddToggle("ToggleHead", {
+    Title = "Toggle Head Control",
+    Default = false,
+    Callback = function(value)
+        isRunning = value
+        if isRunning then
+            spawn(function()
+                while isRunning do
+                    local character = LocalPlayer.Character
+                    if character then
+                        local rightHand = character:FindFirstChild("Right Hand") or character:FindFirstChild("RightHand")
+                        if rightHand then
+                            -- Auto equip punch
+                            local punchTool = backpack:FindFirstChild("Punch")
+                            if punchTool and not character:FindFirstChild("Punch") then
+                                punchTool.Parent = character
+                            end
+                            
+                            for _, player in ipairs(Players:GetPlayers()) do
+                                if player ~= LocalPlayer and 
+                                   not table.find(whitelistedPlayers, player.Name) and 
+                                   not isFriend(player) then
+                                    local playerChar = player.Character
+                                    if playerChar then
+                                        local head = playerChar:FindFirstChild("Head")
+                                        if head then
+                                            head.Transparency = 1
+                                            head.CFrame = rightHand.CFrame
+                                            autoHit()
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    task.wait()
+                end
+            end)
+        end
+    end
+})
+
+-- Show friends list button
+local FriendsButton = Tab:AddButton({
+    Title = "Show Protected Friends",
+    Callback = function()
+        local friendsList = {}
+        for _, player in ipairs(Players:GetPlayers()) do
+            if isFriend(player) then
+                table.insert(friendsList, player.Name)
+            end
+        end
+        Fluent:Notify({
+            Title = "Protected Friends Online",
+            Content = #friendsList > 0 and table.concat(friendsList, ", ") or "No friends online",
+            Duration = 5
+        })
+    end
+})
+
+-- Clear whitelist button
+local Button = Tab:AddButton({
+    Title = "Clear Whitelist",
+    Callback = function()
+        table.clear(whitelistedPlayers)
+        Fluent:Notify({
+            Title = "Success",
+            Content = "Whitelist cleared",
+            Duration = 3
+        })
+    end
+})
+
+-- Show whitelisted players
+local Button2 = Tab:AddButton({
+    Title = "Show Whitelisted Players",
+    Callback = function()
+        local playerList = table.concat(whitelistedPlayers, ", ")
+        Fluent:Notify({
+            Title = "Whitelisted Players",
+            Content = playerList ~= "" and playerList or "No players whitelisted",
+            Duration = 5
+        })
+    end
+})
+
+-- Initial notification
+Fluent:Notify({
+    Title = "Script Loaded",
+    Content = "Friend Protection Active | Fast Attack Enabled",
+    Duration = 5
+})
