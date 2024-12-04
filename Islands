@@ -38,7 +38,7 @@ end
 -- Create window
 local Window = Fluent:CreateWindow({
     Title = "Fluent " .. Fluent.Version,
-    SubTitle = "by daweid",
+    SubTitle = "by dawid",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
@@ -94,11 +94,68 @@ MobileMinimize.MouseButton1Click:Connect(function()
     Window:Minimize()
 end)
 
-local Tab = Window:AddTab({ Title = "Main", Icon = "rbxassetid://12345678" })
+-- Create Tabs
+local MainTab = Window:AddTab({ Title = "Main", Icon = "rbxassetid://12345678" })
+local AutoFarmTab = Window:AddTab({ Title = "Auto Farm", Icon = "rbxassetid://12345678" })
+local KillerTab = Window:AddTab({ Title = "Killer", Icon = "rbxassetid://12345678" })
+local StatsTab = Window:AddTab({ Title = "Stats", Icon = "rbxassetid://12345678" })
+
+-- Killer Tab Content
 local isRunning = false
 
--- Add whitelist input
-local Input = Tab:AddInput("WhitelistInput", {
+-- Enhanced Auto Kill Toggle
+local Toggle = KillerTab:AddToggle("AutoKill", {
+    Title = "Auto Kill",
+    Default = false,
+    Callback = function(value)
+        isRunning = value
+        if isRunning then
+            local connection = RunService.Heartbeat:Connect(function()
+                if not isRunning then connection:Disconnect() return end
+                
+                local character = LocalPlayer.Character
+                if character then
+                    local rightHand = character:FindFirstChild("Right Hand") or character:FindFirstChild("RightHand")
+                    if rightHand then
+                        -- Auto equip punch
+                        local punchTool = backpack:FindFirstChild("Punch")
+                        if punchTool and not character:FindFirstChild("Punch") then
+                            punchTool.Parent = character
+                        end
+                        
+                        -- Collect all valid heads first
+                        local heads = {}
+                        for _, player in ipairs(Players:GetPlayers()) do
+                            if player ~= LocalPlayer and 
+                               not table.find(whitelistedPlayers, player.Name) and 
+                               not isFriend(player) then
+                                local playerChar = player.Character
+                                if playerChar then
+                                    local head = playerChar:FindFirstChild("Head")
+                                    if head then
+                                        table.insert(heads, head)
+                                    end
+                                end
+                            end
+                        end
+                        
+                        -- Mass teleport all heads simultaneously
+                        for _, head in ipairs(heads) do
+                            head.Transparency = 1
+                            head.CFrame = rightHand.CFrame
+                        end
+                        
+                        -- Execute hits
+                        autoHit()
+                    end
+                end
+            end)
+        end
+    end
+})
+
+-- Whitelist Input
+local Input = KillerTab:AddInput("WhitelistInput", {
     Title = "Whitelist Player",
     Default = "",
     Placeholder = "Enter player name",
@@ -117,8 +174,8 @@ local Input = Tab:AddInput("WhitelistInput", {
     end
 })
 
--- Add unwhitelist input
-local UnwhitelistInput = Tab:AddInput("UnwhitelistInput", {
+-- Unwhitelist Input
+local UnwhitelistInput = KillerTab:AddInput("UnwhitelistInput", {
     Title = "Unwhitelist Player",
     Default = "",
     Placeholder = "Enter player name to unwhitelist",
@@ -137,69 +194,8 @@ local UnwhitelistInput = Tab:AddInput("UnwhitelistInput", {
     end
 })
 
--- Toggle button with enhanced Heartbeat functionality
-local Toggle = Tab:AddToggle("ToggleHead", {
-    Title = "Toggle Head Control",
-    Default = false,
-    Callback = function(value)
-        isRunning = value
-        if isRunning then
-            RunService.Heartbeat:Connect(function()
-                if not isRunning then return end
-                
-                local character = LocalPlayer.Character
-                if character then
-                    local rightHand = character:FindFirstChild("Right Hand") or character:FindFirstChild("RightHand")
-                    if rightHand then
-                        -- Auto equip punch
-                        local punchTool = backpack:FindFirstChild("Punch")
-                        if punchTool and not character:FindFirstChild("Punch") then
-                            punchTool.Parent = character
-                        end
-                        
-                        -- Mass teleport all heads at once
-                        for _, player in ipairs(Players:GetPlayers()) do
-                            if player ~= LocalPlayer and 
-                               not table.find(whitelistedPlayers, player.Name) and 
-                               not isFriend(player) then
-                                local playerChar = player.Character
-                                if playerChar then
-                                    local head = playerChar:FindFirstChild("Head")
-                                    if head then
-                                        head.Transparency = 1
-                                        head.CFrame = rightHand.CFrame
-                                        autoHit()
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end)
-        end
-    end
-})
-
--- Show friends list button
-local FriendsButton = Tab:AddButton({
-    Title = "Show Protected Friends",
-    Callback = function()
-        local friendsList = {}
-        for _, player in ipairs(Players:GetPlayers()) do
-            if isFriend(player) then
-                table.insert(friendsList, player.Name)
-            end
-        end
-        Fluent:Notify({
-            Title = "Protected Friends Online",
-            Content = #friendsList > 0 and table.concat(friendsList, ", ") or "No friends online",
-            Duration = 5
-        })
-    end
-})
-
--- Clear whitelist button
-local Button = Tab:AddButton({
+-- Clear Whitelist Button
+local ClearButton = KillerTab:AddButton({
     Title = "Clear Whitelist",
     Callback = function()
         table.clear(whitelistedPlayers)
@@ -211,8 +207,8 @@ local Button = Tab:AddButton({
     end
 })
 
--- Show whitelisted players
-local Button2 = Tab:AddButton({
+-- Show Whitelist Button
+local ShowButton = KillerTab:AddButton({
     Title = "Show Whitelisted Players",
     Callback = function()
         local playerList = table.concat(whitelistedPlayers, ", ")
