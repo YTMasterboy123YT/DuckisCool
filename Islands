@@ -1,6 +1,8 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local backpack = LocalPlayer:WaitForChild("Backpack")
 
 -- Whitelist table
@@ -35,13 +37,62 @@ end
 
 -- Create window
 local Window = Fluent:CreateWindow({
-    Title = "Head Controller",
-    SubTitle = "by Cody",
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
     TabWidth = 160,
-    Size = UDim2.new(0, 400, 0, 300),
+    Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
-    Theme = "Dark"
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
 })
+
+-- Create mobile minimize button
+local MobileMinimize = Instance.new("TextButton")
+MobileMinimize.Size = UDim2.new(0, 30, 0, 30)
+MobileMinimize.Position = UDim2.new(0, 50, 0, 50)
+MobileMinimize.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+MobileMinimize.Text = "-"
+MobileMinimize.TextColor3 = Color3.fromRGB(255, 255, 255)
+MobileMinimize.TextSize = 20
+MobileMinimize.Parent = game.CoreGui
+
+-- Make it draggable
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+MobileMinimize.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = MobileMinimize.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+MobileMinimize.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        MobileMinimize.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Connect minimize function
+MobileMinimize.MouseButton1Click:Connect(function()
+    Window:Minimize()
+end)
 
 local Tab = Window:AddTab({ Title = "Main", Icon = "rbxassetid://12345678" })
 local isRunning = false
@@ -86,43 +137,43 @@ local UnwhitelistInput = Tab:AddInput("UnwhitelistInput", {
     end
 })
 
--- Toggle button with enhanced functionality
+-- Toggle button with enhanced Heartbeat functionality
 local Toggle = Tab:AddToggle("ToggleHead", {
     Title = "Toggle Head Control",
     Default = false,
     Callback = function(value)
         isRunning = value
         if isRunning then
-            spawn(function()
-                while isRunning do
-                    local character = LocalPlayer.Character
-                    if character then
-                        local rightHand = character:FindFirstChild("Right Hand") or character:FindFirstChild("RightHand")
-                        if rightHand then
-                            -- Auto equip punch
-                            local punchTool = backpack:FindFirstChild("Punch")
-                            if punchTool and not character:FindFirstChild("Punch") then
-                                punchTool.Parent = character
-                            end
-                            
-                            for _, player in ipairs(Players:GetPlayers()) do
-                                if player ~= LocalPlayer and 
-                                   not table.find(whitelistedPlayers, player.Name) and 
-                                   not isFriend(player) then
-                                    local playerChar = player.Character
-                                    if playerChar then
-                                        local head = playerChar:FindFirstChild("Head")
-                                        if head then
-                                            head.Transparency = 1
-                                            head.CFrame = rightHand.CFrame
-                                            autoHit()
-                                        end
+            RunService.Heartbeat:Connect(function()
+                if not isRunning then return end
+                
+                local character = LocalPlayer.Character
+                if character then
+                    local rightHand = character:FindFirstChild("Right Hand") or character:FindFirstChild("RightHand")
+                    if rightHand then
+                        -- Auto equip punch
+                        local punchTool = backpack:FindFirstChild("Punch")
+                        if punchTool and not character:FindFirstChild("Punch") then
+                            punchTool.Parent = character
+                        end
+                        
+                        -- Mass teleport all heads at once
+                        for _, player in ipairs(Players:GetPlayers()) do
+                            if player ~= LocalPlayer and 
+                               not table.find(whitelistedPlayers, player.Name) and 
+                               not isFriend(player) then
+                                local playerChar = player.Character
+                                if playerChar then
+                                    local head = playerChar:FindFirstChild("Head")
+                                    if head then
+                                        head.Transparency = 1
+                                        head.CFrame = rightHand.CFrame
+                                        autoHit()
                                     end
                                 end
                             end
                         end
                     end
-                    task.wait()
                 end
             end)
         end
