@@ -1,100 +1,190 @@
-local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local Title = Instance.new("TextLabel")
-local Button1 = Instance.new("TextButton")
-local Button2 = Instance.new("TextButton")
-local Button3 = Instance.new("TextButton")
-local StatusLabel = Instance.new("TextLabel")
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local backpack = LocalPlayer:WaitForChild("Backpack")
 
--- Configure ScreenGui
-ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.ResetOnSpawn = false
+-- Variables
+local whitelistedPlayers = {}
+local autoHitActive = false
+local teleportPlayersActive = false
 
--- Main Frame Setup
-MainFrame.Name = "HackerPanel"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-MainFrame.BorderColor3 = Color3.fromRGB(0, 255, 0)
-MainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 450, 0, 350)
-MainFrame.Active = true
-MainFrame.Draggable = true
-
--- Title Setup
-Title.Name = "Title"
-Title.Parent = MainFrame
-Title.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Title.BorderColor3 = Color3.fromRGB(0, 255, 0)
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Font = Enum.Font.Code
-Title.Text = "H4CK3R CONSOLE v1.0"
-Title.TextColor3 = Color3.fromRGB(0, 255, 0)
-Title.TextSize = 24
-
--- Status Label
-StatusLabel.Name = "Status"
-StatusLabel.Parent = MainFrame
-StatusLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-StatusLabel.BorderColor3 = Color3.fromRGB(0, 255, 0)
-StatusLabel.Position = UDim2.new(0.1, 0, 0.85, 0)
-StatusLabel.Size = UDim2.new(0.8, 0, 0, 30)
-StatusLabel.Font = Enum.Font.Code
-StatusLabel.Text = "STATUS: READY"
-StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
-StatusLabel.TextSize = 16
-
--- Button Creation Function
-local function CreateHackerButton(name, position, text)
-    local button = Instance.new("TextButton")
-    button.Name = name
-    button.Parent = MainFrame
-    button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    button.BorderColor3 = Color3.fromRGB(0, 255, 0)
-    button.Position = position
-    button.Size = UDim2.new(0, 180, 0, 50)
-    button.Font = Enum.Font.Code
-    button.Text = text
-    button.TextColor3 = Color3.fromRGB(0, 255, 0)
-    button.TextSize = 18
-    
-    -- Hover Effect
-    button.MouseEnter:Connect(function()
-        button.BackgroundColor3 = Color3.fromRGB(0, 50, 0)
-    end)
-    
-    button.MouseLeave:Connect(function()
-        button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    end)
-    
-    return button
+-- Core Functions
+local function autoHit()
+    LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+    LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
 end
 
--- Create Buttons
-local button1 = CreateHackerButton("Exploit1", UDim2.new(0.1, 0, 0.2, 0), "INITIATE_EXPLOIT")
-local button2 = CreateHackerButton("Exploit2", UDim2.new(0.1, 0, 0.4, 0), "BYPASS_SECURITY")
-local button3 = CreateHackerButton("Exploit3", UDim2.new(0.1, 0, 0.6, 0), "ACTIVATE_SYSTEM")
-
--- Button Functions
-local function simulateHacking(button)
-    local originalText = button.Text
-    button.TextColor3 = Color3.fromRGB(255, 0, 0)
-    StatusLabel.Text = "STATUS: EXECUTING..."
-    wait(1)
-    button.Text = "PROCESSING..."
-    wait(0.5)
-    button.Text = originalText
-    button.TextColor3 = Color3.fromRGB(0, 255, 0)
-    StatusLabel.Text = "STATUS: COMPLETE"
+local function teleportHeads()
+    local localLeftHand = LocalPlayer.Character:FindFirstChild("LeftHand")
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= LocalPlayer and not table.find(whitelistedPlayers, otherPlayer.Name) and not isFriend(otherPlayer) then
+            local targetCharacter = otherPlayer.Character
+            if targetCharacter then
+                local head = targetCharacter:FindFirstChild("Head")
+                if head and localLeftHand then
+                    head.CFrame = localLeftHand.CFrame
+                end
+            end
+        end
+    end
 end
 
-button1.MouseButton1Click:Connect(function()
-    simulateHacking(button1)
+-- Friend check function
+local function isFriend(player)
+    return player:IsFriendsWith(LocalPlayer.UserId)
+end
+
+-- Create window
+local Window = Fluent:CreateWindow({
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+-- Mobile minimize button setup
+local MobileMinimize = Instance.new("TextButton")
+MobileMinimize.Size = UDim2.new(0, 30, 0, 30)
+MobileMinimize.Position = UDim2.new(0, 50, 0, 50)
+MobileMinimize.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+MobileMinimize.Text = "-"
+MobileMinimize.TextColor3 = Color3.fromRGB(255, 255, 255)
+MobileMinimize.TextSize = 20
+MobileMinimize.Parent = game.CoreGui
+
+-- Draggable functionality
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+MobileMinimize.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = MobileMinimize.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
 end)
 
-button2.MouseButton1Click:Connect(function()
-    simulateHacking(button2)
+MobileMinimize.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
 end)
 
-button3.MouseButton1Click:Connect(function()
-    simulateHacking(button3)
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        MobileMinimize.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
 end)
+
+MobileMinimize.MouseButton1Click:Connect(function()
+    Window:Minimize()
+end)
+
+-- Create Tabs
+local MainTab = Window:AddTab({ Title = "Main", Icon = "rbxassetid://12345678" })
+local AutoFarmTab = Window:AddTab({ Title = "Auto Farm", Icon = "rbxassetid://12345678" })
+local KillerTab = Window:AddTab({ Title = "Killer", Icon = "rbxassetid://12345678" })
+local StatsTab = Window:AddTab({ Title = "Stats", Icon = "rbxassetid://12345678" })
+
+-- Killer Tab Content
+local Toggle = KillerTab:AddToggle("AutoKill", {
+    Title = "Auto Kill",
+    Default = false,
+    Callback = function(value)
+        autoHitActive = value
+        teleportPlayersActive = value
+    end
+})
+
+-- Main Heartbeat Connection
+RunService.Heartbeat:Connect(function()
+    if autoHitActive then autoHit() end
+    if teleportPlayersActive then teleportHeads() end
+end)
+
+-- Whitelist Input
+local Input = KillerTab:AddInput("WhitelistInput", {
+    Title = "Whitelist Player",
+    Default = "",
+    Placeholder = "Enter player name",
+    Callback = function(text)
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player.Name:lower() == text:lower() then
+                table.insert(whitelistedPlayers, player.Name)
+                Fluent:Notify({
+                    Title = "Success",
+                    Content = player.Name .. " has been whitelisted",
+                    Duration = 3
+                })
+                return
+            end
+        end
+    end
+})
+
+-- Unwhitelist Input
+local UnwhitelistInput = KillerTab:AddInput("UnwhitelistInput", {
+    Title = "Unwhitelist Player",
+    Default = "",
+    Placeholder = "Enter player name to unwhitelist",
+    Callback = function(text)
+        for i, name in ipairs(whitelistedPlayers) do
+            if name:lower() == text:lower() then
+                table.remove(whitelistedPlayers, i)
+                Fluent:Notify({
+                    Title = "Success",
+                    Content = name .. " has been unwhitelisted",
+                    Duration = 3
+                })
+                return
+            end
+        end
+    end
+})
+
+-- Clear Whitelist Button
+local ClearButton = KillerTab:AddButton({
+    Title = "Clear Whitelist",
+    Callback = function()
+        table.clear(whitelistedPlayers)
+        Fluent:Notify({
+            Title = "Success",
+            Content = "Whitelist cleared",
+            Duration = 3
+        })
+    end
+})
+
+-- Show Whitelist Button
+local ShowButton = KillerTab:AddButton({
+    Title = "Show Whitelisted Players",
+    Callback = function()
+        local playerList = table.concat(whitelistedPlayers, ", ")
+        Fluent:Notify({
+            Title = "Whitelisted Players",
+            Content = playerList ~= "" and playerList or "No players whitelisted",
+            Duration = 5
+        })
+    end
+})
+
+-- Initial notification
+Fluent:Notify({
+    Title = "Script Loaded",
+    Content = "Friend Protection Active | Fast Attack Enabled",
+    Duration = 5
+})
