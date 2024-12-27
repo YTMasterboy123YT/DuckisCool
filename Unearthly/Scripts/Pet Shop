@@ -1,0 +1,88 @@
+local Library = loadstring(game:HttpGetAsync("https://github.com/ActualMasterOogway/Fluent-Renewed/releases/latest/download/Fluent.luau"))()
+local SaveManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/SaveManager.luau"))()
+local InterfaceManager = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ActualMasterOogway/Fluent-Renewed/master/Addons/InterfaceManager.luau"))()
+
+local Window = Library:CreateWindow{
+    Title = "Pet Farm",
+    SubTitle = "by Masterboy123",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(830, 525),
+    Resize = true,
+    MinSize = Vector2.new(470, 380),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.RightControl
+}
+
+local Tabs = {
+    Main = Window:CreateTab{
+        Title = "Pets",
+        Icon = "paw-print"
+    },
+    Settings = Window:CreateTab{
+        Title = "Settings",
+        Icon = "settings"
+    }
+}
+
+local Options = Library.Options
+
+-- Pet List
+local pets = {
+    "Blue Birdie", "Orange Hedgehog", "Red Kitty", "Dark Vampy",
+    "Blue Bunny", "Silver Dog", "Dark Golem", "Green Butterfly",
+    "Crimson Falcon", "Yellow Butterfly", "Purple Dragon", "Blue Phoenix",
+    "Orange Pegasus", "Purple Falcon", "Red Dragon", "Blue Firecaster",
+    "Golden Pheonix", "Green Firecaster", "White Pheonix",
+    "Frostwave Legends Penguin", "Phantom Genesis Dragon",
+    "Dark Legends Manitcore", "Ultimate Supernova Pegasus",
+    "Aether Spirit Bunny", "Cybernetic Showdown Dragon",
+    "Eternal Strike Leviathan", "Lightning Strike Phantom",
+    "Darkstar Hunter", "Muscle Sensei", "Neon Guardian", "Golden Viking"
+}
+
+-- Pet Dropdown
+local PetDropdown = Tabs.Main:CreateDropdown("PetSelector", {
+    Title = "Select Pet",
+    Description = "Choose a pet to purchase",
+    Values = pets,
+    Multi = false,
+    Default = 1,
+})
+
+-- Auto Buy Toggle
+local Toggle = Tabs.Main:CreateToggle("AutoBuy", {
+    Title = "Auto Buy Selected Pet",
+    Default = false
+})
+
+Toggle:OnChanged(function()
+    while Options.AutoBuy.Value do
+        if PetDropdown.Value then
+            game:GetService("ReplicatedStorage").cPetShopRemote:InvokeServer(
+                game:GetService("ReplicatedStorage").cPetShopFolder[PetDropdown.Value]
+            )
+        end
+        task.wait(0.5)
+    end
+end)
+
+-- Interface Setup
+SaveManager:SetLibrary(Library)
+InterfaceManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes{}
+InterfaceManager:SetFolder("PetFarmScript")
+SaveManager:SetFolder("PetFarmScript/configs")
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+Window:SelectTab(1)
+
+Library:Notify{
+    Title = "Pet Farm Script",
+    Content = "Script loaded successfully!",
+    Duration = 5
+}
+
+SaveManager:LoadAutoloadConfig()
