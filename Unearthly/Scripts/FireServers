@@ -1,1 +1,4 @@
 game:GetService("ReplicatedStorage").rEvents.petEvolveEvent:FireServer("evolvePet","PET NAME HERE")
+
+
+game:GetService("ReplicatedStorage").rEvents.openCrystalRemote:InvokeServer("openCrystal","CRYSTAL NAME HERE")
