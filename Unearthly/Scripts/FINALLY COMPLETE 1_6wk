@@ -1842,22 +1842,12 @@ Tabs.Misc:CreateButton{
     end
 }
 
-SaveManager:SetLibrary(Library)
-InterfaceManager:SetLibrary(Library)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes{}
-InterfaceManager:SetFolder("FluentScriptHub")
-SaveManager:SetFolder("FluentScriptHub/specific-game")
-InterfaceManager:BuildInterfaceSection(Tabs.Settings)
-SaveManager:BuildConfigSection(Tabs.Settings)
-
 Window:SelectTab(1)
 
 Library:Notify{
-    Title = "Ducks",
+    Title = "1-6wk",
     Content = "Ui!",
     Duration = 0.01
 }
 
 SaveManager:LoadAutoloadConfig()
-
