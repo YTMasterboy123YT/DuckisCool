@@ -787,15 +787,33 @@ local gyms = {
     end
   end)
   
-  local RockPositions = {
+local RockPositions = {
     ["Frozen Rock"] = CFrame.new(-2551, -0, -243, -1, 0, 0, 0, 1, 0, 0, 0, -1),
     ["Legend Rock"] = CFrame.new(4140, 987, -4089, -1, 0, 0, 0, 1, 0, 0, 0, -1),
     ["Muscle King Mountain"] = CFrame.new(-8971, 27, -6061, -1, 0, 0, 0, 1, 0, 0, 0, -1),
     ["Jungle Rock"] = CFrame.new(-7612, 32, 2910, -1, 0, 0, 0, 1, 0, 0, 0, -1)
-  }
-  
-  -- Helper Functions
-  local function removeEffects(rock)
+}
+
+-- Rock validation function
+local function validateRockPosition(rockName)
+    local rockMap = {
+        ["Frozen Rock"] = "Frozen Rock",
+        ["Legend Rock"] = "Rock Of Legends",
+        ["Muscle King Mountain"] = "Muscle King Mountain",
+        ["Jungle Rock"] = "Ancient Jungle Rock"
+    }
+    
+    local mappedName = rockMap[rockName]
+    local rock = workspace.machinesFolder:FindFirstChild(mappedName)
+    
+    if rock then
+        return true, rock
+    end
+    return false, nil
+end
+
+-- Helper Functions
+local function removeEffects(rock)
     for _, child in pairs(rock:GetDescendants()) do
         if child:IsA("ParticleEmitter") or 
            child:IsA("Beam") or 
@@ -806,23 +824,35 @@ local gyms = {
             child:Destroy()
         end
     end
-  end
-  
-  local function startRockFarm(rockName)
+end
+
+local function startRockFarm(rockName)
+    local isValid, rock = validateRockPosition(rockName)
+    
+    if not isValid then
+        Tabs.Rock:CreateNotification({
+            Title = "Rock Unavailable",
+            Content = rockName .. " is not accessible right now",
+            Duration = 3
+        })
+        RockToggle:Set(false)
+        return
+    end
+
     local rockMap = {
         ["Frozen Rock"] = "Frozen Rock",
         ["Legend Rock"] = "Rock Of Legends",
         ["Muscle King Mountain"] = "Muscle King Mountain",
         ["Jungle Rock"] = "Ancient Jungle Rock"
     }
-  
+
     rockOriginal = workspace.machinesFolder[rockMap[rockName]].Rock
     rockSize = rockOriginal.Size
-  
+
     rockConnection = RunService.Heartbeat:Connect(function()
         local rightHand = character:FindFirstChild("RightHand")
         local leftHand = character:FindFirstChild("LeftHand")
-  
+
         if rockOriginal and rightHand and leftHand then
             removeEffects(rockOriginal)
             rockOriginal.Size = Vector3.new(3, 5, 5)
@@ -831,7 +861,7 @@ local gyms = {
             if rockOriginal:FindFirstChild("rockGui") then
                 rockOriginal.rockGui:Destroy()
             end
-  
+
             if tick() % 0.2 < 0.1 then
                 rockOriginal.CFrame = rightHand.CFrame * CFrame.new(0, 1, 0)
             else
@@ -840,9 +870,9 @@ local gyms = {
         end
     end)
     isHitting = true
-  end
-  
-  local function stopRockFarm(rockName)
+end
+
+local function stopRockFarm(rockName)
     if rockConnection then
         rockConnection:Disconnect()
     end
@@ -855,13 +885,13 @@ local gyms = {
         rockOriginal.Transparency = 0
     end
     isHitting = false
-  end
-  
-  -- Rock Section
-  local RockSection = Tabs.Rock:CreateSection("Rock Farm")
-  
-  -- Rock Dropdown
-  local RockDropdown = Tabs.Rock:CreateDropdown("RockSelect", {
+end
+
+-- Rock Section
+local RockSection = Tabs.Rock:CreateSection("Rock Farm")
+
+-- Rock Dropdown
+local RockDropdown = Tabs.Rock:CreateDropdown("RockSelect", {
     Title = "Select Rock",
     Description = "Choose which rock to farm",
     Values = {"Frozen Rock", "Legend Rock", "Muscle King Mountain", "Jungle Rock"},
@@ -871,10 +901,10 @@ local gyms = {
         _G.SelectedRock = Value
         print("Selected:", Value)
     end
-  })
-  
-  -- Rock Toggle
-  local RockToggle = Tabs.Rock:CreateToggle("RockFarm", {
+})
+
+-- Rock Toggle
+local RockToggle = Tabs.Rock:CreateToggle("RockFarm", {
     Title = "Farm Rock",
     Description = "Auto farm the selected rock",
     Default = false,
@@ -887,44 +917,40 @@ local gyms = {
         end
         print("Toggle:", Value)
     end
-  })
-  
-  -- Auto-hitting function
-  task.spawn(function()
+})
+
+-- Auto-hitting function
+task.spawn(function()
     while true do
         if _G.FarmRock and isHitting then
-            local punch = player.Backpack:FindFirstChild("Punch")
+            local punch = player.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
             if punch then
-                punch.Parent = player.Character
+                if punch.Parent ~= character then
+                    punch.Parent = character
+                end
                 if punch:FindFirstChild("attackTime") then
                     punch.attackTime.Value = 0
                 end
+                punch:Activate()
             end
-  
+            
             player.muscleEvent:FireServer("punch", "leftHand")
-            if character and character:FindFirstChild("Punch") then
-                character.Punch:Activate()
-            end
             task.wait(0.05)
-  
             player.muscleEvent:FireServer("punch", "rightHand")
-            if character and character:FindFirstChild("Punch") then
-                character.Punch:Activate()
-            end
             task.wait(0.05)
         end
         task.wait(0.1)
     end
-  end)
-  
-  -- Respawn Handler
-  player.CharacterAdded:Connect(function(newCharacter)
+end)
+
+-- Respawn Handler
+player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     task.wait(1)
     if _G.FarmRock and _G.SelectedRock then
         startRockFarm(_G.SelectedRock)
     end
-  end)
+end)
 
 local Section = Tabs.Rebirth:CreateSection("AutoRebirth")
 
