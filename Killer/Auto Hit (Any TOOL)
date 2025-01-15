@@ -5,6 +5,12 @@ local character = player.Character or player.CharacterAdded:Wait()
 local tools = {
     {name = "Punch", type = "attackTime"},
     {name = "Pushups", type = "repTime"},
+    {name = "Weight", type = "repTime"},
+    {name = "Situps", type = "repTime"},
+    {name = "Stomp", type = "attackTime"},
+    {name = "GroundSlam", type = "attackTime"},
+    {name = "Standups", type = "repTime"},
+
 }
 
 local function equipTool(toolName)
